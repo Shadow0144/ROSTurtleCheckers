@@ -172,3 +172,15 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/package.bash
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/package.dsv
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/package.ps1
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/package.sh
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/package.xml
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/package.zsh
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/local_setup.bash
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/local_setup.dsv
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/local_setup.sh
+install/ROSTurtleCheckers/share/ROSTurtleCheckers/local_setup.zsh
+install/
+log/
