@@ -8,15 +8,15 @@
 
 using namespace std::chrono_literals;
 
-class GameMasterNode : public rclcpp::Node
+class CheckersBoardNode : public rclcpp::Node
 {
 public:
-    GameMasterNode()
-        : Node("game_master_node"), count_(0)
+    CheckersBoardNode()
+        : Node("checkers_board_node"), count_(0)
     {
         publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
         timer_ = this->create_wall_timer(
-            500ms, std::bind(&GameMasterNode::timer_callback, this));
+            500ms, std::bind(&CheckersBoardNode::timer_callback, this));
     }
 
 private:
@@ -35,7 +35,7 @@ private:
 int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<GameMasterNode>());
+    rclcpp::spin(std::make_shared<CheckersBoardNode>());
     rclcpp::shutdown();
     return 0;
 }
