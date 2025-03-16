@@ -184,3 +184,4 @@ install/ROSTurtleCheckers/share/ROSTurtleCheckers/local_setup.sh
 install/ROSTurtleCheckers/share/ROSTurtleCheckers/local_setup.zsh
 install/
 log/
+.vs/
