@@ -10,16 +10,16 @@
 #define DEFAULT_BG_B 0xff
 
 CheckersBoardFrame::CheckersBoardFrame(std::shared_ptr<rclcpp::Node> nh, QWidget* parent, Qt::WindowFlags f)
-	: nh_(nh)
+	/*: nh_(nh)
 	, QFrame(parent, f)
 	, path_image_(500, 500, QImage::Format_ARGB32)
 	, path_painter_(&path_image_)
-	, frame_count_(0)
+	, frame_count_(0)*/
 {
 	setFixedSize(500, 500);
-	setWindowTitle("TurtleSim");
+	setWindowTitle("TurtleCheckers");
 
-	srand(time(NULL));
+	/*srand(time(NULL));
 
 	update_timer_ = new QTimer(this);
 	update_timer_->setInterval(16);
@@ -76,13 +76,13 @@ CheckersBoardFrame::CheckersBoardFrame(std::shared_ptr<rclcpp::Node> nh, QWidget
 			name.replace(QString("-"), QString(""));
 			spawnTurtle(name.toStdString(), 1.0 + 1.5 * (index % 7), 1.0 + 1.5 * (index / 7), PI / 2.0, index);
 		}
-	}
+	}*/
 }
 
 
 CheckersBoardFrame::~CheckersBoardFrame()
 {
-	delete update_timer_;
+	//delete update_timer_;
 }
 
 // bool CheckersBoardFrame::spawnCallback(std::shared_ptr<turtlesim::srv::Spawn::Request> req, 
@@ -133,7 +133,7 @@ CheckersBoardFrame::~CheckersBoardFrame()
 //   return true;
 // }
 
-
+/*
 bool CheckersBoardFrame::hasTurtle(const std::string& name)
 {
 	return turtles_.find(name) != turtles_.end();
@@ -235,3 +235,4 @@ void CheckersBoardFrame::updateTurtles()
 
 	++frame_count_;
 }
+*/

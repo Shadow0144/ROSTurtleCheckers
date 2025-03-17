@@ -1,4 +1,4 @@
-#pramga once
+#pragma once
 
 #include <QFrame>
 #include <QImage>
@@ -11,12 +11,12 @@
 #ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
 	#include <rclcpp/rclcpp.hpp>
 
-	#include <turtlesim/srv/empty.hpp>
-	#include <turtlesim/srv/spawn.hpp>
-	#include <turtlesim/srv/kill.hpp>
+	//#include <turtlesim/srv/empty.hpp>
+	//#include <turtlesim/srv/spawn.hpp>
+	//#include <turtlesim/srv/kill.hpp>
 	#include <map>
 
-	#include "turtle.hpp"
+	//#include "turtle.hpp"
 #endif
 
 class CheckersBoardFrame : public QFrame
@@ -26,17 +26,17 @@ public:
 	CheckersBoardFrame(std::shared_ptr<rclcpp::Node> nh, QWidget* parent = 0, Qt::WindowFlags f = 0);
 	~CheckersBoardFrame();
 
-	std::string spawnTurtle(const std::string& name, float x, float y, float angle);
-	std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index);
+	//std::string spawnTurtle(const std::string& name, float x, float y, float angle);
+	//std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index);
 
 protected:
-	void paintEvent(QPaintEvent* event);
+	//void paintEvent(QPaintEvent* event);
 
 private slots:
-	void onUpdate();
+	//void onUpdate();
 
 private:
-	void updateTurtles();
+	/*void updateTurtles();
 	void clear();
 	bool hasTurtle(const std::string& name);
 
@@ -71,5 +71,5 @@ private:
 
 	float meter_;
 	float width_in_meters_;
-	float height_in_meters_;
+	float height_in_meters_;*/
 };
