@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+// #include "turtle.hpp" // NO LINT
+#endif
+
 #include <QFrame>
 #include <QImage>
 #include <QPainter>
@@ -8,68 +12,85 @@
 #include <QVector>
 
 // This prevents a MOC error with versions of boost >= 1.48
-#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
-	#include <rclcpp/rclcpp.hpp>
+#ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+#include <map>
+#include <string>
+#include <rclcpp/rclcpp.hpp>
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
-	//#include <turtlesim/srv/empty.hpp>
-	//#include <turtlesim/srv/spawn.hpp>
-	//#include <turtlesim/srv/kill.hpp>
-	#include <map>
-
-	//#include "turtle.hpp"
+#include <rcl_interfaces/msg/parameter_event.hpp>
+#include <std_srvs/srv/empty.hpp>
+// #include <turtlesim_msgs/srv/spawn.hpp>
+// #include <turtlesim_msgs/srv/kill.hpp>
 #endif
 
+// A single animation frame of the Turtle Checkers game
 class CheckersBoardFrame : public QFrame
 {
 	Q_OBJECT
 public:
-	CheckersBoardFrame(std::shared_ptr<rclcpp::Node> nh, QWidget* parent = 0, Qt::WindowFlags f = 0);
+	CheckersBoardFrame(
+		rclcpp::Node::SharedPtr &node_handle, QWidget *parent = 0,
+		Qt::WindowFlags f = Qt::WindowFlags());
 	~CheckersBoardFrame();
 
-	//std::string spawnTurtle(const std::string& name, float x, float y, float angle);
-	//std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index);
+	void setupGame();
+
+	std::string spawnRedTurtle(const std::string& name, float x, float y, float angle);
+	std::string spawnRedTurtle(const std::string& name, float x, float y, float angle, size_t index);
+	std::string spawnBlackTurtle(const std::string& name, float x, float y, float angle);
+	std::string spawnBlackTurtle(const std::string& name, float x, float y, float angle, size_t index);
 
 protected:
-	//void paintEvent(QPaintEvent* event);
+	void paintEvent(QPaintEvent *event);
 
 private slots:
-	//void onUpdate();
+	void onUpdate();
 
 private:
-	/*void updateTurtles();
+	// void updateTurtles();
 	void clear();
-	bool hasTurtle(const std::string& name);
+	// bool hasTurtle(const std::string &name);
 
-	//   bool clearCallback(std::shared_ptr<turtlesim::srv::Empty::Request>,
-	//                             std::shared_ptr<turtlesim::srv::Empty::Response>);
-	//   bool resetCallback(std::shared_ptr<turtlesim::srv::Empty::Request>, 
-	//                             std::shared_ptr<turtlesim::srv::Empty::Response>);
-	//   bool spawnCallback(std::shared_ptr<turtlesim::srv::Spawn::Request>, 
-	//                             std::shared_ptr<turtlesim::srv::Spawn::Response>);
-	//   bool killCallback(std::shared_ptr<turtlesim::srv::Kill::Request>, 
-	//                            std::shared_ptr<turtlesim::srv::Kill::Response>);
+	bool clearCallback(
+		const std_srvs::srv::Empty::Request::SharedPtr,
+		std_srvs::srv::Empty::Response::SharedPtr);
+	bool resetCallback(
+		const std_srvs::srv::Empty::Request::SharedPtr,
+		std_srvs::srv::Empty::Response::SharedPtr);
+	// bool spawnCallback(
+	//	const turtlesim_msgs::srv::Spawn::Request::SharedPtr,
+	//	turtlesim_msgs::srv::Spawn::Response::SharedPtr);
+	// bool killCallback(
+	//	const turtlesim_msgs::srv::Kill::Request::SharedPtr,
+	//	turtlesim_msgs::srv::Kill::Response::SharedPtr);
 
-	std::shared_ptr<rclcpp::Node> nh_;
-	QTimer* update_timer_;
+	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
+
+	rclcpp::Node::SharedPtr nh_;
+
+	QTimer *update_timer_;
 	QImage path_image_;
 	QPainter path_painter_;
 
 	uint64_t frame_count_;
 
-	// ros::WallTime last_turtle_update_;
+	rclcpp::Time last_turtle_update_;
 
-	// ros::ServiceServer clear_srv_;
-	// ros::ServiceServer reset_srv_;
-	// ros::ServiceServer spawn_srv_;
-	// ros::ServiceServer kill_srv_;
+	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr clear_srv_;
+	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv_;
+	// rclcpp::Service<turtlesim_msgs::srv::Spawn>::SharedPtr spawn_srv_;
+	// rclcpp::Service<turtlesim_msgs::srv::Kill>::SharedPtr kill_srv_;
+	rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
 
-	typedef std::map<std::string, TurtlePtr> M_Turtle;
-	M_Turtle turtles_;
-	uint32_t id_counter_ = 0;
+	// typedef std::map<std::string, TurtlePtr> M_Turtle;
+	// M_Turtle turtles_;
+	uint32_t id_counter_;
 
-	QVector<QImage> turtle_images_;
+	QVector<QImage> red_turtle_images_;
+	QVector<QImage> black_turtle_images_;
 
 	float meter_;
 	float width_in_meters_;
-	float height_in_meters_;*/
+	float height_in_meters_;
 };

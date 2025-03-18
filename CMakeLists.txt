@@ -17,8 +17,11 @@ endif()
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Widgets)
 
 if (Qt5_POSITION_INDEPENDENT_CODE)
@@ -30,12 +33,16 @@ include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 qt5_wrap_cpp(checkers_board_node_MOCS include/checkers_board_frame.hpp)
 
 add_executable(checkers_board_node 
+  src/turtle.cpp
   src/checkers_board_frame.cpp 
   src/checkers_board_node.cpp
   ${checkers_board_node_MOCS})
 ament_target_dependencies(checkers_board_node
+  ament_index_cpp
   rclcpp
-  std_msgs)
+  std_msgs
+  std_srvs
+  geometry_msgs)
 target_link_libraries(checkers_board_node
   Qt5::Widgets)
 
