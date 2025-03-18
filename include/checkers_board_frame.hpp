@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
-// #include "turtle.hpp" // NO LINT
+#include "turtle.hpp" // NO LINT
 #endif
 
 #include <QFrame>
@@ -36,10 +36,8 @@ public:
 
 	void setupGame();
 
-	std::string spawnRedTurtle(const std::string& name, float x, float y, float angle);
-	std::string spawnRedTurtle(const std::string& name, float x, float y, float angle, size_t index);
-	std::string spawnBlackTurtle(const std::string& name, float x, float y, float angle);
-	std::string spawnBlackTurtle(const std::string& name, float x, float y, float angle, size_t index);
+	std::string spawnRedTurtle(const std::string &name, float x, float y, float angle, size_t index);
+	std::string spawnBlackTurtle(const std::string &name, float x, float y, float angle, size_t index);
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -83,9 +81,11 @@ private:
 	// rclcpp::Service<turtlesim_msgs::srv::Kill>::SharedPtr kill_srv_;
 	rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
 
-	// typedef std::map<std::string, TurtlePtr> M_Turtle;
-	// M_Turtle turtles_;
+	typedef std::map<std::string, TurtlePtr> M_Turtle;
+	M_Turtle red_turtles_;
+	M_Turtle black_turtles_;
 	uint32_t id_counter_;
+	const static uint32_t NUM_PIECES_PER_PLAYER = 12;
 
 	QVector<QImage> red_turtle_images_;
 	QVector<QImage> black_turtle_images_;
@@ -93,4 +93,12 @@ private:
 	float meter_;
 	float width_in_meters_;
 	float height_in_meters_;
+	const static int NUM_COLS_ROWS = 8;
+
+	const static int NUM_PLAYABLE_TILES = 32;
+	float tile_centers_x[NUM_PLAYABLE_TILES];
+	float tile_centers_y[NUM_PLAYABLE_TILES];
+
+	const int RED_SQUARES_BG_RGB[3] = {255, 0, 0};
+	const int BLACK_SQUARES_BG_RGB[3] = {0, 0, 0};
 };
