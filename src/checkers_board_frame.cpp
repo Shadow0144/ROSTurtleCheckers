@@ -115,8 +115,8 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 	width_in_meters_ = (width() - 1) / meter_;
 	height_in_meters_ = (height() - 1) / meter_;
 
-	const float tile_width = width() / NUM_COLS_ROWS;
-	const float tile_height = height() / NUM_COLS_ROWS;
+	const float tile_width = width_in_meters_ / NUM_COLS_ROWS;
+	const float tile_height = width_in_meters_ / NUM_COLS_ROWS;
 	const float tile_half_width = tile_width / 2.0f;
 	const float tile_half_height = tile_height / 2.0f;
 
@@ -137,25 +137,34 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 			tile_centers_x[(i * 4) + 3] = (6 * tile_width) + tile_half_width;
 		}
 
-		tile_centers_y[(i * 4) + 0] = (i * tile_height) + tile_half_height;
-		tile_centers_y[(i * 4) + 1] = (i * tile_height) + tile_half_height;
-		tile_centers_y[(i * 4) + 2] = (i * tile_height) + tile_half_height;
-		tile_centers_y[(i * 4) + 3] = (i * tile_height) + tile_half_height;
+		tile_centers_y[(i * 4) + 0] = ((i * tile_height) + tile_half_height);
+		tile_centers_y[(i * 4) + 1] = ((i * tile_height) + tile_half_height);
+		tile_centers_y[(i * 4) + 2] = ((i * tile_height) + tile_half_height);
+		tile_centers_y[(i * 4) + 3] = ((i * tile_height) + tile_half_height);
 	}
 
 	const uint32_t image_index = 0u; // Which image to use for both pieces at the start
 
 	// Spawn all the checkers pieces
 	// Red
-	const float FACING = static_cast<float>(M_PI) / 2.0f;
+	const float RED_ROTATION = static_cast<float>(M_PI) / 2.0f;
 	for (uint32_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
 	{
-		spawnRedTurtle("Red" + std::to_string(i + 1), tile_centers_x[i], tile_centers_y[i], FACING, image_index);
+		spawnRedTurtle("Red" + std::to_string(i + 1), 
+						tile_centers_x[i], 
+						tile_centers_y[i], 
+						RED_ROTATION, 
+						image_index);
 	}
 	// Black
+	const float BLACK_ROTATION = 3.0f * static_cast<float>(M_PI) / 2.0f;
 	for (uint32_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
 	{
-		spawnBlackTurtle("Black" + std::to_string(i + 1), tile_centers_x[i + 20], tile_centers_y[i + 20], 0, image_index);
+		spawnBlackTurtle("Black" + std::to_string(i + 1), 
+							tile_centers_x[i + 20], 
+							tile_centers_y[i + 20], 
+							BLACK_ROTATION, 
+							image_index);
 	}
 }
 
@@ -322,7 +331,6 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	M_Turtle::iterator rend = red_turtles_.end();
 	for (; rit != rend; ++rit)
 	{
-		std::cout << "Painting red turtle" << std::endl;
 		rit->second->paint(painter);
 	}
 
@@ -330,7 +338,6 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	M_Turtle::iterator bend = black_turtles_.end();
 	for (; bit != bend; ++bit)
 	{
-		std::cout << "Painting black turtle" << std::endl;
 		bit->second->paint(painter);
 	}
 }
