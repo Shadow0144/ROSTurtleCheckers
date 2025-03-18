@@ -17,8 +17,21 @@
 // #include "turtlesim_msgs/srv/kill.hpp"
 // #include "turtlesim_msgs/srv/spawn.hpp"
 
+// Constants
+constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
+
+constexpr size_t NUM_COLS_ROWS = 8u;
+
+constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
+constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
+
+constexpr float RED_ROTATION = 1.5f * M_PI;
+constexpr float BLACK_ROTATION = 0.5f * M_PI;
+
 CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWidget *parent, Qt::WindowFlags f)
-	: QFrame(parent, f), path_image_(500, 500, QImage::Format_ARGB32), path_painter_(&path_image_), frame_count_(0), id_counter_(0)
+	: QFrame(parent, f), 
+	path_image_(500, 500, QImage::Format_ARGB32), 
+	path_painter_(&path_image_)
 {
 	setFixedSize(500, 500);
 	setWindowTitle("TurtleCheckers");
@@ -71,7 +84,7 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 
 	QString images_path =
 		(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/img/").c_str();
-		std:: cout << images_path.toStdString() << std::endl;
+	std::cout << images_path.toStdString() << std::endl;
 	for (int i = 0; i < turtles_images.size(); ++i)
 	{
 		QImage r_img;
@@ -81,8 +94,6 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 		b_img.load(images_path + turtles_images[i] + "_black.png");
 		black_turtle_images_.append(b_img);
 	}
-
-	meter_ = red_turtle_images_[0].height(); // Assume we have at least one red image
 
 	clear();
 
@@ -112,15 +123,16 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 	RCLCPP_INFO(
 		nh_->get_logger(), "Starting turtle checkers board with node name %s", nh_->get_fully_qualified_name());
 
-	width_in_meters_ = (width() - 1) / meter_;
-	height_in_meters_ = (height() - 1) / meter_;
 
-	const float tile_width = width_in_meters_ / NUM_COLS_ROWS;
-	const float tile_height = width_in_meters_ / NUM_COLS_ROWS;
+	const float meter = red_turtle_images_[0].height(); // Assume we have at least one red image
+	const float width_in_meters = (width() - 1) / meter;
+	const float height_in_meters = (height() - 1) / meter;
+	const float tile_width = width_in_meters / NUM_COLS_ROWS;
+	const float tile_height = height_in_meters / NUM_COLS_ROWS;
 	const float tile_half_width = tile_width / 2.0f;
 	const float tile_half_height = tile_height / 2.0f;
 
-	for (uint32_t i = 0u; i < NUM_COLS_ROWS; i++)
+	for (size_t i = 0u; i < NUM_COLS_ROWS; i++)
 	{
 		if (i % 2u == 0u)
 		{
@@ -137,147 +149,81 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 			tile_centers_x[(i * 4) + 3] = (6 * tile_width) + tile_half_width;
 		}
 
-		tile_centers_y[(i * 4) + 0] = ((i * tile_height) + tile_half_height);
-		tile_centers_y[(i * 4) + 1] = ((i * tile_height) + tile_half_height);
-		tile_centers_y[(i * 4) + 2] = ((i * tile_height) + tile_half_height);
-		tile_centers_y[(i * 4) + 3] = ((i * tile_height) + tile_half_height);
+		tile_centers_y[(i * 4) + 0] = (i * tile_height) + tile_half_height;
+		tile_centers_y[(i * 4) + 1] = (i * tile_height) + tile_half_height;
+		tile_centers_y[(i * 4) + 2] = (i * tile_height) + tile_half_height;
+		tile_centers_y[(i * 4) + 3] = (i * tile_height) + tile_half_height;
 	}
 
-	const uint32_t image_index = 0u; // Which image to use for both pieces at the start
-
-	// Spawn all the checkers pieces
-	// Red
-	const float RED_ROTATION = static_cast<float>(M_PI) / 2.0f;
-	for (uint32_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
-	{
-		spawnRedTurtle("Red" + std::to_string(i + 1), 
-						tile_centers_x[i], 
-						tile_centers_y[i], 
-						RED_ROTATION, 
-						image_index);
-	}
-	// Black
-	const float BLACK_ROTATION = 3.0f * static_cast<float>(M_PI) / 2.0f;
-	for (uint32_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
-	{
-		spawnBlackTurtle("Black" + std::to_string(i + 1), 
-							tile_centers_x[i + 20], 
-							tile_centers_y[i + 20], 
-							BLACK_ROTATION, 
-							image_index);
-	}
+	spawnPieces();
 }
 
 CheckersBoardFrame::~CheckersBoardFrame()
 {
 	delete update_timer_;
 }
-/*
-bool CheckersBoardFrame::spawnCallback(
-  const turtlesim_msgs::srv::Spawn::Request::SharedPtr req,
-  turtlesim_msgs::srv::Spawn::Response::SharedPtr res)
-{
-  std::string name = spawnTurtle(req->name, req->x, req->y, req->theta);
-  if (name.empty()) {
-	RCLCPP_ERROR(nh_->get_logger(), "A turtle named [%s] already exists", req->name.c_str());
-	return false;
-  }
 
-  res->name = name;
-
-  return true;
-}
-
-bool CheckersBoardFrame::killCallback(
-  const turtlesim_msgs::srv::Kill::Request::SharedPtr req,
-  turtlesim_msgs::srv::Kill::Response::SharedPtr)
-{
-  M_Turtle::iterator it = turtles_.find(req->name);
-  if (it == turtles_.end()) {
-	RCLCPP_ERROR(
-	  nh_->get_logger(), "Tried to kill turtle [%s], which does not exist", req->name.c_str());
-	return false;
-  }
-
-  turtles_.erase(it);
-  update();
-
-  return true;
-}
-*/
 void CheckersBoardFrame::parameterEventCallback(
 	const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
 {
-	// only consider events from this node
+	// Only consider events from this node
 	if (event->node == nh_->get_fully_qualified_name())
 	{
-		// since parameter events for this event aren't expected frequently just always call update()
+		// Since parameter events for this event aren't expected frequently just always call update()
 		update();
 	}
 }
 
-std::string CheckersBoardFrame::spawnRedTurtle(
-	const std::string &name,
-	float x,
-	float y,
-	float angle,
-	size_t index)
+void CheckersBoardFrame::clearPieces()
 {
-	std::string real_name = name;
-	/*if (real_name.empty()) {
-	  do{
-		std::stringstream ss;
-		ss << "turtle" << ++id_counter_;
-		real_name = ss.str();
-	  } while (hasTurtle(real_name));
-	} else {
-	  if (hasTurtle(real_name)) {
-		return "";
-	  }
-	}*/
-
-	TurtlePtr t = std::make_shared<Turtle>(
-		nh_, real_name, red_turtle_images_[static_cast<int>(index)], QPointF(x, height_in_meters_ - y), angle);
-	red_turtles_[real_name] = t;
-	update();
-
-	RCLCPP_INFO(
-		nh_->get_logger(), "Spawning turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-		real_name.c_str(), x, y, angle);
-
-	return real_name;
 }
 
-std::string CheckersBoardFrame::spawnBlackTurtle(
-	const std::string &name,
-	float x,
-	float y,
-	float angle,
-	size_t index)
+void CheckersBoardFrame::spawnPieces()
 {
-	std::string real_name = name;
-	/*if (real_name.empty()) {
-	  do{
-		std::stringstream ss;
-		ss << "turtle" << ++id_counter_;
-		real_name = ss.str();
-	  } while (hasTurtle(real_name));
-	} else {
-	  if (hasTurtle(real_name)) {
-		return "";
-	  }
-	}*/
+	// Spawn all the checkers pieces
+	// Red
+	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
+	{
+		spawnTurtle("Red" + std::to_string(i + 1),
+					true,
+					tile_centers_x[i],
+					tile_centers_y[i],
+					red_image_index);
+	}
+	// Black
+	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
+	{
+		spawnTurtle("Black" + std::to_string(i + 1),
+					false,
+					tile_centers_x[i + 20],
+					tile_centers_y[i + 20],
+					black_image_index);
+	}
+}
 
-	TurtlePtr t = std::make_shared<Turtle>(
-		nh_, real_name, black_turtle_images_[static_cast<int>(index)], QPointF(x, height_in_meters_ - y), angle);
-	black_turtles_[real_name] = t;
+std::string CheckersBoardFrame::spawnTurtle(const std::string &name, bool red, float x, float y, size_t image_index)
+{
+	if (red)
+	{
+		red_turtles_[name] = std::make_shared<Turtle>(
+			nh_, name, red_turtle_images_[static_cast<int>(image_index)],
+			QPointF(x, y), RED_ROTATION);
+		RCLCPP_INFO(
+			nh_->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f], theta=[%f]",
+			name.c_str(), x, y, RED_ROTATION);
+	}
+	else // black
+	{
+		black_turtles_[name] = std::make_shared<Turtle>(
+			nh_, name, black_turtle_images_[static_cast<int>(image_index)],
+			QPointF(x, y), BLACK_ROTATION);
+		RCLCPP_INFO(
+			nh_->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f], theta=[%f]",
+			name.c_str(), x, y, BLACK_ROTATION);
+	}
 	update();
 
-	RCLCPP_INFO(
-		nh_->get_logger(), "Spawning turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-		real_name.c_str(), x, y, angle);
-
-	return real_name;
+	return name;
 }
 
 void CheckersBoardFrame::clear()
@@ -308,9 +254,9 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	float tile_width = width() / NUM_COLS_ROWS;
 	float tile_height = height() / NUM_COLS_ROWS;
 
-	for (int i = 0; i < NUM_COLS_ROWS; i++)
+	for (size_t i = 0u; i < NUM_COLS_ROWS; i++)
 	{
-		for (int j = 0; j < NUM_COLS_ROWS; j++)
+		for (size_t j = 0u; j < NUM_COLS_ROWS; j++)
 		{
 			int r = ((i + j) % 2 == 0) ? RED_SQUARES_BG_RGB[0] : BLACK_SQUARES_BG_RGB[0];
 			int g = ((i + j) % 2 == 0) ? RED_SQUARES_BG_RGB[1] : BLACK_SQUARES_BG_RGB[1];
@@ -342,28 +288,6 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	}
 }
 
-/*void CheckersBoardFrame::updateTurtles()
-{
-  if (last_turtle_update_.nanoseconds() == 0) {
-	last_turtle_update_ = nh_->now();
-	return;
-  }
-
-  bool modified = false;
-  M_Turtle::iterator it = turtles_.begin();
-  M_Turtle::iterator end = turtles_.end();
-  for (; it != end; ++it) {
-	modified |= it->second->update(
-	  0.001 * update_timer_->interval(), path_painter_, path_image_, width_in_meters_,
-	  height_in_meters_);
-  }
-  if (modified) {
-	update();
-  }
-
-  ++frame_count_;
-}*/
-
 bool CheckersBoardFrame::clearCallback(
 	const std_srvs::srv::Empty::Request::SharedPtr,
 	std_srvs::srv::Empty::Response::SharedPtr)
@@ -378,9 +302,8 @@ bool CheckersBoardFrame::resetCallback(
 	std_srvs::srv::Empty::Response::SharedPtr)
 {
 	RCLCPP_INFO(nh_->get_logger(), "Resetting checkers.");
-	// turtles_.clear();
-	id_counter_ = 0;
-	// spawnTurtle("", width_in_meters_ / 2.0, height_in_meters_ / 2.0, 0);
+	clearPieces();
+	spawnPieces();
 	clear();
 	return true;
 }

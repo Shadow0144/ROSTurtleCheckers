@@ -36,8 +36,7 @@ public:
 
 	void setupGame();
 
-	std::string spawnRedTurtle(const std::string &name, float x, float y, float angle, size_t index);
-	std::string spawnBlackTurtle(const std::string &name, float x, float y, float angle, size_t index);
+	std::string spawnTurtle(const std::string &name, bool red, float x, float y, size_t image_index);
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -46,9 +45,10 @@ private slots:
 	void onUpdate();
 
 private:
-	// void updateTurtles();
 	void clear();
-	// bool hasTurtle(const std::string &name);
+
+	void clearPieces();
+	void spawnPieces();
 
 	bool clearCallback(
 		const std_srvs::srv::Empty::Request::SharedPtr,
@@ -71,10 +71,6 @@ private:
 	QImage path_image_;
 	QPainter path_painter_;
 
-	uint64_t frame_count_;
-
-	rclcpp::Time last_turtle_update_;
-
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr clear_srv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv_;
 	// rclcpp::Service<turtlesim_msgs::srv::Spawn>::SharedPtr spawn_srv_;
@@ -84,21 +80,13 @@ private:
 	typedef std::map<std::string, TurtlePtr> M_Turtle;
 	M_Turtle red_turtles_;
 	M_Turtle black_turtles_;
-	uint32_t id_counter_;
-	const static uint32_t NUM_PIECES_PER_PLAYER = 12;
 
 	QVector<QImage> red_turtle_images_;
+	size_t red_image_index = 0u;
 	QVector<QImage> black_turtle_images_;
+	size_t black_image_index = 0u;
 
-	float meter_;
-	float width_in_meters_;
-	float height_in_meters_;
-	const static int NUM_COLS_ROWS = 8;
-
-	const static int NUM_PLAYABLE_TILES = 32;
+	constexpr static size_t NUM_PLAYABLE_TILES = 32u;
 	float tile_centers_x[NUM_PLAYABLE_TILES];
 	float tile_centers_y[NUM_PLAYABLE_TILES];
-
-	const int RED_SQUARES_BG_RGB[3] = {255, 0, 0};
-	const int BLACK_SQUARES_BG_RGB[3] = {0, 0, 0};
 };
