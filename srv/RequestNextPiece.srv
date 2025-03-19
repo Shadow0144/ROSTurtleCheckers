@@ -1,0 +1,4 @@
+bool red_player
+uint64[] available_pieces
+---
+uint64 next_piece

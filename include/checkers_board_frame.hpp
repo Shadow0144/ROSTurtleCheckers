@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
-#include "turtle.hpp" // NO LINT
+#include "turtle_piece.hpp" // NO LINT
 #endif
 
 #include <QFrame>
@@ -36,7 +36,7 @@ public:
 
 	void setupGame();
 
-	std::string spawnTurtle(const std::string &name, bool red, float x, float y, size_t image_index);
+	std::string spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t image_index);
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -56,12 +56,6 @@ private:
 	bool resetCallback(
 		const std_srvs::srv::Empty::Request::SharedPtr,
 		std_srvs::srv::Empty::Response::SharedPtr);
-	// bool spawnCallback(
-	//	const turtlesim_msgs::srv::Spawn::Request::SharedPtr,
-	//	turtlesim_msgs::srv::Spawn::Response::SharedPtr);
-	// bool killCallback(
-	//	const turtlesim_msgs::srv::Kill::Request::SharedPtr,
-	//	turtlesim_msgs::srv::Kill::Response::SharedPtr);
 
 	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
 
@@ -73,18 +67,16 @@ private:
 
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr clear_srv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv_;
-	// rclcpp::Service<turtlesim_msgs::srv::Spawn>::SharedPtr spawn_srv_;
-	// rclcpp::Service<turtlesim_msgs::srv::Kill>::SharedPtr kill_srv_;
 	rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
 
-	typedef std::map<std::string, TurtlePtr> M_Turtle;
-	M_Turtle red_turtles_;
-	M_Turtle black_turtles_;
+	typedef std::map<std::string, TurtlePiecePtr> TurtlePiecesMap;
+	TurtlePiecesMap black_turtles_;
+	TurtlePiecesMap red_turtles_;
 
-	QVector<QImage> red_turtle_images_;
-	size_t red_image_index = 0u;
 	QVector<QImage> black_turtle_images_;
 	size_t black_image_index = 0u;
+	QVector<QImage> red_turtle_images_;
+	size_t red_image_index = 0u;
 
 	constexpr static size_t NUM_PLAYABLE_TILES = 32u;
 	float tile_centers_x[NUM_PLAYABLE_TILES];

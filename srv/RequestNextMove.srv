@@ -1,0 +1,4 @@
+bool black_player
+uint64[] available_moves
+---
+uint64 next_move

@@ -1,0 +1,1 @@
+uint64 winner # 0 - Stalemate, 1 - Black player, 2 - Red player

@@ -8,29 +8,32 @@
 #include <string>
 #include <math.h>
 
-#include "rcl_interfaces/msg/integer_range.hpp"
+#include "rcl_interfaces/msg/floating_point_range.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "std_srvs/srv/empty.hpp"
-
-// #include "turtlesim_msgs/srv/kill.hpp"
-// #include "turtlesim_msgs/srv/spawn.hpp"
 
 // Constants
 constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
 
 constexpr size_t NUM_COLS_ROWS = 8u;
 
-constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
 constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
+constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
+
+constexpr int TILE_WIDTH = 55;
+constexpr int TILE_HEIGHT = 55;
+constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
+constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
+
+constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
 CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWidget *parent, Qt::WindowFlags f)
-	: QFrame(parent, f), 
-	path_image_(500, 500, QImage::Format_ARGB32), 
-	path_painter_(&path_image_)
+	: QFrame(parent, f),
+	  path_image_(BOARD_WIDTH, BOARD_HEIGHT, QImage::Format_ARGB32),
+	  path_painter_(&path_image_)
 {
-	setFixedSize(500, 500);
+	setFixedSize(BOARD_WIDTH, BOARD_HEIGHT);
 	setWindowTitle("TurtleCheckers");
 
 	srand(time(NULL));
@@ -42,6 +45,15 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 	connect(update_timer_, SIGNAL(timeout()), this, SLOT(onUpdate()));
 
 	nh_ = node_handle;
+
+	rcl_interfaces::msg::FloatingPointRange range;
+	range.from_value = 0.01f;
+	range.to_value = 255.0f;
+	rcl_interfaces::msg::ParameterDescriptor board_scale_descriptor;
+	board_scale_descriptor.description = "Scale of the checkers board render";
+	board_scale_descriptor.floating_point_range.push_back(range);
+	nh_->declare_parameter(
+		"board_scale", rclcpp::ParameterValue(DEFAULT_BOARD_SCALE), board_scale_descriptor);
 
 	rcl_interfaces::msg::ParameterDescriptor holonomic_descriptor;
 	holonomic_descriptor.description = "If true, then turtles will be holonomic";
@@ -65,12 +77,12 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 	std::cout << images_path.toStdString() << std::endl;
 	for (int i = 0; i < turtles_images.size(); ++i)
 	{
-		QImage r_img;
-		r_img.load(images_path + turtles_images[i] + "_red.png");
-		red_turtle_images_.append(r_img);
 		QImage b_img;
 		b_img.load(images_path + turtles_images[i] + "_black.png");
 		black_turtle_images_.append(b_img);
+		QImage r_img;
+		r_img.load(images_path + turtles_images[i] + "_red.png");
+		red_turtle_images_.append(r_img);
 	}
 
 	clear();
@@ -101,35 +113,29 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 	RCLCPP_INFO(
 		nh_->get_logger(), "Starting turtle checkers board with node name %s", nh_->get_fully_qualified_name());
 
-	const float meter = red_turtle_images_[0].height(); // Assume we have at least one red image
-	const float width_in_meters = (width() - 1) / meter;
-	const float height_in_meters = (height() - 1) / meter;
-	const float tile_width = width_in_meters / NUM_COLS_ROWS;
-	const float tile_height = height_in_meters / NUM_COLS_ROWS;
-	const float tile_half_width = tile_width / 2.0f;
-	const float tile_half_height = tile_height / 2.0f;
-
+	const float tile_half_width = TILE_WIDTH / 2.0f;
+	const float tile_half_height = TILE_HEIGHT / 2.0f;
 	for (size_t i = 0u; i < NUM_COLS_ROWS; i++)
 	{
 		if (i % 2u == 0u)
 		{
-			tile_centers_x[(i * 4) + 0] = (1 * tile_width) + tile_half_width;
-			tile_centers_x[(i * 4) + 1] = (3 * tile_width) + tile_half_width;
-			tile_centers_x[(i * 4) + 2] = (5 * tile_width) + tile_half_width;
-			tile_centers_x[(i * 4) + 3] = (7 * tile_width) + tile_half_width;
+			tile_centers_x[(i * 4) + 0] = (1 * TILE_WIDTH) + tile_half_width;
+			tile_centers_x[(i * 4) + 1] = (3 * TILE_WIDTH) + tile_half_width;
+			tile_centers_x[(i * 4) + 2] = (5 * TILE_WIDTH) + tile_half_width;
+			tile_centers_x[(i * 4) + 3] = (7 * TILE_WIDTH) + tile_half_width;
 		}
 		else
 		{
-			tile_centers_x[(i * 4) + 0] = (0 * tile_width) + tile_half_width;
-			tile_centers_x[(i * 4) + 1] = (2 * tile_width) + tile_half_width;
-			tile_centers_x[(i * 4) + 2] = (4 * tile_width) + tile_half_width;
-			tile_centers_x[(i * 4) + 3] = (6 * tile_width) + tile_half_width;
+			tile_centers_x[(i * 4) + 0] = (0 * TILE_WIDTH) + tile_half_width;
+			tile_centers_x[(i * 4) + 1] = (2 * TILE_WIDTH) + tile_half_width;
+			tile_centers_x[(i * 4) + 2] = (4 * TILE_WIDTH) + tile_half_width;
+			tile_centers_x[(i * 4) + 3] = (6 * TILE_WIDTH) + tile_half_width;
 		}
 
-		tile_centers_y[(i * 4) + 0] = (i * tile_height) + tile_half_height;
-		tile_centers_y[(i * 4) + 1] = (i * tile_height) + tile_half_height;
-		tile_centers_y[(i * 4) + 2] = (i * tile_height) + tile_half_height;
-		tile_centers_y[(i * 4) + 3] = (i * tile_height) + tile_half_height;
+		tile_centers_y[(i * 4) + 0] = (i * TILE_HEIGHT) + tile_half_height;
+		tile_centers_y[(i * 4) + 1] = (i * TILE_HEIGHT) + tile_half_height;
+		tile_centers_y[(i * 4) + 2] = (i * TILE_HEIGHT) + tile_half_height;
+		tile_centers_y[(i * 4) + 3] = (i * TILE_HEIGHT) + tile_half_height;
 	}
 
 	spawnPieces();
@@ -158,45 +164,52 @@ void CheckersBoardFrame::clearPieces()
 void CheckersBoardFrame::spawnPieces()
 {
 	// Spawn all the checkers pieces
-	// Red
-	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
-	{
-		spawnTurtle("Red" + std::to_string(i + 1),
-					true,
-					tile_centers_x[i],
-					tile_centers_y[i],
-					red_image_index);
-	}
 	// Black
 	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
 	{
 		spawnTurtle("Black" + std::to_string(i + 1),
 					false,
+					tile_centers_x[i],
+					tile_centers_y[i],
+					1.0f * M_PI,
+					black_image_index);
+	}
+	// Red
+	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
+	{
+		spawnTurtle("Red" + std::to_string(i + 1),
+					true,
 					tile_centers_x[i + 20],
 					tile_centers_y[i + 20],
-					black_image_index);
+					0.0f * M_PI,
+					red_image_index);
 	}
 }
 
-std::string CheckersBoardFrame::spawnTurtle(const std::string &name, bool red, float x, float y, size_t image_index)
+std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
+											bool black,
+											float x,
+											float y,
+											float angle,
+											size_t image_index)
 {
-	if (red)
+	if (black)
 	{
-		red_turtles_[name] = std::make_shared<Turtle>(
-			nh_, name, red_turtle_images_[static_cast<int>(image_index)],
-			QPointF(x, y));
+		black_turtles_[name] = std::make_shared<TurtlePiece>(
+			name, black_turtle_images_[static_cast<int>(image_index)],
+			QPointF(x, y), angle);
 		RCLCPP_INFO(
-			nh_->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f]",
-			name.c_str(), x, y);
+			nh_->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f], theta=[%f]",
+			name.c_str(), x, y, angle);
 	}
-	else // black
+	else // red
 	{
-		black_turtles_[name] = std::make_shared<Turtle>(
-			nh_, name, black_turtle_images_[static_cast<int>(image_index)],
-			QPointF(x, y));
+		red_turtles_[name] = std::make_shared<TurtlePiece>(
+			name, red_turtle_images_[static_cast<int>(image_index)],
+			QPointF(x, y), angle);
 		RCLCPP_INFO(
-			nh_->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f]",
-			name.c_str(), x, y);
+			nh_->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f], theta=[%f]",
+			name.c_str(), x, y, angle);
 	}
 	update();
 
@@ -250,18 +263,18 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 
 	painter.drawImage(QPoint(0, 0), path_image_);
 
-	M_Turtle::iterator rit = red_turtles_.begin();
-	M_Turtle::iterator rend = red_turtles_.end();
-	for (; rit != rend; ++rit)
-	{
-		rit->second->paint(painter);
-	}
-
-	M_Turtle::iterator bit = black_turtles_.begin();
-	M_Turtle::iterator bend = black_turtles_.end();
+	TurtlePiecesMap::iterator bit = black_turtles_.begin();
+	TurtlePiecesMap::iterator bend = black_turtles_.end();
 	for (; bit != bend; ++bit)
 	{
 		bit->second->paint(painter);
+	}
+
+	TurtlePiecesMap::iterator rit = red_turtles_.begin();
+	TurtlePiecesMap::iterator rend = red_turtles_.end();
+	for (; rit != rend; ++rit)
+	{
+		rit->second->paint(painter);
 	}
 }
 

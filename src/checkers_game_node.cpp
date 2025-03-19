@@ -16,6 +16,9 @@ public:
         // The game node publishes when it is ready for which player's next move
         subscription_ = this->create_subscription<std_msgs::msg::String>(
             "player_move", 10, std::bind(&GamePlayerNode::player_move_callback, this, _1));
+        /*publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
+        timer_ = this->create_wall_timer(
+            500ms, std::bind(&CheckersPlayerNode::timer_callback, this));*/
     }
 
 private:

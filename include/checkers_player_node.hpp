@@ -18,5 +18,5 @@ public:
     int exec();
 
 private:
-    std::shared_ptr<rclcpp::Node> board_node;
+    std::shared_ptr<rclcpp::Node> player_node;
 };
