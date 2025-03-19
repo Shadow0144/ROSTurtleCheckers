@@ -25,9 +25,6 @@ constexpr size_t NUM_COLS_ROWS = 8u;
 constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
 constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
 
-constexpr float RED_ROTATION = 1.5f * M_PI;
-constexpr float BLACK_ROTATION = 0.5f * M_PI;
-
 CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWidget *parent, Qt::WindowFlags f)
 	: QFrame(parent, f), 
 	path_image_(500, 500, QImage::Format_ARGB32), 
@@ -45,25 +42,6 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 	connect(update_timer_, SIGNAL(timeout()), this, SLOT(onUpdate()));
 
 	nh_ = node_handle;
-	rcl_interfaces::msg::IntegerRange range;
-	range.from_value = 0;
-	range.step = 1;
-	range.to_value = 255;
-	rcl_interfaces::msg::ParameterDescriptor background_r_descriptor;
-	background_r_descriptor.description = "Red channel of the background color";
-	background_r_descriptor.integer_range.push_back(range);
-	rcl_interfaces::msg::ParameterDescriptor background_g_descriptor;
-	background_g_descriptor.description = "Green channel of the background color";
-	background_g_descriptor.integer_range.push_back(range);
-	rcl_interfaces::msg::ParameterDescriptor background_b_descriptor;
-	background_b_descriptor.description = "Blue channel of the background color";
-	background_b_descriptor.integer_range.push_back(range);
-	nh_->declare_parameter(
-		"background_r", rclcpp::ParameterValue(RED_SQUARES_BG_RGB[0]), background_r_descriptor);
-	nh_->declare_parameter(
-		"background_g", rclcpp::ParameterValue(RED_SQUARES_BG_RGB[1]), background_g_descriptor);
-	nh_->declare_parameter(
-		"background_b", rclcpp::ParameterValue(RED_SQUARES_BG_RGB[2]), background_b_descriptor);
 
 	rcl_interfaces::msg::ParameterDescriptor holonomic_descriptor;
 	holonomic_descriptor.description = "If true, then turtles will be holonomic";
@@ -122,7 +100,6 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 
 	RCLCPP_INFO(
 		nh_->get_logger(), "Starting turtle checkers board with node name %s", nh_->get_fully_qualified_name());
-
 
 	const float meter = red_turtle_images_[0].height(); // Assume we have at least one red image
 	const float width_in_meters = (width() - 1) / meter;
@@ -207,19 +184,19 @@ std::string CheckersBoardFrame::spawnTurtle(const std::string &name, bool red, f
 	{
 		red_turtles_[name] = std::make_shared<Turtle>(
 			nh_, name, red_turtle_images_[static_cast<int>(image_index)],
-			QPointF(x, y), RED_ROTATION);
+			QPointF(x, y));
 		RCLCPP_INFO(
-			nh_->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-			name.c_str(), x, y, RED_ROTATION);
+			nh_->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f]",
+			name.c_str(), x, y);
 	}
 	else // black
 	{
 		black_turtles_[name] = std::make_shared<Turtle>(
 			nh_, name, black_turtle_images_[static_cast<int>(image_index)],
-			QPointF(x, y), BLACK_ROTATION);
+			QPointF(x, y));
 		RCLCPP_INFO(
-			nh_->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-			name.c_str(), x, y, BLACK_ROTATION);
+			nh_->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f]",
+			name.c_str(), x, y);
 	}
 	update();
 

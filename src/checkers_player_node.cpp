@@ -1,31 +1,28 @@
-#include <memory>
+#include "checkers_player_node.hpp"
+#include "checkers_board_frame.hpp"
 
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
-using std::placeholders::_1;
+#include <rclcpp/rclcpp.hpp>
 
-class GamePlayerNode : public rclcpp::Node
-{
-public:
-    GamePlayerNode()
-        : Node("game_player_node")
-    {
-        subscription_ = this->create_subscription<std_msgs::msg::String>(
-            "topic", 10, std::bind(&GamePlayerNode::topic_callback, this, _1));
-    }
-
-private:
-    void topic_callback(const std_msgs::msg::String::SharedPtr msg) const
-    {
-        RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
-    }
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
-};
-
-int main(int argc, char* argv[])
+CheckersPlayerNode::CheckersPlayerNode(int & argc, char ** argv)
+    : QApplication(argc, argv)
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<GamePlayerNode>());
-    rclcpp::shutdown();
-    return 0;
+    board_node = rclcpp::Node::make_shared("checkers_board_node");
+    /*publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
+    timer_ = this->create_wall_timer(
+        500ms, std::bind(&CheckersPlayerNode::timer_callback, this));*/
+}
+
+int CheckersPlayerNode::exec()
+{
+    CheckersBoardFrame frame(board_node);
+    frame.show();
+
+    return QApplication::exec();
+}
+
+int main(int argc, char **argv)
+{
+    CheckersPlayerNode node(argc, argv);
+    return node.exec();
 }

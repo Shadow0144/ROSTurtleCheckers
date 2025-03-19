@@ -28,7 +28,7 @@ class Turtle
 public:
     Turtle(
         rclcpp::Node::SharedPtr &nh, const std::string &real_name, const QImage &turtle_image,
-        const QPointF &pos, float orient);
+        const QPointF &post);
 
     bool update(
         double dt, QPainter &path_painter, const QImage &path_image, qreal canvas_width,
@@ -41,21 +41,11 @@ private:
     // turtlesim_msgs::srv::TeleportAbsolute::Response::SharedPtr);
     // void rotateAbsoluteAcceptCallback(const std::shared_ptr<RotateAbsoluteGoalHandle>);
 
-    void rotateImage();
-
     rclcpp::Node::SharedPtr nh_;
 
     QImage turtle_image_;
-    QImage turtle_rotated_image_;
 
     QPointF pos_;
-    qreal orient_;
-
-    qreal lin_vel_x_;
-    qreal lin_vel_y_;
-    qreal ang_vel_;
-    bool pen_on_;
-    QPen pen_;
 
     /*
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr velocity_sub_;
@@ -79,16 +69,14 @@ private:
 
     struct TeleportRequest
     {
-        TeleportRequest(float x, float y, qreal _theta, qreal _linear, bool _relative)
+        TeleportRequest(float x, float y, qreal _linear, bool _relative)
             : pos(x, y),
-              theta(_theta),
               linear(_linear),
               relative(_relative)
         {
         }
 
         QPointF pos;
-        qreal theta;
         qreal linear;
         bool relative;
     };

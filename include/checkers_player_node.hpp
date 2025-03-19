@@ -10,10 +10,10 @@
 
 #include <QApplication>
 
-class CheckersBoardNode : public QApplication
+class CheckersPlayerNode : public QApplication
 {
 public:
-    explicit CheckersBoardNode(int & argc, char ** argv);
+    explicit CheckersPlayerNode(int & argc, char ** argv);
 
     int exec();
 
