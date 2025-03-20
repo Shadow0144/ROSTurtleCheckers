@@ -19,4 +19,6 @@ public:
 
 private:
     std::shared_ptr<rclcpp::Node> player_node;
+
+    char * player_name;
 };

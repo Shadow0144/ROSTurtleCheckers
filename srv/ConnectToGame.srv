@@ -1,0 +1,4 @@
+string player_name
+---
+string lobby_name
+bool black_player

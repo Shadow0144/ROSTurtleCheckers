@@ -1,4 +1,4 @@
-#include "checkers_board_frame.hpp"
+#include "CheckersBoardFrame.hpp"
 
 #include <QPointF>
 

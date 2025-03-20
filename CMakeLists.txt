@@ -31,19 +31,21 @@ endif()
 
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
-qt5_wrap_cpp(checkers_player_node_MOCS include/checkers_board_frame.hpp)
+qt5_wrap_cpp(CheckersBoardFrame_MOCS include/CheckersBoardFrame.hpp)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/AnnounceGameResult.msg"
   "msg/StartNewGame.msg"
+  "srv/ConnectToGame.srv"
+  "srv/RequestNextMove.srv"
   "srv/RequestNextPiece.srv"
 )
 
 add_executable(checkers_player_node 
-  src/turtle_piece.cpp
-  src/checkers_board_frame.cpp 
-  src/checkers_player_node.cpp
-  ${checkers_player_node_MOCS})
+  src/TurtlePiece.cpp
+  src/CheckersBoardFrame.cpp 
+  src/CheckersPlayerNode.cpp
+  ${CheckersBoardFrame_MOCS})
 ament_target_dependencies(checkers_player_node
   ament_index_cpp
   rclcpp
@@ -53,7 +55,7 @@ ament_target_dependencies(checkers_player_node
 target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
-add_executable(checkers_game_node src/checkers_game_node.cpp)
+add_executable(checkers_game_node src/CheckersGameNode.cpp)
 ament_target_dependencies(checkers_game_node rclcpp std_msgs)
 
 install(TARGETS

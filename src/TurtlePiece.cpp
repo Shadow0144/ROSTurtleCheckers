@@ -1,4 +1,4 @@
-#include "turtle_piece.hpp"
+#include "TurtlePiece.hpp"
 
 #include <QColor>
 #include <QRgb>

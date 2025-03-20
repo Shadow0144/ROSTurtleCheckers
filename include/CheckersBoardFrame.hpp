@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
-#include "turtle_piece.hpp" // NO LINT
+#include "TurtlePiece.hpp" // NO LINT
 #endif
 
 #include <QFrame>
