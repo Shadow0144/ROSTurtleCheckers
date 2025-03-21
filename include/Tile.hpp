@@ -24,12 +24,12 @@ public:
         TurtlePieceColor turtlePieceColor,
         TurtlePieceColor turtlePieceKinging);
 
-    void setTurtlePieceColor(TurtlePieceColor turtlePieceColor);
+    void setTurtlePieceColor(const TurtlePieceColor &turtlePieceColor);
     TurtlePieceColor getTurtlePieceColor();
 
     TurtlePieceColor getTurtlePieceKinging();
 
-    std::vector<uint32_t> getCurrentlyReachableTiles(std::vector<Tile> tiles); // Get the list of tiles the piece currently on this tile can reach (including by jumping)
+    std::vector<uint32_t> getCurrentlyReachableTiles(const std::vector<Tile> &tiles); // Get the list of tiles the piece currently on this tile can reach (including by jumping)
 
 private:
     std::vector<uint32_t> _reachableTilesBlack;

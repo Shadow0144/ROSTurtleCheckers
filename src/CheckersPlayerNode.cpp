@@ -1,5 +1,4 @@
 #include "CheckersPlayerNode.hpp"
-#include "CheckersBoardFrame.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -35,13 +34,17 @@ CheckersPlayerNode::CheckersPlayerNode(int & argc, char ** argv)
     // Try to subscribe to a game and connect to a lobby
     std::cout << "Player " << player_name << " searching for lobby..." << std::endl;
 
+    // Black starts
+    player_color = TurtlePiece::TurtleColor::Black;
+    game_state = CheckersBoardFrame::GameState::SelectPiece;
+
     player_node = rclcpp::Node::make_shared("checkers_player_node");
 }
 
 int CheckersPlayerNode::exec()
 {
-    CheckersBoardFrame frame(player_node);
-    frame.show();
+    checkers_board = std::make_unique<CheckersBoardFrame>(player_node, player_color, game_state);
+    checkers_board->show();
 
     return QApplication::exec();
 }

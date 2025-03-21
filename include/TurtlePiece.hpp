@@ -12,14 +12,27 @@
 class TurtlePiece
 {
 public:
+    enum class TurtleColor
+    {
+        Black,
+        Red
+    };
+
     TurtlePiece(
-        const std::string &name, 
+        const std::string &name,
+        TurtleColor color,
         const QImage &turtle_image,
         const QImage &highlight_image,
         const QImage &king_image,
         const QPointF &position,
         float angle);
 
+    TurtleColor getColor();
+
+    bool getHighlighted();
+    bool getKinged();
+
+    void toggleHighlight();
     void toggleHighlight(bool highlight);
 
     void toggleKingship(bool king);
@@ -29,6 +42,8 @@ public:
 
 private:
     std::string name_;
+
+    TurtleColor color_;
 
     QImage turtle_image_;
     QImage turtle_rotated_image_;

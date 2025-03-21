@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TurtlePiece.hpp"
+
 #include <QPainter>
 #include <QPen>
 #include <QPointF>
@@ -15,10 +17,18 @@ public:
 
     QPointF getCenterPosition();
 
+    bool getTileHighlighted();
+
     bool containsPoint(QPoint point);
 
-    void toggleHighlight();
-    void toggleHighlight(bool highlight);
+    void setTurtlePiece(TurtlePiecePtr turtle);
+
+    bool containsPiece(TurtlePiece::TurtleColor color);
+
+    bool togglePieceHighlight();
+
+    void toggleTileHighlight();
+    void toggleTileHighlight(bool highlight);
 
     void paint(QPainter &painter);
 
@@ -34,6 +44,8 @@ private:
     float tile_height_;
 
     bool highlighted;
+
+    TurtlePiecePtr contained_turtle;
 };
 
 typedef std::shared_ptr<TileRender> TileRenderPtr;

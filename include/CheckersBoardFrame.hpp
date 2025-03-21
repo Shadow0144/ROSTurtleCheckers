@@ -29,8 +29,19 @@ class CheckersBoardFrame : public QFrame
 {
 	Q_OBJECT
 public:
+	enum class GameState
+	{
+		SelectPiece,
+		SelectTile,
+		WaitingOnOtherPlayer,
+		GameFinished
+	};
+
 	CheckersBoardFrame(
-		rclcpp::Node::SharedPtr &node_handle, QWidget *parent = 0,
+		rclcpp::Node::SharedPtr &node_handle,
+		TurtlePiece::TurtleColor player_color,
+		GameState game_state,
+		QWidget *parent = 0,
 		Qt::WindowFlags f = Qt::WindowFlags());
 	~CheckersBoardFrame();
 
@@ -68,6 +79,10 @@ private:
 	QImage path_image_;
 	QPainter path_painter_;
 
+	TurtlePiece::TurtleColor player_color_;
+
+	GameState game_state_;
+
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr clear_srv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv_;
 	rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
@@ -87,3 +102,6 @@ private:
 	TileRenderPtr tile_renders[NUM_PLAYABLE_TILES];
 	int highlighted_tile = -1; // No tile is highlighted
 };
+
+typedef std::unique_ptr<CheckersBoardFrame> CheckersBoardFrameUniPtr;
+typedef std::shared_ptr<CheckersBoardFrame> CheckersBoardFrameShrPtr;

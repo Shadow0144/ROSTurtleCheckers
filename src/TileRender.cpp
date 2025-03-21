@@ -29,6 +29,11 @@ QPointF TileRender::getCenterPosition()
     return center_position_;
 }
 
+bool TileRender::getTileHighlighted()
+{
+    return highlighted;
+}
+
 bool TileRender::containsPoint(QPoint point)
 {
     return point.x() >= left &&
@@ -37,12 +42,32 @@ bool TileRender::containsPoint(QPoint point)
            point.y() <= bottom;
 }
 
-void TileRender::toggleHighlight()
+void TileRender::setTurtlePiece(TurtlePiecePtr turtle)
+{
+    contained_turtle = turtle;
+}
+
+bool TileRender::containsPiece(TurtlePiece::TurtleColor color)
+{
+    return (contained_turtle && (contained_turtle->getColor() == color));
+}
+
+bool TileRender::togglePieceHighlight()
+{
+    if (contained_turtle)
+    {
+        contained_turtle->toggleHighlight();
+        return contained_turtle->getHighlighted();
+    }
+    return false;
+}
+
+void TileRender::toggleTileHighlight()
 {
     highlighted = !highlighted;
 }
 
-void TileRender::toggleHighlight(bool highlight)
+void TileRender::toggleTileHighlight(bool highlight)
 {
     highlighted = highlight;
 }

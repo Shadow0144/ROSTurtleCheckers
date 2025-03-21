@@ -9,12 +9,14 @@
 
 TurtlePiece::TurtlePiece(
     const std::string &name,
+    TurtlePiece::TurtleColor color,
     const QImage &turtle_image,
     const QImage &highlight_image,
     const QImage &king_image,
     const QPointF &position,
     float angle)
     : name_(name),
+      color_(color),
       turtle_image_(turtle_image),
       highlight_image_(highlight_image),
       king_image_(king_image),
@@ -32,6 +34,26 @@ TurtlePiece::TurtlePiece(
 
   highlighted = false;
   kinged = false;
+}
+
+TurtlePiece::TurtleColor TurtlePiece::getColor()
+{
+  return color_;
+}
+
+bool TurtlePiece::getHighlighted()
+{
+  return highlighted;
+}
+
+bool TurtlePiece::getKinged()
+{
+  return kinged;
+}
+
+void TurtlePiece::toggleHighlight()
+{
+  highlighted = !highlighted;
 }
 
 void TurtlePiece::toggleHighlight(bool highlight)

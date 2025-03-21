@@ -16,7 +16,7 @@ Tile::Tile(
 {
 }
 
-void Tile::setTurtlePieceColor(TurtlePieceColor turtlePieceColor)
+void Tile::setTurtlePieceColor(const TurtlePieceColor &turtlePieceColor)
 {
     _turtlePieceColor = turtlePieceColor;
 }
@@ -31,7 +31,7 @@ Tile::TurtlePieceColor Tile::getTurtlePieceKinging()
     return _turtlePieceKinging;
 }
 
-std::vector<uint32_t> getCurrentlyReachableTiles(std::vector<Tile> tiles)
+std::vector<uint32_t> getCurrentlyReachableTiles(const std::vector<Tile> &tiles)
 {
     return std::vector<uint32_t>{};
 }

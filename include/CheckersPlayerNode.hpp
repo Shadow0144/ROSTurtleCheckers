@@ -10,6 +10,9 @@
 
 #include <QApplication>
 
+#include "TurtlePiece.hpp"
+#include "CheckersBoardFrame.hpp"
+
 class CheckersPlayerNode : public QApplication
 {
 public:
@@ -20,5 +23,9 @@ public:
 private:
     std::shared_ptr<rclcpp::Node> player_node;
 
+    CheckersBoardFrameUniPtr checkers_board;
+
     char * player_name;
+    TurtlePiece::TurtleColor player_color;
+    CheckersBoardFrame::GameState game_state;
 };
