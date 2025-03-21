@@ -18,7 +18,6 @@ constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
 
 constexpr size_t NUM_COLS_ROWS = 8u;
 
-constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
 constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
 
 constexpr int TILE_WIDTH = 55;
@@ -83,6 +82,12 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 		QImage r_img;
 		r_img.load(images_path + turtles_images[i] + "_red.png");
 		red_turtle_images_.append(r_img);
+		QImage h_img;
+		h_img.load(images_path + turtles_images[i] + "_highlight.png");
+		highlight_turtle_images_.append(h_img);
+		QImage k_img;
+		k_img.load(images_path + turtles_images[i] + "_king.png");
+		king_turtle_images_.append(k_img);
 	}
 
 	clear();
@@ -95,16 +100,7 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 		nh_->create_service<std_srvs::srv::Empty>(
 			"reset",
 			std::bind(&CheckersBoardFrame::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
-	/*
-	spawn_srv_ =
-	  nh_->create_service<turtlesim_msgs::srv::Spawn>(
-	  "spawn",
-	  std::bind(&CheckersBoardFrame::spawnCallback, this, std::placeholders::_1, std::placeholders::_2));
-	kill_srv_ =
-	  nh_->create_service<turtlesim_msgs::srv::Kill>(
-	  "kill",
-	  std::bind(&CheckersBoardFrame::killCallback, this, std::placeholders::_1, std::placeholders::_2));
-	*/
+
 	rclcpp::QoS qos(rclcpp::KeepLast(100), rmw_qos_profile_sensor_data);
 	parameter_event_sub_ = nh_->create_subscription<rcl_interfaces::msg::ParameterEvent>(
 		"/parameter_events", qos,
@@ -113,8 +109,32 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 	RCLCPP_INFO(
 		nh_->get_logger(), "Starting turtle checkers board with node name %s", nh_->get_fully_qualified_name());
 
+	spawnTiles();
+	spawnPieces();
+}
+
+CheckersBoardFrame::~CheckersBoardFrame()
+{
+	delete update_timer_;
+}
+
+void CheckersBoardFrame::parameterEventCallback(
+	const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
+{
+	// Only consider events from this node
+	if (event->node == nh_->get_fully_qualified_name())
+	{
+		// Since parameter events for this event aren't expected frequently just always call update()
+		update();
+	}
+}
+
+void CheckersBoardFrame::spawnTiles()
+{
 	const float tile_half_width = TILE_WIDTH / 2.0f;
 	const float tile_half_height = TILE_HEIGHT / 2.0f;
+	float tile_centers_x[NUM_PLAYABLE_TILES];
+	float tile_centers_y[NUM_PLAYABLE_TILES];
 	for (size_t i = 0u; i < NUM_COLS_ROWS; i++)
 	{
 		if (i % 2u == 0u)
@@ -137,23 +157,9 @@ CheckersBoardFrame::CheckersBoardFrame(rclcpp::Node::SharedPtr &node_handle, QWi
 		tile_centers_y[(i * 4) + 2] = (i * TILE_HEIGHT) + tile_half_height;
 		tile_centers_y[(i * 4) + 3] = (i * TILE_HEIGHT) + tile_half_height;
 	}
-
-	spawnPieces();
-}
-
-CheckersBoardFrame::~CheckersBoardFrame()
-{
-	delete update_timer_;
-}
-
-void CheckersBoardFrame::parameterEventCallback(
-	const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event)
-{
-	// Only consider events from this node
-	if (event->node == nh_->get_fully_qualified_name())
+	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
-		// Since parameter events for this event aren't expected frequently just always call update()
-		update();
+		tile_renders[i] = std::make_shared<TileRender>(QPointF(tile_centers_x[i], tile_centers_y[i]), TILE_WIDTH, TILE_HEIGHT);
 	}
 }
 
@@ -167,20 +173,22 @@ void CheckersBoardFrame::spawnPieces()
 	// Black
 	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
 	{
+		auto center = tile_renders[i]->getCenterPosition();
 		spawnTurtle("Black" + std::to_string(i + 1),
 					false,
-					tile_centers_x[i],
-					tile_centers_y[i],
+					center.x(),
+					center.y(),
 					1.0f * M_PI,
 					black_image_index);
 	}
 	// Red
 	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
 	{
+		auto center = tile_renders[i + 20]->getCenterPosition();
 		spawnTurtle("Red" + std::to_string(i + 1),
 					true,
-					tile_centers_x[i + 20],
-					tile_centers_y[i + 20],
+					center.x(),
+					center.y(),
 					0.0f * M_PI,
 					red_image_index);
 	}
@@ -196,8 +204,12 @@ std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
 	if (black)
 	{
 		black_turtles_[name] = std::make_shared<TurtlePiece>(
-			name, black_turtle_images_[static_cast<int>(image_index)],
-			QPointF(x, y), angle);
+			name,
+			black_turtle_images_[static_cast<int>(image_index)],
+			highlight_turtle_images_[static_cast<int>(image_index)],
+			king_turtle_images_[static_cast<int>(image_index)],
+			QPointF(x, y),
+			angle);
 		RCLCPP_INFO(
 			nh_->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f], theta=[%f]",
 			name.c_str(), x, y, angle);
@@ -205,8 +217,12 @@ std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
 	else // red
 	{
 		red_turtles_[name] = std::make_shared<TurtlePiece>(
-			name, red_turtle_images_[static_cast<int>(image_index)],
-			QPointF(x, y), angle);
+			name,
+			red_turtle_images_[static_cast<int>(image_index)],
+			highlight_turtle_images_[static_cast<int>(image_index)],
+			king_turtle_images_[static_cast<int>(image_index)],
+			QPointF(x, y),
+			angle);
 		RCLCPP_INFO(
 			nh_->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f], theta=[%f]",
 			name.c_str(), x, y, angle);
@@ -218,9 +234,6 @@ std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
 
 void CheckersBoardFrame::clear()
 {
-	// Make all pixels fully transparent
-	path_image_.fill(qRgba(255, 255, 255, 0));
-	update();
 }
 
 void CheckersBoardFrame::onUpdate()
@@ -241,28 +254,17 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	(void)event; // NO LINT
 	QPainter painter(this);
 
-	float tile_width = width() / NUM_COLS_ROWS;
-	float tile_height = height() / NUM_COLS_ROWS;
+	// Fill the background in red
+	QRgb background_color = qRgb(RED_SQUARES_BG_RGB[0], RED_SQUARES_BG_RGB[1], RED_SQUARES_BG_RGB[2]);
+	painter.fillRect(0, 0, width(), height(), background_color);
 
-	for (size_t i = 0u; i < NUM_COLS_ROWS; i++)
+	// Draw the black tiles over the red background
+	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
-		for (size_t j = 0u; j < NUM_COLS_ROWS; j++)
-		{
-			int r = ((i + j) % 2 == 0) ? RED_SQUARES_BG_RGB[0] : BLACK_SQUARES_BG_RGB[0];
-			int g = ((i + j) % 2 == 0) ? RED_SQUARES_BG_RGB[1] : BLACK_SQUARES_BG_RGB[1];
-			int b = ((i + j) % 2 == 0) ? RED_SQUARES_BG_RGB[2] : BLACK_SQUARES_BG_RGB[2];
-			QRgb background_color = qRgb(r, g, b);
-			painter.fillRect(
-				tile_width * i,
-				tile_height * j,
-				tile_width * (i + 1),
-				tile_height * (j + 1),
-				background_color);
-		}
+		tile_renders[i]->paint(painter);
 	}
 
-	painter.drawImage(QPoint(0, 0), path_image_);
-
+	// Draw the black turtles
 	TurtlePiecesMap::iterator bit = black_turtles_.begin();
 	TurtlePiecesMap::iterator bend = black_turtles_.end();
 	for (; bit != bend; ++bit)
@@ -270,6 +272,7 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 		bit->second->paint(painter);
 	}
 
+	// Draw the red turtles
 	TurtlePiecesMap::iterator rit = red_turtles_.begin();
 	TurtlePiecesMap::iterator rend = red_turtles_.end();
 	for (; rit != rend; ++rit)

@@ -1,6 +1,7 @@
 #pragma once
 
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+#include "TileRender.hpp"
 #include "TurtlePiece.hpp" // NO LINT
 #endif
 
@@ -47,6 +48,8 @@ private slots:
 private:
 	void clear();
 
+	void spawnTiles();
+
 	void clearPieces();
 	void spawnPieces();
 
@@ -77,8 +80,9 @@ private:
 	size_t black_image_index = 0u;
 	QVector<QImage> red_turtle_images_;
 	size_t red_image_index = 0u;
+	QVector<QImage> highlight_turtle_images_;
+	QVector<QImage> king_turtle_images_;
 
 	constexpr static size_t NUM_PLAYABLE_TILES = 32u;
-	float tile_centers_x[NUM_PLAYABLE_TILES];
-	float tile_centers_y[NUM_PLAYABLE_TILES];
+	TileRenderPtr tile_renders[NUM_PLAYABLE_TILES];
 };
