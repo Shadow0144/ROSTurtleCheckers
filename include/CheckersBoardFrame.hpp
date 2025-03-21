@@ -14,15 +14,14 @@
 
 // This prevents a MOC error with versions of boost >= 1.48
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
-#include <map>
-#include <string>
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
 #include <rcl_interfaces/msg/parameter_event.hpp>
 #include <std_srvs/srv/empty.hpp>
-// #include <turtlesim_msgs/srv/spawn.hpp>
-// #include <turtlesim_msgs/srv/kill.hpp>
+
+#include <map>
+#include <string>
 #endif
 
 // A single animation frame of the Turtle Checkers game
@@ -37,9 +36,9 @@ public:
 
 	void setupGame();
 
-	std::string spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t image_index);
-
 protected:
+	void mousePressEvent(QMouseEvent *event) override;
+
 	void paintEvent(QPaintEvent *event);
 
 private slots:
@@ -52,6 +51,7 @@ private:
 
 	void clearPieces();
 	void spawnPieces();
+	std::string spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t image_index);
 
 	bool clearCallback(
 		const std_srvs::srv::Empty::Request::SharedPtr,
@@ -85,4 +85,5 @@ private:
 
 	constexpr static size_t NUM_PLAYABLE_TILES = 32u;
 	TileRenderPtr tile_renders[NUM_PLAYABLE_TILES];
+	int highlighted_tile = -1; // No tile is highlighted
 };

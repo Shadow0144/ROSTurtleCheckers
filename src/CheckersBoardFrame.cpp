@@ -129,6 +129,54 @@ void CheckersBoardFrame::parameterEventCallback(
 	}
 }
 
+void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
+{
+	if (event->button() == Qt::LeftButton)
+	{
+		int clicked_tile = -1;
+		// Check for collisions with tiles
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			if (tile_renders[i]->containsPoint(event->pos()))
+			{
+				clicked_tile = i;
+				break; // Only 1 tile can contain the mouse at any time
+			}
+		}
+
+		// -1 marks no tile is highlighted
+		if (clicked_tile >= 0)
+		{
+			if (highlighted_tile >= 0)
+			{
+				if (clicked_tile == highlighted_tile)
+				{
+					// If we clicked a highlighted tile, unhighlight it
+					tile_renders[clicked_tile]->toggleHighlight(false);
+					highlighted_tile = -1;
+				}
+				else
+				{
+					// If we clicked a new tile while one was already highlighted,
+					// unhighlight the old one and highlight the new one
+					tile_renders[highlighted_tile]->toggleHighlight(false);
+					tile_renders[clicked_tile]->toggleHighlight(true);
+					highlighted_tile = clicked_tile;
+				}
+			}
+			else
+			{
+				// If there are no highlighted tiles, highlight the new one
+				tile_renders[clicked_tile]->toggleHighlight(true);
+				highlighted_tile = clicked_tile;
+			}
+		}
+
+		update();
+	}
+	QFrame::mousePressEvent(event); // Ensure base class event handling
+}
+
 void CheckersBoardFrame::spawnTiles()
 {
 	const float tile_half_width = TILE_WIDTH / 2.0f;
@@ -210,9 +258,9 @@ std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
 			king_turtle_images_[static_cast<int>(image_index)],
 			QPointF(x, y),
 			angle);
-		RCLCPP_INFO(
+		/*RCLCPP_INFO(
 			nh_->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-			name.c_str(), x, y, angle);
+			name.c_str(), x, y, angle);*/
 	}
 	else // red
 	{
@@ -223,9 +271,9 @@ std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
 			king_turtle_images_[static_cast<int>(image_index)],
 			QPointF(x, y),
 			angle);
-		RCLCPP_INFO(
+		/*RCLCPP_INFO(
 			nh_->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-			name.c_str(), x, y, angle);
+			name.c_str(), x, y, angle);*/
 	}
 	update();
 

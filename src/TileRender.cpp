@@ -19,11 +19,27 @@ TileRender::TileRender(const QPointF &center_position, size_t tile_width, size_t
     auto tile_half_height = 0.5f * tile_height_;
     left = center_position_.x() - tile_half_width;
     top = center_position_.y() - tile_half_height;
+    right = center_position_.x() + tile_half_width;
+    bottom = center_position_.y() + tile_half_height;
+    highlighted = false;
 }
 
 QPointF TileRender::getCenterPosition()
 {
     return center_position_;
+}
+
+bool TileRender::containsPoint(QPoint point)
+{
+    return point.x() >= left &&
+           point.y() >= top &&
+           point.x() <= right &&
+           point.y() <= bottom;
+}
+
+void TileRender::toggleHighlight()
+{
+    highlighted = !highlighted;
 }
 
 void TileRender::toggleHighlight(bool highlight)

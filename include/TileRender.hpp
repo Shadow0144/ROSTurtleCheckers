@@ -15,8 +15,11 @@ public:
 
     QPointF getCenterPosition();
 
+    bool containsPoint(QPoint point);
+
+    void toggleHighlight();
     void toggleHighlight(bool highlight);
-    
+
     void paint(QPainter &painter);
 
 private:
@@ -24,6 +27,9 @@ private:
 
     float left;
     float top;
+    float right;
+    float bottom;
+
     float tile_width_;
     float tile_height_;
 
