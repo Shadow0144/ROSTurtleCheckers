@@ -42,6 +42,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 add_executable(checkers_player_node 
+  src/Tile.cpp
   src/TurtlePiece.cpp
   src/CheckersBoardFrame.cpp 
   src/CheckersPlayerNode.cpp
@@ -55,8 +56,13 @@ ament_target_dependencies(checkers_player_node
 target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
-add_executable(checkers_game_node src/CheckersGameNode.cpp)
-ament_target_dependencies(checkers_game_node rclcpp std_msgs)
+add_executable(checkers_game_node 
+  src/CheckersGameNode.cpp
+  src/CheckersGameLobby.cpp
+  src/Tile.cpp)
+ament_target_dependencies(checkers_game_node
+  rclcpp 
+  std_msgs)
 
 install(TARGETS
   checkers_player_node

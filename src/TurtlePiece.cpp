@@ -29,6 +29,9 @@ TurtlePiece::TurtlePiece(
 void TurtlePiece::move(
   const QPointF &new_position)
 {
+  position_ = new_position;
+  position_.rx() -= 0.5 * turtle_rotated_image_.width();
+  position_.ry() -= 0.5 * turtle_rotated_image_.height();
 }
 
 void TurtlePiece::paint(QPainter &painter)

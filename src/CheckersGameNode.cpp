@@ -3,6 +3,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include "CheckersGameLobby.hpp"
+
 using std::placeholders::_1;
 
 class GamePlayerNode : public rclcpp::Node
@@ -11,7 +13,6 @@ public:
     GamePlayerNode()
         : Node("checkers_game_node")
     {
-
         // A game node creates a 2-player game for player nodes to publish their moves to
         // The game node publishes when it is ready for which player's next move
         subscription_ = this->create_subscription<std_msgs::msg::String>(
