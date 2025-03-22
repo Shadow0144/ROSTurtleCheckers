@@ -23,7 +23,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Widgets)
-find_package(rosidl_default_generators REQUIRED)
+find_package(turtle_checkers_interfaces REQUIRED)
 
 if (Qt5_POSITION_INDEPENDENT_CODE)
   SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -32,14 +32,6 @@ endif()
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
 qt5_wrap_cpp(CheckersBoardFrame_MOCS include/CheckersBoardFrame.hpp)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/AnnounceGameResult.msg"
-  "msg/StartNewGame.msg"
-  "srv/ConnectToGame.srv"
-  "srv/RequestNextMove.srv"
-  "srv/RequestNextPiece.srv"
-)
 
 add_executable(checkers_player_node 
   src/TileRender.cpp
@@ -52,7 +44,8 @@ ament_target_dependencies(checkers_player_node
   rclcpp
   std_msgs
   std_srvs
-  geometry_msgs)
+  geometry_msgs
+  turtle_checkers_interfaces)
 target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
@@ -62,7 +55,8 @@ add_executable(checkers_game_node
   src/CheckersGameNode.cpp)
 ament_target_dependencies(checkers_game_node
   rclcpp 
-  std_msgs)
+  std_msgs
+  turtle_checkers_interfaces)
 
 install(TARGETS
   checkers_player_node

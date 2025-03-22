@@ -22,6 +22,7 @@ public:
     bool containsPoint(QPoint point);
 
     void setTurtlePiece(TurtlePiecePtr turtle);
+    TurtlePiecePtr &getTurtlePiece();
 
     bool containsPiece(TurtlePiece::TurtleColor color);
 

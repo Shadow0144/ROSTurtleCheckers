@@ -20,6 +20,8 @@
 #include <rcl_interfaces/msg/parameter_event.hpp>
 #include <std_srvs/srv/empty.hpp>
 
+#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+
 #include <map>
 #include <string>
 #endif
@@ -71,6 +73,8 @@ private:
 		const std_srvs::srv::Empty::Request::SharedPtr,
 		std_srvs::srv::Empty::Response::SharedPtr);
 
+	void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
+
 	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
 
 	rclcpp::Node::SharedPtr nh_;
@@ -83,9 +87,13 @@ private:
 
 	GameState game_state_;
 
+	std::string selected_piece_;
+
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr clear_srv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv_;
 	rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
+
+	rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr requestReachableTilesClient;
 
 	typedef std::map<std::string, TurtlePiecePtr> TurtlePiecesMap;
 	TurtlePiecesMap black_turtles_;

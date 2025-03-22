@@ -48,7 +48,8 @@ void Tile::checkTilesAbove(const std::vector<Tile> &tiles, std::vector<uint32_t>
     int topLeftJumpableIndex = -1;
     int topRightJumpableIndex = -1;
 
-    for (int i = 0; i < tiles.size(); i++)
+    const int tileCount = static_cast<int>(tiles.size());
+    for (int i = 0; i < tileCount; i++)
     {
         // Check the tile to the top left of this one
         if (row_ > 0u && col_ > 0u &&
@@ -122,7 +123,8 @@ void Tile::checkTilesBelow(const std::vector<Tile> &tiles, std::vector<uint32_t>
     int bottomLeftJumpableIndex = -1;
     int bottomRightJumpableIndex = -1;
 
-    for (int i = 0; i < tiles.size(); i++)
+    const int tileCount = static_cast<int>(tiles.size());
+    for (int i = 0; i < tileCount; i++)
     {
         // Check the tile to the bottom left of this one
         if (row_ < MAX_COLS_ROW_INDEX && col_ > 0u &&

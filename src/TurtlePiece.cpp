@@ -36,6 +36,11 @@ TurtlePiece::TurtlePiece(
   kinged = false;
 }
 
+std::string &TurtlePiece::getName()
+{
+  return name_;
+}
+
 TurtlePiece::TurtleColor TurtlePiece::getColor()
 {
   return color_;

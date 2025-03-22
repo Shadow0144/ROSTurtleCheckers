@@ -27,6 +27,8 @@ public:
         const QPointF &position,
         float angle);
 
+    std::string &getName();
+
     TurtleColor getColor();
 
     bool getHighlighted();

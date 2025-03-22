@@ -47,6 +47,11 @@ void TileRender::setTurtlePiece(TurtlePiecePtr turtle)
     contained_turtle = turtle;
 }
 
+TurtlePiecePtr &TileRender::getTurtlePiece()
+{
+    return contained_turtle;
+}
+
 bool TileRender::containsPiece(TurtlePiece::TurtleColor color)
 {
     return (contained_turtle && (contained_turtle->getColor() == color));
