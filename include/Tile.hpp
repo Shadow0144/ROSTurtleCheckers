@@ -13,31 +13,29 @@ public:
         None,
         Black,
         Red,
-        King
+        BlackKing,
+        RedKing
     };
 
-    Tile(
-        const std::vector<uint32_t> &reachableTilesBlack,
-        const std::vector<uint32_t> &reachableTilesRed,
-        const std::unordered_map<uint32_t, std::vector<uint32_t>> &reachableTilesBlackJump,
-        const std::unordered_map<uint32_t, std::vector<uint32_t>> &reachableTilesRedJump,
-        TurtlePieceColor turtlePieceColor,
-        TurtlePieceColor turtlePieceKinging);
+    Tile(size_t row, size_t col);
+
+    size_t getRow() const;
+    size_t getCol() const;
 
     void setTurtlePieceColor(const TurtlePieceColor &turtlePieceColor);
-    TurtlePieceColor getTurtlePieceColor();
+    TurtlePieceColor getTurtlePieceColor() const;
 
-    TurtlePieceColor getTurtlePieceKinging();
-
-    std::vector<uint32_t> getCurrentlyReachableTiles(const std::vector<Tile> &tiles); // Get the list of tiles the piece currently on this tile can reach (including by jumping)
+    std::vector<uint32_t> getCurrentlyReachableTiles(const std::vector<Tile> &tiles) const; // Get the list of tiles the piece currently on this tile can reach (including by jumping)
 
 private:
-    std::vector<uint32_t> _reachableTilesBlack;
-    std::vector<uint32_t> _reachableTilesRed;
-    std::unordered_map<uint32_t, std::vector<uint32_t>> _reachableTilesBlackJump;
-    std::unordered_map<uint32_t, std::vector<uint32_t>> _reachableTilesRedJump;
-    TurtlePieceColor _turtlePieceColor;
-    TurtlePieceColor _turtlePieceKinging;
+    bool canJumpPiece(TurtlePieceColor otherPieceColor) const;
+    void checkTilesAbove(const std::vector<Tile> &tiles, std::vector<uint32_t> &reachableTiles) const;
+    void checkTilesBelow(const std::vector<Tile> &tiles, std::vector<uint32_t> &reachableTiles) const;
+
+    size_t row_;
+    size_t col_;
+
+    TurtlePieceColor _turtlePieceColor; // The color of the current piece (or None)
 };
 
 typedef std::shared_ptr<Tile> TilePtr;
