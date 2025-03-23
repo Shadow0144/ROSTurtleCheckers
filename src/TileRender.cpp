@@ -42,7 +42,7 @@ bool TileRender::containsPoint(QPoint point)
            point.y() <= bottom;
 }
 
-void TileRender::setTurtlePiece(TurtlePiecePtr turtle)
+void TileRender::setTurtlePiece(const TurtlePiecePtr &turtle)
 {
     contained_turtle = turtle;
 }
@@ -65,6 +65,14 @@ bool TileRender::togglePieceHighlight()
         return contained_turtle->getHighlighted();
     }
     return false;
+}
+
+void TileRender::togglePieceHighlight(bool highlight)
+{
+    if (contained_turtle)
+    {
+        contained_turtle->toggleHighlight(highlight);
+    }
 }
 
 void TileRender::toggleTileHighlight()

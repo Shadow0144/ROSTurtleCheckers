@@ -21,12 +21,13 @@ public:
 
     bool containsPoint(QPoint point);
 
-    void setTurtlePiece(TurtlePiecePtr turtle);
+    void setTurtlePiece(const TurtlePiecePtr &turtle);
     TurtlePiecePtr &getTurtlePiece();
 
     bool containsPiece(TurtlePiece::TurtleColor color);
 
     bool togglePieceHighlight();
+    void togglePieceHighlight(bool highlight);
 
     void toggleTileHighlight();
     void toggleTileHighlight(bool highlight);

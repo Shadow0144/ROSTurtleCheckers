@@ -64,7 +64,7 @@ private:
 
 	void clearPieces();
 	void spawnPieces();
-	std::string spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t image_index);
+	void spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t image_index);
 
 	bool clearCallback(
 		const std_srvs::srv::Empty::Request::SharedPtr,

@@ -7,6 +7,7 @@
 #include <functional>
 #include <string>
 #include <math.h>
+#include <chrono>
 
 #include "rcl_interfaces/msg/floating_point_range.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -19,6 +20,8 @@ constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
 constexpr size_t NUM_COLS_ROWS = 8u;
 
 constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
+
+constexpr size_t BLACK_OFFSET = 20u;
 
 constexpr int TILE_WIDTH = 55;
 constexpr int TILE_HEIGHT = 55;
@@ -114,13 +117,22 @@ CheckersBoardFrame::CheckersBoardFrame(
 		"/parameter_events", qos,
 		std::bind(&CheckersBoardFrame::parameterEventCallback, this, std::placeholders::_1));
 
-	requestReachableTilesClient = nh_->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
-
 	RCLCPP_INFO(
 		nh_->get_logger(), "Starting turtle checkers board with node name %s", nh_->get_fully_qualified_name());
 
 	spawnTiles();
 	spawnPieces();
+
+	requestReachableTilesClient = nh_->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
+	while (!requestReachableTilesClient->wait_for_service(std::chrono::seconds(1)))
+	{
+		if (!rclcpp::ok())
+		{
+			RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+			return;
+		}
+		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Service not available, waiting again...");
+	}
 }
 
 CheckersBoardFrame::~CheckersBoardFrame()
@@ -149,8 +161,9 @@ void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_che
 	const auto &highlightedTiles = result->reachable_tile_indices;
 	for (size_t i = 0u; i < highlightedTiles.size(); i++)
 	{
-		tile_renders[i]->toggleTileHighlight(true);
+		tile_renders[highlightedTiles[i]]->toggleTileHighlight(true);
 	}
+	update();
 }
 
 void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
@@ -161,29 +174,36 @@ void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
 		{
 		case GameState::SelectPiece:
 		{
-			if (!selected_piece_.empty())
+			bool selected = false;
+			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 			{
-				for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+				tile_renders[i]->togglePieceHighlight(false);
+				tile_renders[i]->toggleTileHighlight(false);
+			}
+			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+			{
+				if (tile_renders[i]->containsPoint(event->pos()) && tile_renders[i]->containsPiece(player_color_))
 				{
-					if (tile_renders[i]->containsPoint(event->pos()) && tile_renders[i]->containsPiece(player_color_))
+					if (selected_piece_ != tile_renders[i]->getTurtlePiece()->getName()) // If we've clicked a new piece, highlight it
 					{
 						selected_piece_ = tile_renders[i]->getTurtlePiece()->getName();
+						tile_renders[i]->togglePieceHighlight(true);
 						auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestReachableTiles::Request>();
 						request->piece_name = selected_piece_;
 						requestReachableTilesClient->async_send_request(request,
 																		std::bind(&CheckersBoardFrame::requestReachableTilesResponse, this, std::placeholders::_1));
-						tile_renders[i]->togglePieceHighlight();
-						break; // Only 1 tile can contain the mouse at any time
+						selected = true;
 					}
+					else // If we've clicked the same piece again, unselect it instead
+					{
+						selected_piece_.clear();
+					}
+					break; // Only 1 tile can contain the mouse at any time
 				}
 			}
-			else
+			if (!selected) // We clicked somewhere which isn't on a valid turtle, so clear the selected piece
 			{
 				selected_piece_.clear();
-				for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-				{
-					tile_renders[i]->toggleTileHighlight(false);
-				}
 			}
 		}
 		break;
@@ -287,38 +307,40 @@ void CheckersBoardFrame::clearPieces()
 void CheckersBoardFrame::spawnPieces()
 {
 	// Spawn all the checkers pieces
-	// Black
-	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
-	{
-		auto center = tile_renders[i]->getCenterPosition();
-		const auto &name = spawnTurtle("Black" + std::to_string(i + 1),
-									   false,
-									   center.x(),
-									   center.y(),
-									   1.0f * M_PI,
-									   black_image_index);
-		// tile_renders[i]->setTurtlePiece(black_turtles_[name]);
-	}
 	// Red
 	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
 	{
-		auto center = tile_renders[i + 20]->getCenterPosition();
-		const auto &name = spawnTurtle("Red" + std::to_string(i + 1),
-									   true,
-									   center.x(),
-									   center.y(),
-									   0.0f * M_PI,
-									   red_image_index);
-		// tile_renders[i]->setTurtlePiece(red_turtles_[name]);
+		std::string name = "Red" + std::to_string(i + 1);
+		auto center = tile_renders[i]->getCenterPosition();
+		spawnTurtle(name,
+					false,
+					center.x(),
+					center.y(),
+					1.0f * M_PI,
+					red_image_index);
+		tile_renders[i]->setTurtlePiece(red_turtles_[name]);
+	}
+	// Black
+	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
+	{
+		std::string name = "Black" + std::to_string(i + 1);
+		auto center = tile_renders[i + BLACK_OFFSET]->getCenterPosition();
+		spawnTurtle(name,
+					true,
+					center.x(),
+					center.y(),
+					0.0f * M_PI,
+					black_image_index);
+		tile_renders[i + BLACK_OFFSET]->setTurtlePiece(black_turtles_[name]);
 	}
 }
 
-std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
-											bool black,
-											float x,
-											float y,
-											float angle,
-											size_t image_index)
+void CheckersBoardFrame::spawnTurtle(const std::string &name,
+									 bool black,
+									 float x,
+									 float y,
+									 float angle,
+									 size_t image_index)
 {
 	if (black)
 	{
@@ -349,8 +371,6 @@ std::string CheckersBoardFrame::spawnTurtle(const std::string &name,
 			name.c_str(), x, y, angle);*/
 	}
 	update();
-
-	return name;
 }
 
 void CheckersBoardFrame::clear()
