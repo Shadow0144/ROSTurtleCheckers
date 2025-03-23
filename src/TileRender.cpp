@@ -7,8 +7,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-constexpr int HIGHLIGHTED_SQUARES_BG_RGB[3] = {0u, 0u, 255u};
-constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
+#include "CheckersConsts.hpp"
 
 TileRender::TileRender(const QPointF &center_position, size_t tile_width, size_t tile_height)
     : center_position_(center_position)
@@ -52,7 +51,7 @@ TurtlePiecePtr &TileRender::getTurtlePiece()
     return contained_turtle;
 }
 
-bool TileRender::containsPiece(TurtlePiece::TurtleColor color)
+bool TileRender::containsPiece(TurtlePieceColor color)
 {
     return (contained_turtle && (contained_turtle->getColor() == color));
 }

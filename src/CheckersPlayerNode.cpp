@@ -35,8 +35,8 @@ CheckersPlayerNode::CheckersPlayerNode(int & argc, char ** argv)
     std::cout << "Player " << player_name << " searching for lobby..." << std::endl;
 
     // Black starts
-    player_color = TurtlePiece::TurtleColor::Black;
-    game_state = CheckersBoardFrame::GameState::SelectPiece;
+    player_color = TurtlePieceColor::Black;
+    game_state = GameState::SelectPiece;
 
     player_node = rclcpp::Node::make_shared("checkers_player_node");
 }

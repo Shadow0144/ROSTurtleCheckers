@@ -9,18 +9,14 @@
 #include <string>
 #include <vector>
 
+#include "CheckersConsts.hpp"
+
 class TurtlePiece
 {
 public:
-    enum class TurtleColor
-    {
-        Black,
-        Red
-    };
-
     TurtlePiece(
         const std::string &name,
-        TurtleColor color,
+        TurtlePieceColor color,
         const QImage &turtle_image,
         const QImage &highlight_image,
         const QImage &king_image,
@@ -29,7 +25,7 @@ public:
 
     std::string &getName();
 
-    TurtleColor getColor();
+    TurtlePieceColor getColor();
 
     bool getHighlighted();
     bool getKinged();
@@ -45,7 +41,7 @@ public:
 private:
     std::string name_;
 
-    TurtleColor color_;
+    TurtlePieceColor color_;
 
     QImage turtle_image_;
     QImage turtle_rotated_image_;

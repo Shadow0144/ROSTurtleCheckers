@@ -14,28 +14,14 @@
 #include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-// Constants
-constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
-
-constexpr size_t NUM_COLS_ROWS = 8u;
-
-constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
-
-constexpr size_t BLACK_OFFSET = 20u;
-
-constexpr int TILE_WIDTH = 55;
-constexpr int TILE_HEIGHT = 55;
-constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
-constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
-
-constexpr float DEFAULT_BOARD_SCALE = 1.0f;
+#include "CheckersConsts.hpp"
 
 using std::placeholders::_1;
 
 CheckersBoardFrame::CheckersBoardFrame(
 	rclcpp::Node::SharedPtr &node_handle,
-	TurtlePiece::TurtleColor player_color,
-	CheckersBoardFrame::GameState game_state,
+	TurtlePieceColor player_color,
+	GameState game_state,
 	QWidget *parent,
 	Qt::WindowFlags f)
 	: QFrame(parent, f),
@@ -346,7 +332,7 @@ void CheckersBoardFrame::spawnTurtle(const std::string &name,
 	{
 		black_turtles_[name] = std::make_shared<TurtlePiece>(
 			name,
-			TurtlePiece::TurtleColor::Black,
+			TurtlePieceColor::Black,
 			black_turtle_images_[static_cast<int>(image_index)],
 			highlight_turtle_images_[static_cast<int>(image_index)],
 			king_turtle_images_[static_cast<int>(image_index)],
@@ -360,7 +346,7 @@ void CheckersBoardFrame::spawnTurtle(const std::string &name,
 	{
 		red_turtles_[name] = std::make_shared<TurtlePiece>(
 			name,
-			TurtlePiece::TurtleColor::Red,
+			TurtlePieceColor::Red,
 			red_turtle_images_[static_cast<int>(image_index)],
 			highlight_turtle_images_[static_cast<int>(image_index)],
 			king_turtle_images_[static_cast<int>(image_index)],

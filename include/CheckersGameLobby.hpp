@@ -7,19 +7,12 @@
 #include <vector>
 #include <unordered_map>
 
+#include "CheckersConsts.hpp"
 #include "Tile.hpp"
 
 class CheckersGameLobby
 {
 public:
-    enum class Winner
-    {
-        None,
-        Black,
-        Red,
-        Draw
-    };
-
     CheckersGameLobby(
         const std::string &lobby_name,
         const std::string &black_player_name,

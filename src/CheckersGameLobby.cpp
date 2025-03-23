@@ -1,10 +1,6 @@
 #include "CheckersGameLobby.hpp"
 
-constexpr size_t NUM_PLAYABLE_ROWS = 8u;
-constexpr size_t NUM_PLAYABLE_COLS = 4u;
-constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
-constexpr size_t BLACK_OFFSET = 20u;
-constexpr size_t NUM_PLAYABLE_TILES = 32u;
+#include "CheckersConsts.hpp"
 
 using std::placeholders::_1;
 
@@ -28,11 +24,11 @@ CheckersGameLobby::CheckersGameLobby(
     // Add the pieces
     for (size_t r = 0u; r < NUM_PIECES_PER_PLAYER; r++)
     {
-        tiles_[r]->setTurtlePiece(Tile::TurtlePieceColor::Red, "Red" + std::to_string(r + 1));
+        tiles_[r]->setTurtlePiece(TurtlePieceColor::Red, "Red" + std::to_string(r + 1), false);
     }
     for (size_t b = 0u; b < NUM_PIECES_PER_PLAYER; b++)
     {
-        tiles_[b + BLACK_OFFSET]->setTurtlePiece(Tile::TurtlePieceColor::Black, "Black" + std::to_string(b + 1));
+        tiles_[b + BLACK_OFFSET]->setTurtlePiece(TurtlePieceColor::Black, "Black" + std::to_string(b + 1), false);
     }
 }
 
@@ -53,7 +49,7 @@ std::string CheckersGameLobby::getLobbyName()
     return lobby_name_;
 }
 
-CheckersGameLobby::Winner CheckersGameLobby::getWinner()
+Winner CheckersGameLobby::getWinner()
 {
     return winner;
 }

@@ -5,26 +5,20 @@
 #include <unordered_map>
 #include <vector>
 
+#include "CheckersConsts.hpp"
+
 class Tile
 {
 public:
-    enum class TurtlePieceColor
-    {
-        None,
-        Black,
-        Red,
-        BlackKing,
-        RedKing
-    };
-
     Tile(size_t row, size_t col);
 
     size_t getRow() const;
     size_t getCol() const;
 
-    void setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName);
+    void setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool turtlePieceKinged);
     TurtlePieceColor getTurtlePieceColor() const;
     std::string getTurtlePieceName() const;
+    bool getTurtlePieceKinged() const;
 
     std::vector<uint64_t> getCurrentlyReachableTiles(const std::vector<std::shared_ptr<Tile>> &tiles) const; // Get the list of tiles the piece currently on this tile can reach (including by jumping)
 
@@ -38,6 +32,7 @@ private:
 
     TurtlePieceColor _turtlePieceColor; // The color of the current piece (or None)
     std::string _turtlePieceName;
+    bool _turtlePieceKinged;
 };
 
 typedef std::shared_ptr<Tile> TilePtr;

@@ -2,8 +2,7 @@
 
 #include <iostream>
 
-constexpr size_t MAX_COLS_ROW_INDEX = 7u;
-constexpr size_t MAX_JUMP_INDEX = MAX_COLS_ROW_INDEX - 1u;
+#include "CheckersConsts.hpp"
 
 Tile::Tile(size_t row, size_t col)
     : row_(row),
@@ -12,13 +11,14 @@ Tile::Tile(size_t row, size_t col)
     _turtlePieceColor = TurtlePieceColor::None;
 }
 
-void Tile::setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName)
+void Tile::setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool turtlePieceKinged)
 {
     _turtlePieceColor = turtlePieceColor;
     _turtlePieceName = turtlePieceName;
+    _turtlePieceKinged = turtlePieceKinged;
 }
 
-Tile::TurtlePieceColor Tile::getTurtlePieceColor() const
+TurtlePieceColor Tile::getTurtlePieceColor() const
 {
     return _turtlePieceColor;
 }
@@ -26,6 +26,11 @@ Tile::TurtlePieceColor Tile::getTurtlePieceColor() const
 std::string Tile::getTurtlePieceName() const
 {
     return _turtlePieceName;
+}
+
+bool Tile::getTurtlePieceKinged() const
+{
+    return _turtlePieceKinged;
 }
 
 size_t Tile::getRow() const
@@ -40,10 +45,8 @@ size_t Tile::getCol() const
 
 bool Tile::canJumpPiece(TurtlePieceColor otherPieceColor) const
 {
-    return (((_turtlePieceColor == TurtlePieceColor::Black || _turtlePieceColor == TurtlePieceColor::BlackKing) &&
-             (otherPieceColor == TurtlePieceColor::Red || otherPieceColor == TurtlePieceColor::RedKing)) ||
-            ((_turtlePieceColor == TurtlePieceColor::Red || _turtlePieceColor == TurtlePieceColor::RedKing) &&
-             (otherPieceColor == TurtlePieceColor::Black || otherPieceColor == TurtlePieceColor::BlackKing)));
+    return ((_turtlePieceColor == TurtlePieceColor::Black && otherPieceColor == TurtlePieceColor::Red) ||
+            (_turtlePieceColor == TurtlePieceColor::Red && otherPieceColor == TurtlePieceColor::Black));
 }
 
 void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64_t> &reachableTiles) const
@@ -83,8 +86,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             {
                 reachableTiles.push_back(i);
             }
-            else if (tiles[i]->_turtlePieceColor == TurtlePieceColor::Red ||
-                     tiles[i]->_turtlePieceColor == TurtlePieceColor::RedKing)
+            else if (canJumpPiece(tiles[i]->_turtlePieceColor))
             {
                 topRightJumpable = true;
             }
@@ -158,8 +160,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             {
                 reachableTiles.push_back(i);
             }
-            else if (tiles[i]->_turtlePieceColor == TurtlePieceColor::Red ||
-                     tiles[i]->_turtlePieceColor == TurtlePieceColor::RedKing)
+            else if (canJumpPiece(tiles[i]->_turtlePieceColor))
             {
                 bottomRightJumpable = true;
             }
@@ -206,22 +207,20 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
         // Nothing is reachable
         break;
     case TurtlePieceColor::Black:
-        // Black moves up the board and can jump red (and red king) pieces
+        // Black moves up the board and can jump red pieces
         checkTilesAbove(tiles, reachableTiles);
-        break;
-    case TurtlePieceColor::BlackKing:
-        // Black kings can move in either direction and can jump red (and red king) pieces
-        checkTilesAbove(tiles, reachableTiles);
-        checkTilesBelow(tiles, reachableTiles);
+        if (_turtlePieceKinged) // Kings can move in the opposite direction too
+        {
+            checkTilesBelow(tiles, reachableTiles);
+        }
         break;
     case TurtlePieceColor::Red:
-        // Red moves down the board and can jump black (and black king) pieces
+        // Red moves down the board and can jump black pieces
         checkTilesBelow(tiles, reachableTiles);
-        break;
-    case TurtlePieceColor::RedKing:
-        // Red kings can move in either direction and can jump black (and black king) pieces
-        checkTilesAbove(tiles, reachableTiles);
-        checkTilesBelow(tiles, reachableTiles);
+        if (_turtlePieceKinged) // Kings can move in the opposite direction too
+        {
+            checkTilesAbove(tiles, reachableTiles);
+        }
         break;
     }
 

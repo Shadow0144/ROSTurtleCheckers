@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CheckersConsts.hpp"
 #include "TurtlePiece.hpp"
 
 #include <QPainter>
@@ -24,7 +25,7 @@ public:
     void setTurtlePiece(const TurtlePiecePtr &turtle);
     TurtlePiecePtr &getTurtlePiece();
 
-    bool containsPiece(TurtlePiece::TurtleColor color);
+    bool containsPiece(TurtlePieceColor color);
 
     bool togglePieceHighlight();
     void togglePieceHighlight(bool highlight);

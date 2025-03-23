@@ -9,7 +9,7 @@
 
 TurtlePiece::TurtlePiece(
     const std::string &name,
-    TurtlePiece::TurtleColor color,
+    TurtlePieceColor color,
     const QImage &turtle_image,
     const QImage &highlight_image,
     const QImage &king_image,
@@ -41,7 +41,7 @@ std::string &TurtlePiece::getName()
   return name_;
 }
 
-TurtlePiece::TurtleColor TurtlePiece::getColor()
+TurtlePieceColor TurtlePiece::getColor()
 {
   return color_;
 }

@@ -10,6 +10,7 @@
 
 #include <QApplication>
 
+#include "CheckersConsts.hpp"
 #include "TurtlePiece.hpp"
 #include "CheckersBoardFrame.hpp"
 
@@ -26,6 +27,6 @@ private:
     CheckersBoardFrameUniPtr checkers_board;
 
     char * player_name;
-    TurtlePiece::TurtleColor player_color;
-    CheckersBoardFrame::GameState game_state;
+    TurtlePieceColor player_color;
+    GameState game_state;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+#include "CheckersConsts.hpp"
 #include "TileRender.hpp"
 #include "TurtlePiece.hpp" // NO LINT
 #endif
@@ -31,17 +32,9 @@ class CheckersBoardFrame : public QFrame
 {
 	Q_OBJECT
 public:
-	enum class GameState
-	{
-		SelectPiece,
-		SelectTile,
-		WaitingOnOtherPlayer,
-		GameFinished
-	};
-
 	CheckersBoardFrame(
 		rclcpp::Node::SharedPtr &node_handle,
-		TurtlePiece::TurtleColor player_color,
+		TurtlePieceColor player_color,
 		GameState game_state,
 		QWidget *parent = 0,
 		Qt::WindowFlags f = Qt::WindowFlags());
@@ -83,7 +76,7 @@ private:
 	QImage path_image_;
 	QPainter path_painter_;
 
-	TurtlePiece::TurtleColor player_color_;
+	TurtlePieceColor player_color_;
 
 	GameState game_state_;
 
@@ -106,7 +99,6 @@ private:
 	QVector<QImage> highlight_turtle_images_;
 	QVector<QImage> king_turtle_images_;
 
-	constexpr static size_t NUM_PLAYABLE_TILES = 32u;
 	TileRenderPtr tile_renders[NUM_PLAYABLE_TILES];
 	int highlighted_tile = -1; // No tile is highlighted
 };
