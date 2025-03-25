@@ -3,114 +3,119 @@
 #include <QColor>
 #include <QRgb>
 
-#include <math.h>
-
 #include "rclcpp/rclcpp.hpp"
+
+#include "CheckersConsts.hpp"
 
 TurtlePiece::TurtlePiece(
     const std::string &name,
     TurtlePieceColor color,
-    const QImage &turtle_image,
-    const QImage &king_image,
-    const QImage &highlight_image,
-    const QImage &select_image,
+    const QImage &turtleImage,
+    const QImage &kingImage,
+    const QImage &highlightImage,
+    const QImage &selectImage,
     const QPointF &position,
-    float angle)
-    : name_(name),
-      color_(color),
-      turtle_image_(turtle_image),
-      king_image_(king_image),
-      highlight_image_(highlight_image),
-      select_image_(select_image),
-      position_(position),
-      angle_(angle)
+    int angleDegrees)
+    : m_name(name),
+      m_color(color),
+      m_turtleImage(turtleImage),
+      m_kingImage(kingImage),
+      m_highlightImage(highlightImage),
+      m_selectImage(selectImage),
+      m_position(position),
+      m_angleDegrees(angleDegrees)
 {
   QTransform transform;
-  transform.rotate(-angle * 180.0 / M_PI);
-  turtle_rotated_image_ = turtle_image_.transformed(transform);
-  king_rotated_image_ = king_image_.transformed(transform);
-  highlight_rotated_image_ = highlight_image_.transformed(transform);
-  select_rotated_image_ = select_image_.transformed(transform);
+  transform.rotate(m_angleDegrees);
+  m_turtleRotatedImage = m_turtleImage.transformed(transform);
+  m_kingRotatedImage = m_kingImage.transformed(transform);
+  m_highlightRotatedImage = m_highlightImage.transformed(transform);
+  m_selectRotatedImage = m_selectImage.transformed(transform);
 
-  position_.rx() -= 0.5 * turtle_rotated_image_.width();
-  position_.ry() -= 0.5 * turtle_rotated_image_.height();
+  m_position.rx() -= 0.5 * m_turtleRotatedImage.width();
+  m_position.ry() -= 0.5 * m_turtleRotatedImage.height();
 
-  kinged = false;
-  highlighted = false;
-  selected = false;
+  m_isKinged = false;
+  m_isHighlighted = false;
+  m_isSelected = false;
 }
 
 std::string &TurtlePiece::getName()
 {
-  return name_;
+  return m_name;
 }
 
 TurtlePieceColor TurtlePiece::getColor()
 {
-  return color_;
+  return m_color;
 }
 
-bool TurtlePiece::getKinged()
+bool TurtlePiece::getIsKinged()
 {
-  return kinged;
+  return m_isKinged;
 }
 
-void TurtlePiece::toggleKingship(bool king)
+void TurtlePiece::toggleIsKinged()
 {
-  kinged = king;
+  m_isKinged = !m_isKinged;
 }
 
-bool TurtlePiece::getHighlighted()
+void TurtlePiece::toggleIsKinged(bool isKinged)
 {
-  return highlighted;
+  m_isKinged = isKinged;
 }
 
-void TurtlePiece::toggleHighlight()
+bool TurtlePiece::getIsHighlighted()
 {
-  highlighted = !highlighted;
+  return m_isHighlighted;
 }
 
-void TurtlePiece::toggleHighlight(bool highlight)
+void TurtlePiece::toggleIsHighlighted()
 {
-  highlighted = highlight;
+  m_isHighlighted = !m_isHighlighted;
 }
 
-bool TurtlePiece::getSelected()
+void TurtlePiece::toggleIsHighlighted(bool isHighlighted)
 {
-  return selected;
+  m_isHighlighted = isHighlighted;
 }
 
-void TurtlePiece::toggleSelect()
+bool TurtlePiece::getIsSelected()
 {
-  selected = !selected;
+  return m_isSelected;
 }
 
-void TurtlePiece::toggleSelect(bool select)
+void TurtlePiece::toggleIsSelected()
 {
-  selected = select;
+  m_isSelected = !m_isSelected;
+}
+
+void TurtlePiece::toggleIsSelected(bool isSelected)
+{
+  m_isSelected = isSelected;
 }
 
 void TurtlePiece::move(
-    const QPointF &new_position)
+    const QPointF &newPosition)
 {
-  position_ = new_position;
-  position_.rx() -= 0.5 * turtle_rotated_image_.width();
-  position_.ry() -= 0.5 * turtle_rotated_image_.height();
+  m_position = newPosition;
+  m_position.rx() -= 0.5 * m_turtleRotatedImage.width();
+  m_position.ry() -= 0.5 * m_turtleRotatedImage.height();
 }
 
 void TurtlePiece::paint(QPainter &painter)
 {
-  painter.drawImage(position_, turtle_rotated_image_);
-  if (kinged)
+  painter.drawImage(m_position, m_turtleRotatedImage);
+  if (m_isKinged)
   {
-    painter.drawImage(position_, king_rotated_image_);
+    painter.drawImage(m_position, m_kingRotatedImage);
   }
-  if (highlighted)
+  if (m_isHighlighted)
   {
-    painter.drawImage(position_, highlight_rotated_image_);
+    painter.drawImage(m_position, m_highlightRotatedImage);
   }
-  if (selected)
+  if (m_isSelected)
   {
-    painter.drawImage(position_, select_rotated_image_);
+    painter.drawImage(m_position, m_selectRotatedImage);
   }
 }

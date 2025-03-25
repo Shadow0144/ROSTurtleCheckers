@@ -12,9 +12,7 @@
 class TileRender
 {
 public:
-    TileRender(const QPointF &center_position, 
-        size_t tile_width,
-        size_t tile_height);
+    TileRender(const QPointF &centerPosition);
 
     QPointF getCenterPosition();
 
@@ -25,44 +23,41 @@ public:
 
     bool containsPiece(TurtlePieceColor color);
 
-    bool getPieceHighlight();
-    bool togglePieceHighlight();
-    void togglePieceHighlight(bool highlight);
+    bool getIsPieceHighlighted();
+    bool toggleIsPieceHighlighted();
+    void toggleIsPieceHighlighted(bool isHighlighted);
 
-    bool getPieceSelect();
-    bool togglePieceSelect();
-    void togglePieceSelect(bool select);
+    bool getIsPieceSelected();
+    bool toggleIsPieceSelected();
+    void toggleIsPieceSelected(bool isSelected);
 
-    bool getTileReachable();
-    void toggleTileReachable();
-    void toggleTileReachable(bool reachable);
+    bool getIsTileReachable();
+    void toggleIsTileReachable();
+    void toggleIsTileReachable(bool isReachable);
 
-    bool getTileHighlight();
-    void toggleTileHighlight();
-    void toggleTileHighlight(bool highlight);
+    bool getIsTileHighlighted();
+    void toggleIsTileHighlighted();
+    void toggleIsTileHighlighted(bool isHighlighted);
 
-    bool getTileSelect();
-    void toggleTileSelect();
-    void toggleTileSelect(bool select);
+    bool getIsTileSelected();
+    void toggleIsTileSelected();
+    void toggleIsTileSelected(bool isSelected);
 
     void paint(QPainter &painter);
 
 private:
-    QPointF center_position_;
+    QPointF m_centerPosition;
 
-    float left;
-    float top;
-    float right;
-    float bottom;
+    float m_left;
+    float m_top;
+    float m_right;
+    float m_bottom;
 
-    float tile_width_;
-    float tile_height_;
+    bool m_isReachable;
+    bool m_isHighlighted;
+    bool m_isSelected;
 
-    bool reachabled;
-    bool highlighted;
-    bool selected;
-
-    TurtlePiecePtr contained_turtle;
+    TurtlePiecePtr m_containedTurtle;
 };
 
 typedef std::shared_ptr<TileRender> TileRenderPtr;

@@ -5,48 +5,48 @@
 #include "CheckersConsts.hpp"
 
 Tile::Tile(size_t row, size_t col)
-    : row_(row),
-      col_(col)
+    : m_row(row),
+      m_col(col)
 {
-    _turtlePieceColor = TurtlePieceColor::None;
+    m_turtlePieceColor = TurtlePieceColor::None;
 }
 
-void Tile::setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool turtlePieceKinged)
+void Tile::setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool isTurtlePieceKinged)
 {
-    _turtlePieceColor = turtlePieceColor;
-    _turtlePieceName = turtlePieceName;
-    _turtlePieceKinged = turtlePieceKinged;
+    m_turtlePieceColor = turtlePieceColor;
+    m_turtlePieceName = turtlePieceName;
+    m_isTurtlePieceKinged = isTurtlePieceKinged;
 }
 
 TurtlePieceColor Tile::getTurtlePieceColor() const
 {
-    return _turtlePieceColor;
+    return m_turtlePieceColor;
 }
 
 std::string Tile::getTurtlePieceName() const
 {
-    return _turtlePieceName;
+    return m_turtlePieceName;
 }
 
-bool Tile::getTurtlePieceKinged() const
+bool Tile::getIsTurtlePieceKinged() const
 {
-    return _turtlePieceKinged;
+    return m_isTurtlePieceKinged;
 }
 
 size_t Tile::getRow() const
 {
-    return row_;
+    return m_row;
 }
 
 size_t Tile::getCol() const
 {
-    return col_;
+    return m_col;
 }
 
 bool Tile::canJumpPiece(TurtlePieceColor otherPieceColor) const
 {
-    return ((_turtlePieceColor == TurtlePieceColor::Black && otherPieceColor == TurtlePieceColor::Red) ||
-            (_turtlePieceColor == TurtlePieceColor::Red && otherPieceColor == TurtlePieceColor::Black));
+    return ((m_turtlePieceColor == TurtlePieceColor::Black && otherPieceColor == TurtlePieceColor::Red) ||
+            (m_turtlePieceColor == TurtlePieceColor::Red && otherPieceColor == TurtlePieceColor::Black));
 }
 
 void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64_t> &reachableTiles) const
@@ -64,49 +64,49 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
     for (uint64_t i = 0u; i < tileCount; i++)
     {
         // Check the tile to the top left of this one
-        if (row_ > 0u && col_ > 0u &&
-            row_ - 1u == tiles[i]->row_ &&
-            col_ - 1u == tiles[i]->col_)
+        if (m_row > 0u && m_col > 0u &&
+            m_row - 1u == tiles[i]->m_row &&
+            m_col - 1u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->_turtlePieceColor))
+            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
             {
                 topLeftJumpable = true;
             }
         }
         // Check the tile to the top right of this one
-        else if (row_ > 0u && col_ < MAX_COLS_ROW_INDEX &&
-                 row_ - 1u == tiles[i]->row_ &&
-                 col_ + 1u == tiles[i]->col_)
+        else if (m_row > 0u && m_col < MAX_COL_ROW_INDEX &&
+                 m_row - 1u == tiles[i]->m_row &&
+                 m_col + 1u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->_turtlePieceColor))
+            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
             {
                 topRightJumpable = true;
             }
         }
         // Check if the tile is jumpable to the top left of this one
-        else if (row_ > 1u && col_ > 1u &&
-                 row_ - 2u == tiles[i]->row_ &&
-                 col_ - 2u == tiles[i]->col_)
+        else if (m_row > 1u && m_col > 1u &&
+                 m_row - 2u == tiles[i]->m_row &&
+                 m_col - 2u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 topLeftJumpableIndex = i;
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        else if (row_ > 1u && col_ < MAX_JUMP_INDEX &&
-                 row_ - 2u == tiles[i]->row_ &&
-                 col_ + 2u == tiles[i]->col_)
+        else if (m_row > 1u && m_col < MAX_JUMP_INDEX &&
+                 m_row - 2u == tiles[i]->m_row &&
+                 m_col + 2u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 topRightJumpableIndex = i;
             }
@@ -138,49 +138,49 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
     for (uint64_t i = 0u; i < tileCount; i++)
     {
         // Check the tile to the bottom left of this one
-        if (row_ < MAX_COLS_ROW_INDEX && col_ > 0u &&
-            row_ + 1u == tiles[i]->row_ &&
-            col_ - 1u == tiles[i]->col_)
+        if (m_row < MAX_COL_ROW_INDEX && m_col > 0u &&
+            m_row + 1u == tiles[i]->m_row &&
+            m_col - 1u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->_turtlePieceColor))
+            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
             {
                 bottomLeftJumpable = true;
             }
         }
         // Check the tile to the bottom right of this one
-        else if (row_ < MAX_COLS_ROW_INDEX && col_ < MAX_COLS_ROW_INDEX &&
-                 row_ + 1u == tiles[i]->row_ &&
-                 col_ + 1u == tiles[i]->col_)
+        else if (m_row < MAX_COL_ROW_INDEX && m_col < MAX_COL_ROW_INDEX &&
+                 m_row + 1u == tiles[i]->m_row &&
+                 m_col + 1u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->_turtlePieceColor))
+            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
             {
                 bottomRightJumpable = true;
             }
         }
         // Check if the tile is jumpable to the bottom left of this one
-        else if (row_ < MAX_JUMP_INDEX && col_ > 1u &&
-                 row_ + 2u == tiles[i]->row_ &&
-                 col_ - 2u == tiles[i]->col_)
+        else if (m_row < MAX_JUMP_INDEX && m_col > 1u &&
+                 m_row + 2u == tiles[i]->m_row &&
+                 m_col - 2u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 bottomLeftJumpableIndex = i;
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        else if (row_ < MAX_JUMP_INDEX && col_ < MAX_JUMP_INDEX &&
-                 row_ + 2u == tiles[i]->row_ &&
-                 col_ + 2u == tiles[i]->col_)
+        else if (m_row < MAX_JUMP_INDEX && m_col < MAX_JUMP_INDEX &&
+                 m_row + 2u == tiles[i]->m_row &&
+                 m_col + 2u == tiles[i]->m_col)
         {
-            if (tiles[i]->_turtlePieceColor == TurtlePieceColor::None)
+            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
             {
                 bottomRightJumpableIndex = i;
             }
@@ -201,7 +201,7 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
 {
     std::vector<uint64_t> reachableTiles;
 
-    switch (_turtlePieceColor)
+    switch (m_turtlePieceColor)
     {
     case TurtlePieceColor::None:
         // Nothing is reachable
@@ -209,7 +209,7 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
     case TurtlePieceColor::Black:
         // Black moves up the board and can jump red pieces
         checkTilesAbove(tiles, reachableTiles);
-        if (_turtlePieceKinged) // Kings can move in the opposite direction too
+        if (m_isTurtlePieceKinged) // Kings can move in the opposite direction too
         {
             checkTilesBelow(tiles, reachableTiles);
         }
@@ -217,7 +217,7 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
     case TurtlePieceColor::Red:
         // Red moves down the board and can jump black pieces
         checkTilesBelow(tiles, reachableTiles);
-        if (_turtlePieceKinged) // Kings can move in the opposite direction too
+        if (m_isTurtlePieceKinged) // Kings can move in the opposite direction too
         {
             checkTilesAbove(tiles, reachableTiles);
         }

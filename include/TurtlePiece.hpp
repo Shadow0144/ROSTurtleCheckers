@@ -17,51 +17,53 @@ public:
     TurtlePiece(
         const std::string &name,
         TurtlePieceColor color,
-        const QImage &turtle_image,
-        const QImage &king_image,
-        const QImage &highlight_image,
-        const QImage &select_image,
+        const QImage &turtleImage,
+        const QImage &kingImage,
+        const QImage &highlightImage,
+        const QImage &selectImage,
         const QPointF &position,
-        float angle);
+        int angleDegrees);
 
     std::string &getName();
 
     TurtlePieceColor getColor();
 
-    bool getKinged();
-    void toggleKingship(bool king);
+    bool getIsKinged();
+    void toggleIsKinged();
+    void toggleIsKinged(bool isKinged);
 
-    bool getHighlighted();
-    void toggleHighlight();
-    void toggleHighlight(bool highlight);
+    bool getIsHighlighted();
+    void toggleIsHighlighted();
+    void toggleIsHighlighted(bool isHighlighted);
 
-    bool getSelected();
-    void toggleSelect();
-    void toggleSelect(bool select);
+    bool getIsSelected();
+    void toggleIsSelected();
+    void toggleIsSelected(bool isSelected);
 
-    void move(const QPointF &new_position);
+    void move(const QPointF &newPosition);
+
     void paint(QPainter &painter);
 
 private:
-    std::string name_;
+    std::string m_name;
 
-    TurtlePieceColor color_;
+    TurtlePieceColor m_color;
 
-    QImage turtle_image_;
-    QImage turtle_rotated_image_;
-    QImage king_image_;
-    QImage king_rotated_image_;
-    QImage highlight_image_;
-    QImage highlight_rotated_image_;
-    QImage select_image_;
-    QImage select_rotated_image_;
+    QImage m_turtleImage;
+    QImage m_turtleRotatedImage;
+    QImage m_kingImage;
+    QImage m_kingRotatedImage;
+    QImage m_highlightImage;
+    QImage m_highlightRotatedImage;
+    QImage m_selectImage;
+    QImage m_selectRotatedImage;
 
-    QPointF position_;
-    float angle_;
+    QPointF m_position;
+    int m_angleDegrees; // In degrees
 
-    bool kinged;
-    bool highlighted;
-    bool selected;
+    bool m_isKinged;
+    bool m_isHighlighted;
+    bool m_isSelected;
 };
 
 typedef std::shared_ptr<TurtlePiece> TurtlePiecePtr;

@@ -33,11 +33,11 @@ class CheckersBoardFrame : public QFrame
 	Q_OBJECT
 public:
 	CheckersBoardFrame(
-		rclcpp::Node::SharedPtr &node_handle,
-		TurtlePieceColor player_color,
-		GameState game_state,
+		rclcpp::Node::SharedPtr &nodeHandle,
+		TurtlePieceColor playerColor,
+		GameState gameState,
 		QWidget *parent = 0,
-		Qt::WindowFlags f = Qt::WindowFlags());
+		Qt::WindowFlags windowFlags = Qt::WindowFlags());
 	~CheckersBoardFrame();
 
 	void setupGame();
@@ -58,51 +58,38 @@ private:
 
 	void clearPieces();
 	void spawnPieces();
-	void spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t image_index);
-
-	bool clearCallback(
-		const std_srvs::srv::Empty::Request::SharedPtr,
-		std_srvs::srv::Empty::Response::SharedPtr);
-	bool resetCallback(
-		const std_srvs::srv::Empty::Request::SharedPtr,
-		std_srvs::srv::Empty::Response::SharedPtr);
+	void spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t imageIndex);
 
 	void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
 
 	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
 
-	rclcpp::Node::SharedPtr nh_;
+	rclcpp::Node::SharedPtr m_nodeHandle;
 
-	QTimer *update_timer_;
-	QImage path_image_;
-	QPainter path_painter_;
+	QTimer *m_updateTimer;
 
-	TurtlePieceColor player_color_;
+	TurtlePieceColor m_playerColor;
 
-	GameState game_state_;
+	GameState m_gameState;
 
-	std::string selected_piece_;
+	std::string m_selectedPieceName;
 
-	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr clear_srv_;
-	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv_;
-	rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;
-
-	rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr requestReachableTilesClient;
+	rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesClient;
 
 	typedef std::map<std::string, TurtlePiecePtr> TurtlePiecesMap;
-	TurtlePiecesMap black_turtles_;
-	TurtlePiecesMap red_turtles_;
+	TurtlePiecesMap m_blackTurtles;
+	TurtlePiecesMap m_redTurtles;
 
-	QVector<QImage> black_turtle_images_;
-	size_t black_image_index = 0u;
-	QVector<QImage> red_turtle_images_;
-	size_t red_image_index = 0u;
-	QVector<QImage> king_turtle_images_;
-	QVector<QImage> highlight_turtle_images_;
-	QVector<QImage> select_turtle_images_;
+	QVector<QImage> m_blackTurtleImages;
+	size_t m_blackImageIndex = 0u;
+	QVector<QImage> m_redTurtleImages;
+	size_t m_redImageIndex = 0u;
+	QVector<QImage> m_kingTurtleImages;
+	QVector<QImage> m_highlightTurtleImages;
+	QVector<QImage> m_selectTurtleImages;
 
-	TileRenderPtr tile_renders[NUM_PLAYABLE_TILES];
-	int highlighted_tile = -1; // No tile is highlighted
+	TileRenderPtr m_tileRenders[NUM_PLAYABLE_TILES];
+	int m_highlightedTile = -1; // No tile is highlighted
 };
 
 typedef std::unique_ptr<CheckersBoardFrame> CheckersBoardFrameUniPtr;

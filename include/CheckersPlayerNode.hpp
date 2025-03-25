@@ -17,16 +17,16 @@
 class CheckersPlayerNode : public QApplication
 {
 public:
-    explicit CheckersPlayerNode(int & argc, char ** argv);
+    explicit CheckersPlayerNode(int &argc, char **argv);
 
     int exec();
 
 private:
-    std::shared_ptr<rclcpp::Node> player_node;
+    std::shared_ptr<rclcpp::Node> m_playerNode;
 
-    CheckersBoardFrameUniPtr checkers_board;
+    CheckersBoardFrameUniPtr m_checkersBoard;
 
-    char * player_name;
-    TurtlePieceColor player_color;
-    GameState game_state;
+    std::string m_playerName;
+    TurtlePieceColor m_playerColor;
+    GameState m_gameState;
 };

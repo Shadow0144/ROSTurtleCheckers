@@ -15,10 +15,10 @@ public:
     size_t getRow() const;
     size_t getCol() const;
 
-    void setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool turtlePieceKinged);
+    void setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool isTurtlePieceKinged);
     TurtlePieceColor getTurtlePieceColor() const;
     std::string getTurtlePieceName() const;
-    bool getTurtlePieceKinged() const;
+    bool getIsTurtlePieceKinged() const;
 
     std::vector<uint64_t> getCurrentlyReachableTiles(const std::vector<std::shared_ptr<Tile>> &tiles) const; // Get the list of tiles the piece currently on this tile can reach (including by jumping)
 
@@ -27,12 +27,12 @@ private:
     void checkTilesAbove(const std::vector<std::shared_ptr<Tile>> &tiles, std::vector<uint64_t> &reachableTiles) const;
     void checkTilesBelow(const std::vector<std::shared_ptr<Tile>> &tiles, std::vector<uint64_t> &reachableTiles) const;
 
-    size_t row_;
-    size_t col_;
+    size_t m_row;
+    size_t m_col;
 
-    TurtlePieceColor _turtlePieceColor; // The color of the current piece (or None)
-    std::string _turtlePieceName;
-    bool _turtlePieceKinged;
+    TurtlePieceColor m_turtlePieceColor; // The color of the current piece (or None)
+    std::string m_turtlePieceName;
+    bool m_isTurtlePieceKinged;
 };
 
 typedef std::shared_ptr<Tile> TilePtr;

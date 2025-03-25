@@ -5,9 +5,9 @@
 #include <algorithm>
 
 // Parses command line options
-char* getCmdOption(char ** begin, char ** end, const std::string & option)
+char* getCmdOption(char ** begin, char **end, const std::string & option)
 {
-    char ** itr = std::find(begin, end, option);
+    char **itr = std::find(begin, end, option);
     if (itr != end && ++itr != end)
     {
         return *itr;
@@ -15,36 +15,37 @@ char* getCmdOption(char ** begin, char ** end, const std::string & option)
     return 0;
 }
 
-CheckersPlayerNode::CheckersPlayerNode(int & argc, char ** argv)
+CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
     : QApplication(argc, argv)
 {
     rclcpp::init(argc, argv);
 
-    player_name = getCmdOption(argv, argv + argc, "-p");
-    if (!player_name)
-    {
-        player_name = getCmdOption(argv, argv + argc, "-player_name");
-    }
-    if (!player_name)
-    {
-        std::cerr << "You need to provide a player name with -p or -player_name" << std::endl;
-        return;
-    }
+    m_playerNode = rclcpp::Node::make_shared("checkers_player_node");
 
-    // Try to subscribe to a game and connect to a lobby
-    std::cout << "Player " << player_name << " searching for lobby..." << std::endl;
+    m_playerName = getCmdOption(argv, argv + argc, "-p");
+    if (m_playerName.empty())
+    {
+        m_playerName = getCmdOption(argv, argv + argc, "-player_name");
+    }
 
     // Black starts
-    player_color = TurtlePieceColor::Black;
-    game_state = GameState::SelectPiece;
-
-    player_node = rclcpp::Node::make_shared("checkers_player_node");
+    m_playerColor = TurtlePieceColor::Black;
+    m_gameState = GameState::SelectPiece;
 }
 
 int CheckersPlayerNode::exec()
 {
-    checkers_board = std::make_unique<CheckersBoardFrame>(player_node, player_color, game_state);
-    checkers_board->show();
+    if (m_playerName.empty())
+    {
+        RCLCPP_ERROR(m_playerNode->get_logger(), "You need to provide a player name with -p or -player_name");
+        return -1;
+    }
+
+    // Try to subscribe to a game and connect to a lobby
+    RCLCPP_INFO(m_playerNode->get_logger(), "Player " + m_playerName + " searching for lobby...");
+
+    m_checkersBoard = std::make_unique<CheckersBoardFrame>(m_playerNode, m_playerColor, m_gameState);
+    m_checkersBoard->show();
 
     return QApplication::exec();
 }

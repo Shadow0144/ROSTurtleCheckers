@@ -14,9 +14,9 @@ class CheckersGameLobby
 {
 public:
     CheckersGameLobby(
-        const std::string &lobby_name,
-        const std::string &black_player_name,
-        const std::string &red_player_name);
+        const std::string &lobbyName,
+        const std::string &blackPlayerName,
+        const std::string &redPlayerName);
 
     std::string getLobbyName();
 
@@ -25,15 +25,15 @@ public:
     std::vector<uint64_t> requestReachableTiles(const std::string &requestedPieceName);
 
 private:
-    std::string lobby_name_;
-    std::string black_player_name_;
-    std::string red_player_name_;
+    std::string m_lobbyName;
+    std::string m_blackPlayerName;
+    std::string m_redPlayerName;
 
-    bool nextMoveBlack_;                            // True if it is black's turn, false for red
-    std::vector<uint32_t> validPiecesPerPlayer_[2]; // Black and red
-    std::unordered_map<uint32_t, std::vector<uint32_t>> validMovesPerPiece_;
-    std::vector<TilePtr> tiles_;
-    Winner winner;
+    bool m_isNextMoveBlack;                           // True if it is black's turn, false for red
+    std::vector<uint32_t> m_validPiecesPerPlayer_[2]; // Black and red
+    std::unordered_map<uint32_t, std::vector<uint32_t>> m_validMovesPerPiece;
+    std::vector<TilePtr> m_tiles;
+    Winner m_winner;
 };
 
 typedef std::shared_ptr<CheckersGameLobby> CheckersGameLobbyPtr;
