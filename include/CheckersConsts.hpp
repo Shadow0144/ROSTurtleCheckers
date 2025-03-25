@@ -5,9 +5,9 @@
 // Enums
 enum class GameState
 {
-    SelectPiece,
-    SelectTile,
-    WaitingOnOtherPlayer,
+    Connecting,
+    BlackMove,
+    RedMove,
     GameFinished
 };
 

@@ -16,6 +16,8 @@ public:
     size_t getCol() const;
 
     void setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool isTurtlePieceKinged);
+    void moveTurtlePiece(std::shared_ptr<Tile> tile);
+
     TurtlePieceColor getTurtlePieceColor() const;
     std::string getTurtlePieceName() const;
     bool getIsTurtlePieceKinged() const;
@@ -23,6 +25,8 @@ public:
     std::vector<uint64_t> getCurrentlyReachableTiles(const std::vector<std::shared_ptr<Tile>> &tiles) const; // Get the list of tiles the piece currently on this tile can reach (including by jumping)
 
 private:
+    void clearTurtlePiece();
+
     bool canJumpPiece(TurtlePieceColor otherPieceColor) const;
     void checkTilesAbove(const std::vector<std::shared_ptr<Tile>> &tiles, std::vector<uint64_t> &reachableTiles) const;
     void checkTilesBelow(const std::vector<std::shared_ptr<Tile>> &tiles, std::vector<uint64_t> &reachableTiles) const;

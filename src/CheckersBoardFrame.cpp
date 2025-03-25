@@ -19,13 +19,11 @@ using std::placeholders::_1;
 
 CheckersBoardFrame::CheckersBoardFrame(
 	rclcpp::Node::SharedPtr &nodeHandle,
-	TurtlePieceColor playerColor,
-	GameState gameState,
+	const std::string &playerName,
 	QWidget *parent,
 	Qt::WindowFlags windowFlags)
 	: QFrame(parent, windowFlags),
-	  m_playerColor(playerColor),
-	  m_gameState(gameState)
+	  m_playerName(playerName)
 {
 	setFixedSize(BOARD_WIDTH, BOARD_HEIGHT);
 	setWindowTitle("TurtleCheckers");
@@ -33,6 +31,9 @@ CheckersBoardFrame::CheckersBoardFrame(
 	srand(time(NULL));
 
 	setMouseTracking(true);
+
+	m_gameState = GameState::Connecting;
+	m_playerColor = TurtlePieceColor::None;
 
 	m_updateTimer = new QTimer(this);
 	m_updateTimer->setInterval(16);
@@ -88,6 +89,11 @@ CheckersBoardFrame::CheckersBoardFrame(
 		m_selectTurtleImages.append(sImg);
 	}
 
+	m_selectedPieceName = "";
+	m_sourceTileIndex = -1;
+	m_destinationTileIndex = -1;
+	m_moveSelected = false;
+
 	clear();
 
 	spawnTiles();
@@ -96,8 +102,8 @@ CheckersBoardFrame::CheckersBoardFrame(
 	RCLCPP_INFO(
 		m_nodeHandle->get_logger(), "Starting turtle checkers board with node name %s", m_nodeHandle->get_fully_qualified_name());
 
-	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
-	while (!m_requestReachableTilesClient->wait_for_service(std::chrono::seconds(1)))
+	m_connectToGameClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::ConnectToGame>("ConnectToGame");
+	while (!m_connectToGameClient->wait_for_service(std::chrono::seconds(1)))
 	{
 		if (!rclcpp::ok())
 		{
@@ -106,6 +112,15 @@ CheckersBoardFrame::CheckersBoardFrame(
 		}
 		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Service not available, waiting again...");
 	}
+	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
+	m_requestPieceMoveClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove");
+
+	m_gameStateSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::GameState>("GameState", 10, std::bind(&CheckersBoardFrame::gameStateCallback, this, _1));
+
+	auto request = std::make_shared<turtle_checkers_interfaces::srv::ConnectToGame::Request>();
+	request->player_name = m_playerName;
+	m_connectToGameClient->async_send_request(request,
+											  std::bind(&CheckersBoardFrame::connectToGameResponse, this, std::placeholders::_1));
 }
 
 CheckersBoardFrame::~CheckersBoardFrame()
@@ -124,6 +139,26 @@ void CheckersBoardFrame::parameterEventCallback(
 	}
 }
 
+void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedFuture future)
+{
+	auto result = future.get();
+	if (result->player_color == 1) // Black
+	{
+		m_playerColor = TurtlePieceColor::Black;
+		RCLCPP_INFO(m_nodeHandle->get_logger(), "Connected as black player.");
+	}
+	else if (result->player_color == 2) // Red
+	{
+		m_playerColor = TurtlePieceColor::Red;
+		RCLCPP_INFO(m_nodeHandle->get_logger(), "Connected as red player.");
+	}
+	else // Failed to connect (0)
+	{
+		m_playerColor = TurtlePieceColor::None;
+		RCLCPP_WARN(m_nodeHandle->get_logger(), "Failed to connect to a game.");
+	}
+}
+
 void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future)
 {
 	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
@@ -139,52 +174,90 @@ void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_che
 	update();
 }
 
+void CheckersBoardFrame::requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future)
+{
+	auto result = future.get();
+	if (result->move_accepted)
+	{
+		m_tileRenders[m_destinationTileIndex]->moveTurtlePiece(m_tileRenders[m_sourceTileIndex]);
+	}
+
+	// Clear the selections
+	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+	{
+		m_tileRenders[i]->toggleIsPieceSelected(false);
+		m_tileRenders[i]->toggleIsTileReachable(false);
+		m_tileRenders[i]->toggleIsTileHighlighted(false);
+		m_tileRenders[i]->toggleIsTileSelected(false);
+	}
+	m_selectedPieceName.clear();
+	m_sourceTileIndex = -1;
+	m_destinationTileIndex = -1;
+
+	update();
+}
+
+void CheckersBoardFrame::gameStateCallback(const turtle_checkers_interfaces::msg::GameState::SharedPtr msg)
+{
+	switch (msg->game_state)
+	{
+	case 0: // Connecting
+	{
+		m_gameState = GameState::Connecting;
+	}
+	break;
+	case 1: // Black turn
+	{
+		m_gameState = GameState::BlackMove;
+	}
+	break;
+	case 2: // Red turn
+	{
+		m_gameState = GameState::RedMove;
+	}
+	break;
+	case 3: // Game over
+	{
+		m_gameState = GameState::GameFinished;
+	}
+	break;
+	}
+
+	update();
+}
+
 void CheckersBoardFrame::mouseMoveEvent(QMouseEvent *event)
 {
 	switch (m_gameState)
 	{
-	case GameState::SelectPiece:
-	{
-		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-		{
-			m_tileRenders[i]->toggleIsPieceHighlighted(false);
-		}
-		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-		{
-			if (m_tileRenders[i]->containsPoint(event->pos()) && m_tileRenders[i]->containsPiece(m_playerColor))
-			{
-				m_tileRenders[i]->toggleIsPieceHighlighted(true);
-				break;
-			}
-		}
-
-		if (!m_selectedPieceName.empty())
-		{
-			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-			{
-				m_tileRenders[i]->toggleIsTileHighlighted(false);
-			}
-			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-			{
-				if (m_tileRenders[i]->getIsTileReachable() && m_tileRenders[i]->containsPoint(event->pos()))
-				{
-					m_tileRenders[i]->toggleIsTileHighlighted(true);
-					break;
-				}
-			}
-		}
-	}
-	break;
-	case GameState::SelectTile:
+	case GameState::Connecting:
 	{
 		// Do nothing
 	}
 	break;
-	case GameState::WaitingOnOtherPlayer:
+	case GameState::BlackMove:
 	{
-		// Do nothing
+		if (m_playerColor == TurtlePieceColor::Black)
+		{
+			handleMouseMove(event);
+		}
+		else
+		{
+			// Do nothing
+		}
 	}
 	break;
+	case GameState::RedMove:
+	{
+		if (m_playerColor == TurtlePieceColor::Red)
+		{
+			handleMouseMove(event);
+		}
+		else
+		{
+			// Do nothing
+		}
+	}
 	case GameState::GameFinished:
 	{
 		// Do nothing
@@ -197,96 +270,72 @@ void CheckersBoardFrame::mouseMoveEvent(QMouseEvent *event)
 	QFrame::mouseMoveEvent(event); // Ensure base class event handling
 }
 
+void CheckersBoardFrame::handleMouseMove(QMouseEvent *event)
+{
+	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+	{
+		m_tileRenders[i]->toggleIsPieceHighlighted(false);
+	}
+	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+	{
+		if (m_tileRenders[i]->containsPoint(event->pos()) && m_tileRenders[i]->containsPiece(m_playerColor))
+		{
+			m_tileRenders[i]->toggleIsPieceHighlighted(true);
+			break;
+		}
+	}
+
+	if (!m_selectedPieceName.empty())
+	{
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			m_tileRenders[i]->toggleIsTileHighlighted(false);
+		}
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			if (m_tileRenders[i]->getIsTileReachable() && m_tileRenders[i]->containsPoint(event->pos()))
+			{
+				m_tileRenders[i]->toggleIsTileHighlighted(true);
+				break;
+			}
+		}
+	}
+}
+
 void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
 {
 	if (event->button() == Qt::LeftButton)
 	{
 		switch (m_gameState)
 		{
-		case GameState::SelectPiece:
-		{
-			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-			{
-				m_tileRenders[i]->toggleIsPieceSelected(false);
-				m_tileRenders[i]->toggleIsTileReachable(false);
-				m_tileRenders[i]->toggleIsTileHighlighted(false);
-				m_tileRenders[i]->toggleIsTileSelected(false);
-			}
-			bool selected = false;
-			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-			{
-				if (m_tileRenders[i]->containsPoint(event->pos()) && m_tileRenders[i]->containsPiece(m_playerColor))
-				{
-					if (m_selectedPieceName != m_tileRenders[i]->getTurtlePiece()->getName()) // If we've clicked a new piece, select it
-					{
-						m_selectedPieceName = m_tileRenders[i]->getTurtlePiece()->getName();
-						m_tileRenders[i]->toggleIsPieceSelected(true);
-						auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestReachableTiles::Request>();
-						request->piece_name = m_selectedPieceName;
-						m_requestReachableTilesClient->async_send_request(request,
-																		  std::bind(&CheckersBoardFrame::requestReachableTilesResponse, this, std::placeholders::_1));
-						selected = true;
-					}
-					else // If we've clicked the same piece again, unselect it instead
-					{
-						m_selectedPieceName.clear();
-					}
-					break; // Only 1 tile can contain the mouse at any time
-				}
-			}
-			if (!selected) // We clicked somewhere which isn't on a valid turtle, so clear the selected piece
-			{
-				m_selectedPieceName.clear();
-			}
-		}
-		break;
-		case GameState::SelectTile:
-		{
-			int clickedTile = -1;
-			// Check for collisions with tiles
-			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-			{
-				if (m_tileRenders[i]->containsPoint(event->pos()))
-				{
-					clickedTile = i;
-					break; // Only 1 tile can contain the mouse at any time
-				}
-			}
-
-			// -1 marks no tile is highlighted
-			if (clickedTile >= 0)
-			{
-				if (m_highlightedTile >= 0)
-				{
-					if (clickedTile == m_highlightedTile)
-					{
-						// If we clicked a highlighted tile, unhighlight it
-						m_tileRenders[clickedTile]->toggleIsTileHighlighted(false);
-						m_highlightedTile = -1;
-					}
-					else
-					{
-						// If we clicked a new tile while one was already highlighted,
-						// unhighlight the old one and highlight the new one
-						m_tileRenders[m_highlightedTile]->toggleIsTileHighlighted(false);
-						m_tileRenders[clickedTile]->toggleIsTileHighlighted(true);
-						m_highlightedTile = clickedTile;
-					}
-				}
-				else
-				{
-					// If there are no highlighted tiles, highlight the new one
-					m_tileRenders[clickedTile]->toggleIsTileHighlighted(true);
-					m_highlightedTile = clickedTile;
-				}
-			}
-		}
-		break;
-		case GameState::WaitingOnOtherPlayer:
+		case GameState::Connecting:
 		{
 			// Do nothing
 		}
 		break;
+		case GameState::BlackMove:
+		{
+			if (m_playerColor == TurtlePieceColor::Black)
+			{
+				handleMouseClick(event);
+			}
+			else
+			{
+				// Do nothing
+			}
+		}
+		break;
+		case GameState::RedMove:
+		{
+			if (m_playerColor == TurtlePieceColor::Red)
+			{
+				handleMouseClick(event);
+			}
+			else
+			{
+				// Do nothing
+			}
+		}
 		case GameState::GameFinished:
 		{
 			// Do nothing
@@ -298,6 +347,87 @@ void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
 	update();
 
 	QFrame::mousePressEvent(event); // Ensure base class event handling
+}
+
+void CheckersBoardFrame::handleMouseClick(QMouseEvent *event)
+{
+	if (m_moveSelected)
+	{
+		// Do nothing, continue to wait for a response from the game node
+	}
+	else if (m_selectedPieceName.empty()) // If no piece is selected
+	{
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			m_tileRenders[i]->toggleIsPieceSelected(false);
+			m_tileRenders[i]->toggleIsTileReachable(false);
+			m_tileRenders[i]->toggleIsTileHighlighted(false);
+			m_tileRenders[i]->toggleIsTileSelected(false);
+		}
+		bool selected = false;
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			if (m_tileRenders[i]->containsPoint(event->pos()) && m_tileRenders[i]->containsPiece(m_playerColor))
+			{
+				if (m_selectedPieceName != m_tileRenders[i]->getTurtlePiece()->getName()) // If we've clicked a new piece, select it
+				{
+					m_sourceTileIndex = i;
+					m_selectedPieceName = m_tileRenders[m_sourceTileIndex]->getTurtlePiece()->getName();
+					m_tileRenders[m_sourceTileIndex]->toggleIsPieceSelected(true);
+					auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestReachableTiles::Request>();
+					request->piece_name = m_selectedPieceName;
+					m_requestReachableTilesClient->async_send_request(request,
+																	  std::bind(&CheckersBoardFrame::requestReachableTilesResponse, this, std::placeholders::_1));
+					selected = true;
+				}
+				else // If we've clicked the same piece again, unselect it instead
+				{
+					m_selectedPieceName.clear();
+				}
+				break; // Only 1 tile can contain the mouse at any time
+			}
+		}
+		if (!selected) // We clicked somewhere which isn't on a valid turtle, so clear the selected piece
+		{
+			m_selectedPieceName.clear();
+		}
+	}
+	else // A piece is selected, look for a tile to accept
+	{
+		bool selected = false;
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			if (m_tileRenders[i]->containsPoint(event->pos()))
+			{
+				if (m_tileRenders[i]->getIsTileReachable())
+				{
+					m_destinationTileIndex = i;
+					m_tileRenders[i]->toggleIsTileSelected(true);
+					auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestPieceMove::Request>();
+					request->piece_name = m_selectedPieceName;
+					request->source_tile_index = m_sourceTileIndex;
+					request->destination_tile_index = m_destinationTileIndex;
+					m_requestPieceMoveClient->async_send_request(request,
+																 std::bind(&CheckersBoardFrame::requestPieceMoveResponse, this, std::placeholders::_1));
+					m_moveSelected = true;
+					selected = true;
+				}
+				break; // Only 1 tile can contain the mouse at any time
+			}
+		}
+		if (!selected) // We clicked somewhere which isn't on a valid turtle, so clear the selected piece
+		{
+			m_destinationTileIndex = -1;
+			m_selectedPieceName.clear();
+			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+			{
+				m_tileRenders[i]->toggleIsPieceSelected(false);
+				m_tileRenders[i]->toggleIsTileReachable(false);
+				m_tileRenders[i]->toggleIsTileHighlighted(false);
+				m_tileRenders[i]->toggleIsTileSelected(false);
+			}
+		}
+	}
 }
 
 void CheckersBoardFrame::spawnTiles()

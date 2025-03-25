@@ -5,13 +5,14 @@
 using std::placeholders::_1;
 
 CheckersGameLobby::CheckersGameLobby(
-    const std::string &lobbyName,
-    const std::string &blackPlayerName,
-    const std::string &redPlayerName)
-    : m_lobbyName(lobbyName),
-      m_blackPlayerName(blackPlayerName),
-      m_redPlayerName(redPlayerName)
+    const std::string &lobbyName)
+    : m_lobbyName(lobbyName)
 {
+    m_isBlackTurn = true;
+    
+    m_blackPlayerName = "";
+    m_redPlayerName = "";
+
     // Create the tiles
     for (size_t r = 0u; r < NUM_PLAYABLE_ROWS; r++)
     {
@@ -32,24 +33,99 @@ CheckersGameLobby::CheckersGameLobby(
     }
 }
 
-std::vector<uint64_t> CheckersGameLobby::requestReachableTiles(const std::string &requestedPieceName)
+bool CheckersGameLobby::playerSlotAvailable() const
 {
-    for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+    return (m_blackPlayerName.empty() || m_redPlayerName.empty());
+}
+
+TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName)
+{
+    if (m_blackPlayerName.empty())
     {
-        if (m_tiles[i]->getTurtlePieceName() == requestedPieceName)
+        m_blackPlayerName = playerName;
+        return TurtlePieceColor::Black;
+    }
+    else if (m_redPlayerName.empty())
+    {
+        m_redPlayerName = playerName;
+        return TurtlePieceColor::Red;
+    }
+    else
+    {
+        return TurtlePieceColor::None;
+    }
+}
+
+bool CheckersGameLobby::isPieceValidForTurn(const std::string &requestedPieceName) const
+{
+    if (m_isBlackTurn)
+    {
+        return (requestedPieceName.rfind("Black", 0) == 0);
+    }
+    else
+    {
+        return (requestedPieceName.rfind("Red", 0) == 0);
+    }
+}
+
+std::vector<uint64_t> CheckersGameLobby::requestReachableTiles(const std::string &requestedPieceName) const
+{
+    if (isPieceValidForTurn(requestedPieceName))
+    {
+        for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
         {
-            return m_tiles[i]->getCurrentlyReachableTiles(m_tiles);
+            if (m_tiles[i]->getTurtlePieceName() == requestedPieceName)
+            {
+                return m_tiles[i]->getCurrentlyReachableTiles(m_tiles);
+            }
         }
     }
     return {};
 }
 
-std::string CheckersGameLobby::getLobbyName()
+bool CheckersGameLobby::requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex)
+{
+    if (isPieceValidForTurn(requestedPieceName) &&
+        sourceTileIndex > -1 &&
+        destinationTileIndex > -1 &&
+        sourceTileIndex < static_cast<int>(m_tiles.size()) &&
+        destinationTileIndex < static_cast<int>(m_tiles.size()))
+    {
+        if (m_tiles[sourceTileIndex]->getTurtlePieceName() == requestedPieceName && m_tiles[destinationTileIndex]->getTurtlePieceName().empty())
+        {
+            m_tiles[sourceTileIndex]->moveTurtlePiece(m_tiles[destinationTileIndex]);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return false;
+}
+
+std::string CheckersGameLobby::getLobbyName() const
 {
     return m_lobbyName;
 }
 
-Winner CheckersGameLobby::getWinner()
+Winner CheckersGameLobby::getWinner() const
 {
     return m_winner;
+}
+
+void CheckersGameLobby::setIsBlackTurn(bool isBlackTurn)
+{
+    m_isBlackTurn = isBlackTurn;
+}
+
+bool CheckersGameLobby::getIsBlackTurn() const
+{
+    return m_isBlackTurn;
+}
+
+
+void CheckersGameLobby::togglePlayerTurn()
+{
+    m_isBlackTurn = !m_isBlackTurn;
 }

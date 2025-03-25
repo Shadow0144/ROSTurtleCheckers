@@ -5,7 +5,7 @@
 #include <algorithm>
 
 // Parses command line options
-char* getCmdOption(char ** begin, char **end, const std::string & option)
+char *getCmdOption(char **begin, char **end, const std::string &option)
 {
     char **itr = std::find(begin, end, option);
     if (itr != end && ++itr != end)
@@ -20,17 +20,13 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
 {
     rclcpp::init(argc, argv);
 
-    m_playerNode = rclcpp::Node::make_shared("checkers_player_node");
-
     m_playerName = getCmdOption(argv, argv + argc, "-p");
     if (m_playerName.empty())
     {
         m_playerName = getCmdOption(argv, argv + argc, "-player_name");
     }
 
-    // Black starts
-    m_playerColor = TurtlePieceColor::Black;
-    m_gameState = GameState::SelectPiece;
+    m_playerNode = rclcpp::Node::make_shared("checkers_player_node");
 }
 
 int CheckersPlayerNode::exec()
@@ -44,7 +40,7 @@ int CheckersPlayerNode::exec()
     // Try to subscribe to a game and connect to a lobby
     RCLCPP_INFO(m_playerNode->get_logger(), "Player " + m_playerName + " searching for lobby...");
 
-    m_checkersBoard = std::make_unique<CheckersBoardFrame>(m_playerNode, m_playerColor, m_gameState);
+    m_checkersBoard = std::make_unique<CheckersBoardFrame>(m_playerNode, m_playerName);
     m_checkersBoard->show();
 
     return QApplication::exec();

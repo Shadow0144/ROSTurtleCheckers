@@ -21,7 +21,10 @@
 #include <rcl_interfaces/msg/parameter_event.hpp>
 #include <std_srvs/srv/empty.hpp>
 
+#include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/msg/game_state.hpp"
 
 #include <map>
 #include <string>
@@ -34,8 +37,7 @@ class CheckersBoardFrame : public QFrame
 public:
 	CheckersBoardFrame(
 		rclcpp::Node::SharedPtr &nodeHandle,
-		TurtlePieceColor playerColor,
-		GameState gameState,
+		const std::string &playerName,
 		QWidget *parent = 0,
 		Qt::WindowFlags windowFlags = Qt::WindowFlags());
 	~CheckersBoardFrame();
@@ -60,21 +62,34 @@ private:
 	void spawnPieces();
 	void spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t imageIndex);
 
+	void connectToGameResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedFuture future);
 	void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
+	void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
+
+	void gameStateCallback(const turtle_checkers_interfaces::msg::GameState::SharedPtr msg);
 
 	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
 
+	void handleMouseMove(QMouseEvent *event);
+	void handleMouseClick(QMouseEvent *event);
+
 	rclcpp::Node::SharedPtr m_nodeHandle;
 
-	QTimer *m_updateTimer;
-
+	std::string m_playerName;
 	TurtlePieceColor m_playerColor;
 
 	GameState m_gameState;
 
 	std::string m_selectedPieceName;
+	std::size_t m_sourceTileIndex;
+	std::size_t m_destinationTileIndex;
+	bool m_moveSelected;
 
+	rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedPtr m_connectToGameClient;
 	rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesClient;
+	rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveClient;
+
+	rclcpp::Subscription<turtle_checkers_interfaces::msg::GameState>::SharedPtr m_gameStateSubscription;
 
 	typedef std::map<std::string, TurtlePiecePtr> TurtlePiecesMap;
 	TurtlePiecesMap m_blackTurtles;
@@ -90,6 +105,8 @@ private:
 
 	TileRenderPtr m_tileRenders[NUM_PLAYABLE_TILES];
 	int m_highlightedTile = -1; // No tile is highlighted
+	
+	QTimer *m_updateTimer;
 };
 
 typedef std::unique_ptr<CheckersBoardFrame> CheckersBoardFrameUniPtr;

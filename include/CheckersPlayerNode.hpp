@@ -27,6 +27,4 @@ private:
     CheckersBoardFrameUniPtr m_checkersBoard;
 
     std::string m_playerName;
-    TurtlePieceColor m_playerColor;
-    GameState m_gameState;
 };

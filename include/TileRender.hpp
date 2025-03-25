@@ -20,6 +20,7 @@ public:
 
     void setTurtlePiece(const TurtlePiecePtr &turtle);
     TurtlePiecePtr &getTurtlePiece();
+    void moveTurtlePiece(const std::shared_ptr<TileRender> &tileRender);
 
     bool containsPiece(TurtlePieceColor color);
 

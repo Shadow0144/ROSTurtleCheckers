@@ -8,7 +8,14 @@ Tile::Tile(size_t row, size_t col)
     : m_row(row),
       m_col(col)
 {
+    clearTurtlePiece();
+}
+
+void Tile::clearTurtlePiece()
+{
     m_turtlePieceColor = TurtlePieceColor::None;
+    m_turtlePieceName = "";
+    m_isTurtlePieceKinged = false;
 }
 
 void Tile::setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool isTurtlePieceKinged)
@@ -41,6 +48,14 @@ size_t Tile::getRow() const
 size_t Tile::getCol() const
 {
     return m_col;
+}
+
+void Tile::moveTurtlePiece(TilePtr destinationTile)
+{
+    destinationTile->m_turtlePieceColor = m_turtlePieceColor;
+    destinationTile->m_turtlePieceName = m_turtlePieceName;
+    destinationTile->m_isTurtlePieceKinged = m_isTurtlePieceKinged;
+    clearTurtlePiece();
 }
 
 bool Tile::canJumpPiece(TurtlePieceColor otherPieceColor) const
