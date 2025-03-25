@@ -18,8 +18,9 @@ public:
         const std::string &name,
         TurtlePieceColor color,
         const QImage &turtle_image,
-        const QImage &highlight_image,
         const QImage &king_image,
+        const QImage &highlight_image,
+        const QImage &select_image,
         const QPointF &position,
         float angle);
 
@@ -27,13 +28,16 @@ public:
 
     TurtlePieceColor getColor();
 
-    bool getHighlighted();
     bool getKinged();
+    void toggleKingship(bool king);
 
+    bool getHighlighted();
     void toggleHighlight();
     void toggleHighlight(bool highlight);
 
-    void toggleKingship(bool king);
+    bool getSelected();
+    void toggleSelect();
+    void toggleSelect(bool select);
 
     void move(const QPointF &new_position);
     void paint(QPainter &painter);
@@ -45,16 +49,19 @@ private:
 
     QImage turtle_image_;
     QImage turtle_rotated_image_;
-    QImage highlight_image_;
-    QImage highlight_rotated_image_;
     QImage king_image_;
     QImage king_rotated_image_;
+    QImage highlight_image_;
+    QImage highlight_rotated_image_;
+    QImage select_image_;
+    QImage select_rotated_image_;
 
     QPointF position_;
     float angle_;
 
-    bool highlighted;
     bool kinged;
+    bool highlighted;
+    bool selected;
 };
 
 typedef std::shared_ptr<TurtlePiece> TurtlePiecePtr;

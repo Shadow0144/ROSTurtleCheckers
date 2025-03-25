@@ -43,6 +43,7 @@ public:
 	void setupGame();
 
 protected:
+	void mouseMoveEvent(QMouseEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;
 
 	void paintEvent(QPaintEvent *event);
@@ -96,8 +97,9 @@ private:
 	size_t black_image_index = 0u;
 	QVector<QImage> red_turtle_images_;
 	size_t red_image_index = 0u;
-	QVector<QImage> highlight_turtle_images_;
 	QVector<QImage> king_turtle_images_;
+	QVector<QImage> highlight_turtle_images_;
+	QVector<QImage> select_turtle_images_;
 
 	TileRenderPtr tile_renders[NUM_PLAYABLE_TILES];
 	int highlighted_tile = -1; // No tile is highlighted

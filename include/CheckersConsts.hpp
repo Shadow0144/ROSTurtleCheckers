@@ -48,5 +48,7 @@ constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 constexpr size_t MAX_COLS_ROW_INDEX = 7u;
 constexpr size_t MAX_JUMP_INDEX = MAX_COLS_ROW_INDEX - 1u;
 
-constexpr int HIGHLIGHTED_SQUARES_BG_RGB[3] = {0u, 0u, 255u};
+constexpr int REACHABLED_SQUARES_BG_RGB[3] = {0u, 0u, 255u};
+constexpr int HIGHLIGHTED_SQUARES_BG_RGB[3] = {0u, 150u, 255u};
+constexpr int SELECTED_SQUARES_BG_RGB[3] = {0u, 255u, 0u};
 constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};

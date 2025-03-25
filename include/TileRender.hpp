@@ -18,8 +18,6 @@ public:
 
     QPointF getCenterPosition();
 
-    bool getTileHighlighted();
-
     bool containsPoint(QPoint point);
 
     void setTurtlePiece(const TurtlePiecePtr &turtle);
@@ -27,11 +25,25 @@ public:
 
     bool containsPiece(TurtlePieceColor color);
 
+    bool getPieceHighlight();
     bool togglePieceHighlight();
     void togglePieceHighlight(bool highlight);
 
+    bool getPieceSelect();
+    bool togglePieceSelect();
+    void togglePieceSelect(bool select);
+
+    bool getTileReachable();
+    void toggleTileReachable();
+    void toggleTileReachable(bool reachable);
+
+    bool getTileHighlight();
     void toggleTileHighlight();
     void toggleTileHighlight(bool highlight);
+
+    bool getTileSelect();
+    void toggleTileSelect();
+    void toggleTileSelect(bool select);
 
     void paint(QPainter &painter);
 
@@ -46,7 +58,9 @@ private:
     float tile_width_;
     float tile_height_;
 
+    bool reachabled;
     bool highlighted;
+    bool selected;
 
     TurtlePiecePtr contained_turtle;
 };

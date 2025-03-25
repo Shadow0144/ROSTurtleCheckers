@@ -35,6 +35,8 @@ CheckersBoardFrame::CheckersBoardFrame(
 
 	srand(time(NULL));
 
+	setMouseTracking(true);
+
 	update_timer_ = new QTimer(this);
 	update_timer_->setInterval(16);
 	update_timer_->start();
@@ -79,12 +81,15 @@ CheckersBoardFrame::CheckersBoardFrame(
 		QImage r_img;
 		r_img.load(images_path + turtles_images[i] + "_red.png");
 		red_turtle_images_.append(r_img);
-		QImage h_img;
-		h_img.load(images_path + turtles_images[i] + "_highlight.png");
-		highlight_turtle_images_.append(h_img);
 		QImage k_img;
 		k_img.load(images_path + turtles_images[i] + "_king.png");
 		king_turtle_images_.append(k_img);
+		QImage h_img;
+		h_img.load(images_path + turtles_images[i] + "_highlight.png");
+		highlight_turtle_images_.append(h_img);
+		QImage s_img;
+		s_img.load(images_path + turtles_images[i] + "_select.png");
+		select_turtle_images_.append(s_img);
 	}
 
 	clear();
@@ -141,15 +146,73 @@ void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_che
 {
 	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
-		tile_renders[i]->toggleTileHighlight(false);
+		tile_renders[i]->toggleTileReachable(false);
 	}
 	auto result = future.get();
 	const auto &highlightedTiles = result->reachable_tile_indices;
 	for (size_t i = 0u; i < highlightedTiles.size(); i++)
 	{
-		tile_renders[highlightedTiles[i]]->toggleTileHighlight(true);
+		tile_renders[highlightedTiles[i]]->toggleTileReachable(true);
 	}
 	update();
+}
+
+void CheckersBoardFrame::mouseMoveEvent(QMouseEvent *event)
+{
+	switch (game_state_)
+	{
+	case GameState::SelectPiece:
+	{
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			tile_renders[i]->togglePieceHighlight(false);
+		}
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			if (tile_renders[i]->containsPoint(event->pos()) && tile_renders[i]->containsPiece(player_color_))
+			{
+				tile_renders[i]->togglePieceHighlight(true);
+				break;
+			}
+		}
+
+		if (!selected_piece_.empty())
+		{
+			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+			{
+				tile_renders[i]->toggleTileHighlight(false);
+			}
+			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+			{
+				if (tile_renders[i]->getTileReachable() && tile_renders[i]->containsPoint(event->pos()))
+				{
+					tile_renders[i]->toggleTileHighlight(true);
+					break;
+				}
+			}
+		}
+	}
+	break;
+	case GameState::SelectTile:
+	{
+		// Do nothing
+	}
+	break;
+	case GameState::WaitingOnOtherPlayer:
+	{
+		// Do nothing
+	}
+	break;
+	case GameState::GameFinished:
+	{
+		// Do nothing
+	}
+	break;
+	}
+
+	update();
+
+	QFrame::mouseMoveEvent(event); // Ensure base class event handling
 }
 
 void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
@@ -160,20 +223,22 @@ void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
 		{
 		case GameState::SelectPiece:
 		{
-			bool selected = false;
 			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 			{
-				tile_renders[i]->togglePieceHighlight(false);
+				tile_renders[i]->togglePieceSelect(false);
+				tile_renders[i]->toggleTileReachable(false);
 				tile_renders[i]->toggleTileHighlight(false);
+				tile_renders[i]->toggleTileSelect(false);
 			}
+			bool selected = false;
 			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 			{
 				if (tile_renders[i]->containsPoint(event->pos()) && tile_renders[i]->containsPiece(player_color_))
 				{
-					if (selected_piece_ != tile_renders[i]->getTurtlePiece()->getName()) // If we've clicked a new piece, highlight it
+					if (selected_piece_ != tile_renders[i]->getTurtlePiece()->getName()) // If we've clicked a new piece, select it
 					{
 						selected_piece_ = tile_renders[i]->getTurtlePiece()->getName();
-						tile_renders[i]->togglePieceHighlight(true);
+						tile_renders[i]->togglePieceSelect(true);
 						auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestReachableTiles::Request>();
 						request->piece_name = selected_piece_;
 						requestReachableTilesClient->async_send_request(request,
@@ -246,9 +311,10 @@ void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
 		}
 		break;
 		}
-
-		update();
 	}
+
+	update();
+
 	QFrame::mousePressEvent(event); // Ensure base class event handling
 }
 
@@ -334,8 +400,9 @@ void CheckersBoardFrame::spawnTurtle(const std::string &name,
 			name,
 			TurtlePieceColor::Black,
 			black_turtle_images_[static_cast<int>(image_index)],
-			highlight_turtle_images_[static_cast<int>(image_index)],
 			king_turtle_images_[static_cast<int>(image_index)],
+			highlight_turtle_images_[static_cast<int>(image_index)],
+			select_turtle_images_[static_cast<int>(image_index)],
 			QPointF(x, y),
 			angle);
 		/*RCLCPP_INFO(
@@ -348,8 +415,9 @@ void CheckersBoardFrame::spawnTurtle(const std::string &name,
 			name,
 			TurtlePieceColor::Red,
 			red_turtle_images_[static_cast<int>(image_index)],
-			highlight_turtle_images_[static_cast<int>(image_index)],
 			king_turtle_images_[static_cast<int>(image_index)],
+			highlight_turtle_images_[static_cast<int>(image_index)],
+			select_turtle_images_[static_cast<int>(image_index)],
 			QPointF(x, y),
 			angle);
 		/*RCLCPP_INFO(
