@@ -14,6 +14,9 @@ CheckersGameLobby::CheckersGameLobby(
     m_blackPlayerName = "";
     m_redPlayerName = "";
 
+    m_blackPiecesRemaining = NUM_PIECES_PER_PLAYER;
+    m_redPiecesRemaining = NUM_PIECES_PER_PLAYER;
+
     // Create the tiles
     for (size_t r = 0u; r < NUM_PLAYABLE_ROWS; r++)
     {
@@ -162,4 +165,26 @@ bool CheckersGameLobby::getIsBlackTurn() const
 void CheckersGameLobby::togglePlayerTurn()
 {
     m_isBlackTurn = !m_isBlackTurn;
+}
+
+void CheckersGameLobby::slayTurtleAtTileIndex(int tileIndex)
+{
+    switch (m_tiles[tileIndex]->getTurtlePieceColor())
+    {
+        case TurtlePieceColor::Black:
+        {
+            m_blackPiecesRemaining--;
+        }
+        break;
+        case TurtlePieceColor::Red:
+        {
+            m_redPiecesRemaining--;
+        }
+        break;
+        case TurtlePieceColor::None:
+        {
+            // Do nothing
+        }
+        break;
+    }
 }

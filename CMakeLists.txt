@@ -37,6 +37,7 @@ add_executable(checkers_player_node
   src/TileRender.cpp
   src/TurtlePiece.cpp
   src/TurtleGraveyard.cpp
+  src/HUD.cpp
   src/CheckersBoardFrame.cpp 
   src/CheckersPlayerNode.cpp
   ${CheckersBoardFrame_MOCS})

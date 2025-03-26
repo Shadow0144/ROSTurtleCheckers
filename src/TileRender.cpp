@@ -19,14 +19,15 @@ TileRender::TileRender(const QPointF &centerPosition)
     m_isReachable = false;
     m_isHighlighted = false;
     m_isSelected = false;
+    m_isLastSelected = false;
 }
 
-QPointF TileRender::getCenterPosition()
+QPointF TileRender::getCenterPosition() const
 {
     return m_centerPosition;
 }
 
-bool TileRender::containsPoint(QPoint point)
+bool TileRender::containsPoint(QPoint point) const
 {
     return (point.x() >= m_left &&
             point.y() >= m_top &&
@@ -43,12 +44,12 @@ void TileRender::setTurtlePiece(const TurtlePiecePtr &turtle)
     }
 }
 
-TurtlePiecePtr &TileRender::getTurtlePiece()
+const TurtlePiecePtr &TileRender::getTurtlePiece() const
 {
     return m_containedTurtle;
 }
 
-TurtlePieceColor TileRender::getTurtlePieceColor()
+TurtlePieceColor TileRender::getTurtlePieceColor() const
 {
     if (m_containedTurtle)
     {
@@ -68,12 +69,12 @@ void TileRender::clearTurtlePiece()
     m_containedTurtle.reset();
 }
 
-bool TileRender::containsPiece(TurtlePieceColor color)
+bool TileRender::containsPiece(TurtlePieceColor color) const
 {
     return (m_containedTurtle && (m_containedTurtle->getColor() == color));
 }
 
-bool TileRender::getIsPieceHighlighted()
+bool TileRender::getIsPieceHighlighted() const
 {
     if (m_containedTurtle)
     {
@@ -100,7 +101,7 @@ void TileRender::toggleIsPieceHighlighted(bool isHighlighted)
     }
 }
 
-bool TileRender::getIsPieceSelected()
+bool TileRender::getIsPieceSelected() const
 {
     if (m_containedTurtle)
     {
@@ -127,7 +128,7 @@ void TileRender::toggleIsPieceSelected(bool isSelected)
     }
 }
 
-bool TileRender::getIsTileReachable()
+bool TileRender::getIsTileReachable() const
 {
     return m_isReachable;
 }
@@ -142,7 +143,7 @@ void TileRender::toggleIsTileReachable(bool isReachable)
     m_isReachable = isReachable;
 }
 
-bool TileRender::getIsTileHighlighted()
+bool TileRender::getIsTileHighlighted() const
 {
     return m_isHighlighted;
 }
@@ -157,7 +158,7 @@ void TileRender::toggleIsTileHighlighted(bool isHighlighted)
     m_isHighlighted = isHighlighted;
 }
 
-bool TileRender::getIsTileSelected()
+bool TileRender::getIsTileSelected() const
 {
     return m_isSelected;
 }
@@ -170,6 +171,21 @@ void TileRender::toggleIsTileSelected()
 void TileRender::toggleIsTileSelected(bool isSelected)
 {
     m_isSelected = isSelected;
+}
+
+bool TileRender::getIsTileLastSelected() const
+{
+    return m_isLastSelected;
+}
+
+void TileRender::toggleIsTileLastSelected()
+{
+    m_isLastSelected = !m_isLastSelected;
+}
+
+void TileRender::toggleIsTileLastSelected(bool isLastSelected)
+{
+    m_isLastSelected = isLastSelected;
 }
 
 void TileRender::paint(QPainter &painter)
@@ -194,6 +210,12 @@ void TileRender::paint(QPainter &painter)
         r = REACHABLE_SQUARES_BG_RGB[0];
         g = REACHABLE_SQUARES_BG_RGB[1];
         b = REACHABLE_SQUARES_BG_RGB[2];
+    }
+    else if (m_isLastSelected)
+    {
+        r = LAST_SELECTED_SQUARES_BG_RGB[0];
+        g = LAST_SELECTED_SQUARES_BG_RGB[1];
+        b = LAST_SELECTED_SQUARES_BG_RGB[2];
     }
     QRgb tileColor = qRgb(r, g, b);
     painter.fillRect(m_left, m_top, TILE_WIDTH, TILE_HEIGHT, tileColor);

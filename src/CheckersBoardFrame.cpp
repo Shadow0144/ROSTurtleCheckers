@@ -41,6 +41,13 @@ CheckersBoardFrame::CheckersBoardFrame(
 	m_gameState = GameState::Connecting;
 	m_playerColor = TurtlePieceColor::None;
 
+	m_blackTurtlesRemaining = NUM_PIECES_PER_PLAYER;
+	m_redTurtlesRemaining = NUM_PIECES_PER_PLAYER;
+
+	m_hud = std::make_shared<HUD>();
+	m_hud->setPiecesRemaining(m_blackTurtlesRemaining, m_redTurtlesRemaining);
+	m_hud->setGameState(GameState::Connecting);
+
 	m_updateTimer = new QTimer(this);
 	m_updateTimer->setInterval(16);
 	m_updateTimer->start();
@@ -102,14 +109,17 @@ CheckersBoardFrame::CheckersBoardFrame(
 
 	clear();
 
-	spawnTiles();
-	spawnPieces();
-
 	m_blackPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Black);
 	m_redPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Red);
 
 	RCLCPP_INFO(
 		m_nodeHandle->get_logger(), "Starting turtle checkers board with node name %s", m_nodeHandle->get_fully_qualified_name());
+
+	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
+	m_requestPieceMoveClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove");
+
+	m_updateGameStateSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateGameState>("UpdateGameState", 10, std::bind(&CheckersBoardFrame::updateGameStateCallback, this, _1));
+	m_updateBoardSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10, std::bind(&CheckersBoardFrame::updateBoardCallback, this, _1));
 
 	m_connectToGameClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::ConnectToGame>("ConnectToGame");
 	while (!m_connectToGameClient->wait_for_service(std::chrono::seconds(1)))
@@ -121,12 +131,6 @@ CheckersBoardFrame::CheckersBoardFrame(
 		}
 		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Service not available, waiting again...");
 	}
-	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
-	m_requestPieceMoveClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove");
-
-	m_updateGameStateSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateGameState>("UpdateGameState", 10, std::bind(&CheckersBoardFrame::updateGameStateCallback, this, _1));
-	m_updateBoardSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10, std::bind(&CheckersBoardFrame::updateBoardCallback, this, _1));
-
 	auto request = std::make_shared<turtle_checkers_interfaces::srv::ConnectToGame::Request>();
 	request->player_name = m_playerName;
 	m_connectToGameClient->async_send_request(request,
@@ -152,6 +156,36 @@ void CheckersBoardFrame::parameterEventCallback(
 void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedFuture future)
 {
 	auto result = future.get();
+
+	switch (result->game_state)
+	{
+	case 0: // Connecting
+	{
+		m_gameState = GameState::Connecting;
+	}
+	break;
+	case 1: // Connected
+	{
+		m_gameState = GameState::Connected;
+	}
+	break;
+	case 2: // Black turn
+	{
+		m_gameState = GameState::BlackMove;
+	}
+	break;
+	case 3: // Red turn
+	{
+		m_gameState = GameState::RedMove;
+	}
+	break;
+	case 4: // Game over
+	{
+		m_gameState = GameState::GameFinished;
+	}
+	break;
+	}
+
 	if (result->player_color == 1) // Black
 	{
 		m_playerColor = TurtlePieceColor::Black;
@@ -167,6 +201,12 @@ void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_in
 		m_playerColor = TurtlePieceColor::None;
 		RCLCPP_WARN(m_nodeHandle->get_logger(), "Failed to connect to a game.");
 	}
+
+	m_hud->setPlayerColor(m_playerColor);
+	m_hud->setGameState(m_gameState);
+
+	spawnTiles();
+	spawnPieces();
 }
 
 void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future)
@@ -204,22 +244,29 @@ void CheckersBoardFrame::updateGameStateCallback(const turtle_checkers_interface
 		m_gameState = GameState::Connecting;
 	}
 	break;
-	case 1: // Black turn
+	case 1: // Connected
+	{
+		m_gameState = GameState::Connected;
+	}
+	break;
+	case 2: // Black turn
 	{
 		m_gameState = GameState::BlackMove;
 	}
 	break;
-	case 2: // Red turn
+	case 3: // Red turn
 	{
 		m_gameState = GameState::RedMove;
 	}
 	break;
-	case 3: // Game over
+	case 4: // Game over
 	{
 		m_gameState = GameState::GameFinished;
 	}
 	break;
 	}
+
+	m_hud->setGameState(m_gameState);
 
 	update();
 }
@@ -227,12 +274,19 @@ void CheckersBoardFrame::updateGameStateCallback(const turtle_checkers_interface
 void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
 {
 	clearSelections();
+
 	if (!message->piece_name.empty() &&
 		message->source_tile_index < NUM_PLAYABLE_TILES &&
 		message->destination_tile_index < NUM_PLAYABLE_TILES)
 	{
 		m_tileRenders[message->source_tile_index]->moveTurtlePiece(m_tileRenders[message->destination_tile_index]);
+		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+		{
+			m_tileRenders[i]->toggleIsTileLastSelected(false);
+		}
+		m_tileRenders[message->destination_tile_index]->toggleIsTileLastSelected(true);
 	}
+
 	if (message->slain_piece_tile_index > -1)
 	{
 		auto slainPieceTileIndex = message->slain_piece_tile_index;
@@ -244,11 +298,13 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 			case TurtlePieceColor::Black:
 			{
 				m_redPlayerGraveyard->addTurtlePiece(m_tileRenders[slainPieceTileIndex]);
+				m_blackTurtlesRemaining--;
 			}
 			break;
 			case TurtlePieceColor::Red:
 			{
 				m_blackPlayerGraveyard->addTurtlePiece(m_tileRenders[slainPieceTileIndex]);
+				m_redTurtlesRemaining--;
 			}
 			break;
 			case TurtlePieceColor::None:
@@ -259,6 +315,7 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 			}
 		}
 	}
+
 	switch (message->game_state)
 	{
 	case 0: // Connecting
@@ -266,22 +323,30 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 		m_gameState = GameState::Connecting;
 	}
 	break;
-	case 1: // Black turn
+	case 1: // Connected
+	{
+		m_gameState = GameState::Connected;
+	}
+	break;
+	case 2: // Black turn
 	{
 		m_gameState = GameState::BlackMove;
 	}
 	break;
-	case 2: // Red turn
+	case 3: // Red turn
 	{
 		m_gameState = GameState::RedMove;
 	}
 	break;
-	case 3: // Game over
+	case 4: // Game over
 	{
 		m_gameState = GameState::GameFinished;
 	}
 	break;
 	}
+
+	m_hud->setGameState(m_gameState);
+	m_hud->setPiecesRemaining(m_blackTurtlesRemaining, m_redTurtlesRemaining);
 
 	update();
 }
@@ -291,6 +356,11 @@ void CheckersBoardFrame::mouseMoveEvent(QMouseEvent *event)
 	switch (m_gameState)
 	{
 	case GameState::Connecting:
+	{
+		// Do nothing
+	}
+	break;
+	case GameState::Connected:
 	{
 		// Do nothing
 	}
@@ -369,6 +439,11 @@ void CheckersBoardFrame::mousePressEvent(QMouseEvent *event)
 		switch (m_gameState)
 		{
 		case GameState::Connecting:
+		{
+			// Do nothing
+		}
+		break;
+		case GameState::Connected:
 		{
 			// Do nothing
 		}
@@ -518,10 +593,20 @@ void CheckersBoardFrame::spawnTiles()
 			tileCentersX[(i * 4) + 3] = (6 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
 		}
 
-		tileCentersY[(i * 4) + 0] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT;
-		tileCentersY[(i * 4) + 1] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT;
-		tileCentersY[(i * 4) + 2] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT;
-		tileCentersY[(i * 4) + 3] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT;
+		if (m_playerColor == TurtlePieceColor::Black)
+		{
+			tileCentersY[(i * 4) + 0] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
+			tileCentersY[(i * 4) + 1] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
+			tileCentersY[(i * 4) + 2] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
+			tileCentersY[(i * 4) + 3] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
+		}
+		else // Red - The red player faces the board from the other direction, so mirror it
+		{
+			tileCentersY[(i * 4) + 0] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
+			tileCentersY[(i * 4) + 1] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
+			tileCentersY[(i * 4) + 2] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
+			tileCentersY[(i * 4) + 3] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
+		}
 	}
 	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
@@ -545,7 +630,7 @@ void CheckersBoardFrame::spawnPieces()
 					false,
 					center.x(),
 					center.y(),
-					DOWNWARD_ANGLE,
+					(m_playerColor == TurtlePieceColor::Black) ? DOWNWARD_ANGLE : UPWARD_ANGLE,
 					m_redImageIndex);
 		m_tileRenders[i]->setTurtlePiece(m_redTurtles[name]);
 	}
@@ -558,7 +643,7 @@ void CheckersBoardFrame::spawnPieces()
 					true,
 					center.x(),
 					center.y(),
-					UPWARD_ANGLE,
+					(m_playerColor == TurtlePieceColor::Black) ? UPWARD_ANGLE : DOWNWARD_ANGLE,
 					m_blackImageIndex);
 		m_tileRenders[i + BLACK_OFFSET]->setTurtlePiece(m_blackTurtles[name]);
 	}
@@ -624,6 +709,11 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	(void)event; // NO LINT
 	QPainter painter(this);
 
+	if (m_playerColor == TurtlePieceColor::None)
+	{
+		return; // If we haven't connected yet, don't draw a board
+	}
+
 	// Fill the background in red
 	QRgb backgroundColor = qRgb(RED_SQUARES_BG_RGB[0], RED_SQUARES_BG_RGB[1], RED_SQUARES_BG_RGB[2]);
 	painter.fillRect(0, 0, width(), height(), backgroundColor);
@@ -653,4 +743,7 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	// Draw the graveyards
 	m_blackPlayerGraveyard->paint(painter);
 	m_redPlayerGraveyard->paint(painter);
+
+	// Draw the HUD
+	m_hud->paint(painter);
 }

@@ -1,10 +1,11 @@
 #pragma once
 
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
-#include "CheckersConsts.hpp"
+#include "CheckersConsts.hpp" // NO LINT
 #include "TileRender.hpp"
-#include "TurtlePiece.hpp" // NO LINT
+#include "TurtlePiece.hpp"
 #include "TurtleGraveyard.hpp"
+#include "HUD.hpp"
 #endif
 
 #include <QFrame>
@@ -111,6 +112,11 @@ private:
 
 	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
 	TurtleGraveyardPtr m_redPlayerGraveyard; // Red player's graveyard containing the slain black pieces
+
+	HUDPtr m_hud;
+
+	size_t m_blackTurtlesRemaining;
+	size_t m_redTurtlesRemaining;
 	
 	QTimer *m_updateTimer;
 };

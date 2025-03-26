@@ -30,6 +30,7 @@ public:
     std::vector<uint64_t> requestReachableTiles(const std::string &requestedPieceName) const;
     bool requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex);
     int getJumpedPieceTileIndex(int sourceTileIndex, int destinationTileIndex) const; // Returns -1 when nothing was jumped
+    void slayTurtleAtTileIndex(int tileIndex);
 
 private:
     bool isPieceValidForTurn(const std::string &requestedPieceName) const;
@@ -38,6 +39,9 @@ private:
     std::string m_blackPlayerName;
     std::string m_redPlayerName;
     bool m_isBlackTurn;
+
+    size_t m_blackPiecesRemaining;
+    size_t m_redPiecesRemaining;
 
     bool m_isNextMoveBlack;                           // True if it is black's turn, false for red
     std::vector<uint32_t> m_validPiecesPerPlayer_[2]; // Black and red

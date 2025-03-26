@@ -14,37 +14,41 @@ class TileRender
 public:
     TileRender(const QPointF &centerPosition);
 
-    QPointF getCenterPosition();
+    QPointF getCenterPosition() const;
 
-    bool containsPoint(QPoint point);
+    bool containsPoint(QPoint point) const;
 
     void setTurtlePiece(const TurtlePiecePtr &turtle);
-    TurtlePiecePtr &getTurtlePiece();
-    TurtlePieceColor getTurtlePieceColor();
+    const TurtlePiecePtr &getTurtlePiece() const;
+    TurtlePieceColor getTurtlePieceColor() const;
     void moveTurtlePiece(const std::shared_ptr<TileRender> &destinationTile);
     void clearTurtlePiece();
 
-    bool containsPiece(TurtlePieceColor color);
+    bool containsPiece(TurtlePieceColor color) const;
 
-    bool getIsPieceHighlighted();
+    bool getIsPieceHighlighted() const;
     bool toggleIsPieceHighlighted();
     void toggleIsPieceHighlighted(bool isHighlighted);
 
-    bool getIsPieceSelected();
+    bool getIsPieceSelected() const;
     bool toggleIsPieceSelected();
     void toggleIsPieceSelected(bool isSelected);
 
-    bool getIsTileReachable();
+    bool getIsTileReachable() const;
     void toggleIsTileReachable();
     void toggleIsTileReachable(bool isReachable);
 
-    bool getIsTileHighlighted();
+    bool getIsTileHighlighted() const;
     void toggleIsTileHighlighted();
     void toggleIsTileHighlighted(bool isHighlighted);
 
-    bool getIsTileSelected();
+    bool getIsTileSelected() const;
     void toggleIsTileSelected();
     void toggleIsTileSelected(bool isSelected);
+
+    bool getIsTileLastSelected() const;
+    void toggleIsTileLastSelected();
+    void toggleIsTileLastSelected(bool isLastSelected);
 
     void paint(QPainter &painter);
 
@@ -59,6 +63,7 @@ private:
     bool m_isReachable;
     bool m_isHighlighted;
     bool m_isSelected;
+    bool m_isLastSelected;
 
     TurtlePiecePtr m_containedTurtle;
 };

@@ -24,7 +24,7 @@ TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor)
     case TurtlePieceColor::Red:
     {
         m_left = 0;
-        m_nextPosition = QPointF(TILE_HALF_WIDTH, TILE_HALF_HEIGHT);
+        m_nextPosition = QPointF(TILE_HALF_WIDTH, HUD_HEIGHT + TILE_HALF_HEIGHT);
     }
     break;
     case TurtlePieceColor::None:
@@ -75,7 +75,7 @@ void TurtleGraveyard::paint(QPainter &painter)
     int g = GRAVEYARD_BG_RGB[1];
     int b = GRAVEYARD_BG_RGB[2];
     QRgb graveyardColor = qRgb(r, g, b);
-    painter.fillRect(m_left, 0, GRAVEYARD_WIDTH, BOARD_HEIGHT, graveyardColor);
+    painter.fillRect(m_left, HUD_HEIGHT, GRAVEYARD_WIDTH, BOARD_HEIGHT, graveyardColor);
 
     for (const auto &turtlePiece : m_slainTurtles)
     {
