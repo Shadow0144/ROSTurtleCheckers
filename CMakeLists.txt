@@ -36,6 +36,7 @@ qt5_wrap_cpp(CheckersBoardFrame_MOCS include/CheckersBoardFrame.hpp)
 add_executable(checkers_player_node 
   src/TileRender.cpp
   src/TurtlePiece.cpp
+  src/TurtleGraveyard.cpp
   src/CheckersBoardFrame.cpp 
   src/CheckersPlayerNode.cpp
   ${CheckersBoardFrame_MOCS})

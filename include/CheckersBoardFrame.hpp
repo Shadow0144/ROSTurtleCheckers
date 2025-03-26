@@ -4,6 +4,7 @@
 #include "CheckersConsts.hpp"
 #include "TileRender.hpp"
 #include "TurtlePiece.hpp" // NO LINT
+#include "TurtleGraveyard.hpp"
 #endif
 
 #include <QFrame>
@@ -107,6 +108,9 @@ private:
 
 	TileRenderPtr m_tileRenders[NUM_PLAYABLE_TILES];
 	int m_highlightedTile = -1; // No tile is highlighted
+
+	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
+	TurtleGraveyardPtr m_redPlayerGraveyard; // Red player's graveyard containing the slain black pieces
 	
 	QTimer *m_updateTimer;
 };

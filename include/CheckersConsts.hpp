@@ -48,6 +48,11 @@ constexpr float TILE_HALF_HEIGHT = 0.5f * TILE_HEIGHT;
 constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
 constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
 
+constexpr int GRAVEYARD_WIDTH = TILE_WIDTH;
+
+constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH);
+constexpr int WINDOW_HEIGHT = BOARD_HEIGHT;
+
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
 constexpr size_t MAX_COL_ROW_INDEX = 7u;
@@ -57,3 +62,4 @@ constexpr int REACHABLE_SQUARES_BG_RGB[3] = {0u, 0u, 255u};
 constexpr int HIGHLIGHTED_SQUARES_BG_RGB[3] = {0u, 150u, 255u};
 constexpr int SELECTED_SQUARES_BG_RGB[3] = {0u, 255u, 0u};
 constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
+constexpr int GRAVEYARD_BG_RGB[3] = {50u, 50u, 50u};

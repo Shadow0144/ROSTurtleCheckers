@@ -89,11 +89,16 @@ void GamePlayerNode::requestPieceMoveRequest(const std::shared_ptr<turtle_checke
     response->move_accepted = moveAccepted;
     if (moveAccepted)
     {
-        m_checkersGameLobby->togglePlayerTurn();
+        auto jumpedPieceTileIndex = m_checkersGameLobby->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
+        if (jumpedPieceTileIndex == -1) // Toggle the player turn if no piece was jumped
+        {
+            m_checkersGameLobby->togglePlayerTurn();
+        }
         auto message = turtle_checkers_interfaces::msg::UpdateBoard();
         message.piece_name = request->piece_name;
         message.source_tile_index = request->source_tile_index;
         message.destination_tile_index = request->destination_tile_index;
+        message.slain_piece_tile_index = jumpedPieceTileIndex;
         if (m_checkersGameLobby->getWinner() != Winner::None)
         {
             message.game_state = 3; // Game over

@@ -29,6 +29,7 @@ public:
 
     std::vector<uint64_t> requestReachableTiles(const std::string &requestedPieceName) const;
     bool requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex);
+    int getJumpedPieceTileIndex(int sourceTileIndex, int destinationTileIndex) const; // Returns -1 when nothing was jumped
 
 private:
     bool isPieceValidForTurn(const std::string &requestedPieceName) const;

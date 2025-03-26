@@ -31,7 +31,7 @@ CheckersBoardFrame::CheckersBoardFrame(
 	: QFrame(parent, windowFlags),
 	  m_playerName(playerName)
 {
-	setFixedSize(BOARD_WIDTH, BOARD_HEIGHT);
+	setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	setWindowTitle("TurtleCheckers");
 
 	srand(time(NULL));
@@ -104,6 +104,9 @@ CheckersBoardFrame::CheckersBoardFrame(
 
 	spawnTiles();
 	spawnPieces();
+
+	m_blackPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Black);
+	m_redPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Red);
 
 	RCLCPP_INFO(
 		m_nodeHandle->get_logger(), "Starting turtle checkers board with node name %s", m_nodeHandle->get_fully_qualified_name());
@@ -229,6 +232,32 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 		message->destination_tile_index < NUM_PLAYABLE_TILES)
 	{
 		m_tileRenders[message->source_tile_index]->moveTurtlePiece(m_tileRenders[message->destination_tile_index]);
+	}
+	if (message->slain_piece_tile_index > -1)
+	{
+		auto slainPieceTileIndex = message->slain_piece_tile_index;
+		if (slainPieceTileIndex < static_cast<int>(NUM_PLAYABLE_TILES) &&
+			slainPieceTileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
+		{
+			switch (m_tileRenders[slainPieceTileIndex]->getTurtlePieceColor())
+			{
+			case TurtlePieceColor::Black:
+			{
+				m_redPlayerGraveyard->addTurtlePiece(m_tileRenders[slainPieceTileIndex]);
+			}
+			break;
+			case TurtlePieceColor::Red:
+			{
+				m_blackPlayerGraveyard->addTurtlePiece(m_tileRenders[slainPieceTileIndex]);
+			}
+			break;
+			case TurtlePieceColor::None:
+			{
+				// Do nothing
+			}
+			break;
+			}
+		}
 	}
 	switch (message->game_state)
 	{
@@ -476,17 +505,17 @@ void CheckersBoardFrame::spawnTiles()
 	{
 		if (i % 2u == 0u)
 		{
-			tileCentersX[(i * 4) + 0] = (1 * TILE_WIDTH) + TILE_HALF_WIDTH;
-			tileCentersX[(i * 4) + 1] = (3 * TILE_WIDTH) + TILE_HALF_WIDTH;
-			tileCentersX[(i * 4) + 2] = (5 * TILE_WIDTH) + TILE_HALF_WIDTH;
-			tileCentersX[(i * 4) + 3] = (7 * TILE_WIDTH) + TILE_HALF_WIDTH;
+			tileCentersX[(i * 4) + 0] = (1 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+			tileCentersX[(i * 4) + 1] = (3 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+			tileCentersX[(i * 4) + 2] = (5 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+			tileCentersX[(i * 4) + 3] = (7 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
 		}
 		else
 		{
-			tileCentersX[(i * 4) + 0] = (0 * TILE_WIDTH) + TILE_HALF_WIDTH;
-			tileCentersX[(i * 4) + 1] = (2 * TILE_WIDTH) + TILE_HALF_WIDTH;
-			tileCentersX[(i * 4) + 2] = (4 * TILE_WIDTH) + TILE_HALF_WIDTH;
-			tileCentersX[(i * 4) + 3] = (6 * TILE_WIDTH) + TILE_HALF_WIDTH;
+			tileCentersX[(i * 4) + 0] = (0 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+			tileCentersX[(i * 4) + 1] = (2 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+			tileCentersX[(i * 4) + 2] = (4 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+			tileCentersX[(i * 4) + 3] = (6 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
 		}
 
 		tileCentersY[(i * 4) + 0] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT;
@@ -620,4 +649,8 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	{
 		rit->second->paint(painter);
 	}
+
+	// Draw the graveyards
+	m_blackPlayerGraveyard->paint(painter);
+	m_redPlayerGraveyard->paint(painter);
 }

@@ -48,9 +48,23 @@ TurtlePiecePtr &TileRender::getTurtlePiece()
     return m_containedTurtle;
 }
 
+TurtlePieceColor TileRender::getTurtlePieceColor()
+{
+    if (m_containedTurtle)
+    {
+        return m_containedTurtle->getColor();
+    }
+    return TurtlePieceColor::None;
+}
+
 void TileRender::moveTurtlePiece(const TileRenderPtr &destinationTile)
 {
     destinationTile->setTurtlePiece(m_containedTurtle);
+    m_containedTurtle.reset();
+}
+
+void TileRender::clearTurtlePiece()
+{
     m_containedTurtle.reset();
 }
 

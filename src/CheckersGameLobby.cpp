@@ -10,7 +10,7 @@ CheckersGameLobby::CheckersGameLobby(
 {
     m_winner = Winner::None;
     m_isBlackTurn = true;
-    
+
     m_blackPlayerName = "";
     m_redPlayerName = "";
 
@@ -105,6 +105,40 @@ bool CheckersGameLobby::requestPieceMove(const std::string &requestedPieceName, 
     return false;
 }
 
+int CheckersGameLobby::getJumpedPieceTileIndex(int sourceTileIndex, int destinationTileIndex) const
+{
+    if (sourceTileIndex > -1 &&
+        destinationTileIndex > -1 &&
+        sourceTileIndex < static_cast<int>(m_tiles.size()) &&
+        destinationTileIndex < static_cast<int>(m_tiles.size()) &&
+        std::abs(sourceTileIndex - destinationTileIndex) > NUM_COLS_ROWS)
+    {
+        if (m_tiles[sourceTileIndex]->getRow() < m_tiles[destinationTileIndex]->getRow()) // Jumped down
+        {
+            if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+            {
+                return (sourceTileIndex + NUM_PLAYABLE_COLS);
+            }
+            else // Jumped left
+            {
+                return (sourceTileIndex + NUM_PLAYABLE_COLS - 1);
+            }
+        }
+        else // Jumped up
+        {
+            if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+            {
+                return (sourceTileIndex - NUM_PLAYABLE_COLS + 1);
+            }
+            else // Jumped left
+            {
+                return (sourceTileIndex - NUM_PLAYABLE_COLS);
+            }
+        }
+    }
+    return -1;
+}
+
 std::string CheckersGameLobby::getLobbyName() const
 {
     return m_lobbyName;
@@ -124,7 +158,6 @@ bool CheckersGameLobby::getIsBlackTurn() const
 {
     return m_isBlackTurn;
 }
-
 
 void CheckersGameLobby::togglePlayerTurn()
 {
