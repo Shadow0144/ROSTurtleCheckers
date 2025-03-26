@@ -6,7 +6,8 @@
 #include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
-#include "turtle_checkers_interfaces/msg/game_state.hpp"
+#include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_game_state.hpp"
 
 #include "CheckersGameLobby.hpp"
 
@@ -31,7 +32,8 @@ GamePlayerNode::GamePlayerNode()
     m_requestPieceMoveService =
         this->create_service<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove", std::bind(&GamePlayerNode::requestPieceMoveRequest, this, std::placeholders::_1, std::placeholders::_2));
 
-    m_gameStatePublisher = this->create_publisher<turtle_checkers_interfaces::msg::GameState>("GameState", 10);
+    m_updateGameStatePublisher = this->create_publisher<turtle_checkers_interfaces::msg::UpdateGameState>("UpdateGameState", 10);
+    m_updateBoardPublisher = this->create_publisher<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10);
 
     RCLCPP_INFO(get_logger(), "Starting Turtles Checkers game node; now accepting players!");
 }
@@ -67,9 +69,9 @@ void GamePlayerNode::connectToGameRequest(const std::shared_ptr<turtle_checkers_
     }
     if (!m_checkersGameLobby->playerSlotAvailable()) // Game is full, start it
     {
-        auto message = turtle_checkers_interfaces::msg::GameState();
+        auto message = turtle_checkers_interfaces::msg::UpdateGameState();
         message.game_state = 1; // Black to move
-        m_gameStatePublisher->publish(message);
+        m_updateGameStatePublisher->publish(message);
         RCLCPP_INFO(get_logger(), "Starting game!");
     }
 }
@@ -88,20 +90,23 @@ void GamePlayerNode::requestPieceMoveRequest(const std::shared_ptr<turtle_checke
     if (moveAccepted)
     {
         m_checkersGameLobby->togglePlayerTurn();
-        auto message = turtle_checkers_interfaces::msg::GameState();
+        auto message = turtle_checkers_interfaces::msg::UpdateBoard();
+        message.piece_name = request->piece_name;
+        message.source_tile_index = request->source_tile_index;
+        message.destination_tile_index = request->destination_tile_index;
         if (m_checkersGameLobby->getWinner() != Winner::None)
         {
-            message.game_state = 2; // Game over
+            message.game_state = 3; // Game over
         }
         else if (m_checkersGameLobby->getIsBlackTurn())
         {
-            message.game_state = 0; // Black to move
+            message.game_state = 1; // Black to move
         }
         else
         {
-            message.game_state = 1; // Red to move
+            message.game_state = 2; // Red to move
         }
-        m_gameStatePublisher->publish(message);
+        m_updateBoardPublisher->publish(message);
     }
 }
 

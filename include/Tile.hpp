@@ -16,7 +16,7 @@ public:
     size_t getCol() const;
 
     void setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool isTurtlePieceKinged);
-    void moveTurtlePiece(std::shared_ptr<Tile> tile);
+    void moveTurtlePiece(const std::shared_ptr<Tile> &tile);
 
     TurtlePieceColor getTurtlePieceColor() const;
     std::string getTurtlePieceName() const;

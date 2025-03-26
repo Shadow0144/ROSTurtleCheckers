@@ -37,6 +37,10 @@ bool TileRender::containsPoint(QPoint point)
 void TileRender::setTurtlePiece(const TurtlePiecePtr &turtle)
 {
     m_containedTurtle = turtle;
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->move(m_centerPosition);
+    }
 }
 
 TurtlePiecePtr &TileRender::getTurtlePiece()
@@ -44,11 +48,10 @@ TurtlePiecePtr &TileRender::getTurtlePiece()
     return m_containedTurtle;
 }
 
-void TileRender::moveTurtlePiece(const TileRenderPtr &tileRender)
+void TileRender::moveTurtlePiece(const TileRenderPtr &destinationTile)
 {
-    m_containedTurtle = tileRender->m_containedTurtle;
-    tileRender->m_containedTurtle.reset();
-    m_containedTurtle->move(m_centerPosition);
+    destinationTile->setTurtlePiece(m_containedTurtle);
+    m_containedTurtle.reset();
 }
 
 bool TileRender::containsPiece(TurtlePieceColor color)

@@ -8,6 +8,7 @@ CheckersGameLobby::CheckersGameLobby(
     const std::string &lobbyName)
     : m_lobbyName(lobbyName)
 {
+    m_winner = Winner::None;
     m_isBlackTurn = true;
     
     m_blackPlayerName = "";

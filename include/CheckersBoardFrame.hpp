@@ -18,13 +18,11 @@
 #include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
-#include <rcl_interfaces/msg/parameter_event.hpp>
-#include <std_srvs/srv/empty.hpp>
-
 #include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
-#include "turtle_checkers_interfaces/msg/game_state.hpp"
+#include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_game_state.hpp"
 
 #include <map>
 #include <string>
@@ -66,12 +64,15 @@ private:
 	void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
 	void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
 
-	void gameStateCallback(const turtle_checkers_interfaces::msg::GameState::SharedPtr msg);
+	void updateGameStateCallback(const turtle_checkers_interfaces::msg::UpdateGameState::SharedPtr message);
+	void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
 
 	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
 
 	void handleMouseMove(QMouseEvent *event);
 	void handleMouseClick(QMouseEvent *event);
+
+	void clearSelections();
 
 	rclcpp::Node::SharedPtr m_nodeHandle;
 
@@ -89,7 +90,8 @@ private:
 	rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesClient;
 	rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveClient;
 
-	rclcpp::Subscription<turtle_checkers_interfaces::msg::GameState>::SharedPtr m_gameStateSubscription;
+	rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateGameState>::SharedPtr m_updateGameStateSubscription;
+	rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
 
 	typedef std::map<std::string, TurtlePiecePtr> TurtlePiecesMap;
 	TurtlePiecesMap m_blackTurtles;

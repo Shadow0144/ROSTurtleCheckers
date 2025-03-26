@@ -13,6 +13,12 @@
 #include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
+#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_game_state.hpp"
+
 #include "CheckersConsts.hpp"
 
 using std::placeholders::_1;
@@ -115,7 +121,8 @@ CheckersBoardFrame::CheckersBoardFrame(
 	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
 	m_requestPieceMoveClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove");
 
-	m_gameStateSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::GameState>("GameState", 10, std::bind(&CheckersBoardFrame::gameStateCallback, this, _1));
+	m_updateGameStateSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateGameState>("UpdateGameState", 10, std::bind(&CheckersBoardFrame::updateGameStateCallback, this, _1));
+	m_updateBoardSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10, std::bind(&CheckersBoardFrame::updateBoardCallback, this, _1));
 
 	auto request = std::make_shared<turtle_checkers_interfaces::srv::ConnectToGame::Request>();
 	request->player_name = m_playerName;
@@ -177,29 +184,53 @@ void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_che
 void CheckersBoardFrame::requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future)
 {
 	auto result = future.get();
-	if (result->move_accepted)
+	if (!result->move_accepted) // If the move was rejected, clear everything and try again (This normally shouldn't happen)
 	{
-		m_tileRenders[m_destinationTileIndex]->moveTurtlePiece(m_tileRenders[m_sourceTileIndex]);
+		clearSelections();
 	}
-
-	// Clear the selections
-	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-	{
-		m_tileRenders[i]->toggleIsPieceSelected(false);
-		m_tileRenders[i]->toggleIsTileReachable(false);
-		m_tileRenders[i]->toggleIsTileHighlighted(false);
-		m_tileRenders[i]->toggleIsTileSelected(false);
-	}
-	m_selectedPieceName.clear();
-	m_sourceTileIndex = -1;
-	m_destinationTileIndex = -1;
 
 	update();
 }
 
-void CheckersBoardFrame::gameStateCallback(const turtle_checkers_interfaces::msg::GameState::SharedPtr msg)
+void CheckersBoardFrame::updateGameStateCallback(const turtle_checkers_interfaces::msg::UpdateGameState::SharedPtr message)
 {
-	switch (msg->game_state)
+	switch (message->game_state)
+	{
+	case 0: // Connecting
+	{
+		m_gameState = GameState::Connecting;
+	}
+	break;
+	case 1: // Black turn
+	{
+		m_gameState = GameState::BlackMove;
+	}
+	break;
+	case 2: // Red turn
+	{
+		m_gameState = GameState::RedMove;
+	}
+	break;
+	case 3: // Game over
+	{
+		m_gameState = GameState::GameFinished;
+	}
+	break;
+	}
+
+	update();
+}
+
+void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
+{
+	clearSelections();
+	if (!message->piece_name.empty() &&
+		message->source_tile_index < NUM_PLAYABLE_TILES &&
+		message->destination_tile_index < NUM_PLAYABLE_TILES)
+	{
+		m_tileRenders[message->source_tile_index]->moveTurtlePiece(m_tileRenders[message->destination_tile_index]);
+	}
+	switch (message->game_state)
 	{
 	case 0: // Connecting
 	{
@@ -417,17 +448,24 @@ void CheckersBoardFrame::handleMouseClick(QMouseEvent *event)
 		}
 		if (!selected) // We clicked somewhere which isn't on a valid turtle, so clear the selected piece
 		{
-			m_destinationTileIndex = -1;
-			m_selectedPieceName.clear();
-			for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-			{
-				m_tileRenders[i]->toggleIsPieceSelected(false);
-				m_tileRenders[i]->toggleIsTileReachable(false);
-				m_tileRenders[i]->toggleIsTileHighlighted(false);
-				m_tileRenders[i]->toggleIsTileSelected(false);
-			}
+			clearSelections();
 		}
 	}
+}
+
+void CheckersBoardFrame::clearSelections()
+{
+	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+	{
+		m_tileRenders[i]->toggleIsPieceSelected(false);
+		m_tileRenders[i]->toggleIsTileReachable(false);
+		m_tileRenders[i]->toggleIsTileHighlighted(false);
+		m_tileRenders[i]->toggleIsTileSelected(false);
+	}
+	m_selectedPieceName.clear();
+	m_sourceTileIndex = -1;
+	m_destinationTileIndex = -1;
+	m_moveSelected = false;
 }
 
 void CheckersBoardFrame::spawnTiles()

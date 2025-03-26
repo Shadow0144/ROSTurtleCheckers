@@ -50,7 +50,7 @@ size_t Tile::getCol() const
     return m_col;
 }
 
-void Tile::moveTurtlePiece(TilePtr destinationTile)
+void Tile::moveTurtlePiece(const TilePtr &destinationTile)
 {
     destinationTile->m_turtlePieceColor = m_turtlePieceColor;
     destinationTile->m_turtlePieceName = m_turtlePieceName;
