@@ -69,15 +69,10 @@ void GamePlayerNode::connectToGameRequest(const std::shared_ptr<turtle_checkers_
     }
     if (!m_checkersGameLobby->playerSlotAvailable()) // Game is full, start it
     {
-        response->game_state = 2; // Black to move
         auto message = turtle_checkers_interfaces::msg::UpdateGameState();
         message.game_state = 2; // Black to move
         m_updateGameStatePublisher->publish(message);
         RCLCPP_INFO(get_logger(), "Starting game!");
-    }
-    else
-    {
-        response->game_state = 1; // Connected
     }
 }
 
@@ -107,6 +102,7 @@ void GamePlayerNode::requestPieceMoveRequest(const std::shared_ptr<turtle_checke
         message.piece_name = request->piece_name;
         message.source_tile_index = request->source_tile_index;
         message.destination_tile_index = request->destination_tile_index;
+        message.king_piece = m_checkersGameLobby->wasPieceKinged(request->piece_name, request->destination_tile_index);
         message.slain_piece_tile_index = jumpedPieceTileIndex;
         if (m_checkersGameLobby->getWinner() != Winner::None)
         {

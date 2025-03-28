@@ -106,6 +106,7 @@ private:
 	QVector<QImage> m_kingTurtleImages;
 	QVector<QImage> m_highlightTurtleImages;
 	QVector<QImage> m_selectTurtleImages;
+	QVector<QImage> m_deadTurtleImages;
 
 	TileRenderPtr m_tileRenders[NUM_PLAYABLE_TILES];
 	int m_highlightedTile = -1; // No tile is highlighted

@@ -14,6 +14,7 @@ TurtlePiece::TurtlePiece(
     const QImage &kingImage,
     const QImage &highlightImage,
     const QImage &selectImage,
+    const QImage &deadImage,
     const QPointF &position,
     int angleDegrees)
     : m_name(name),
@@ -22,6 +23,7 @@ TurtlePiece::TurtlePiece(
       m_kingImage(kingImage),
       m_highlightImage(highlightImage),
       m_selectImage(selectImage),
+      m_deadImage(deadImage),
       m_position(position),
       m_angleDegrees(angleDegrees)
 {
@@ -31,6 +33,7 @@ TurtlePiece::TurtlePiece(
   m_kingRotatedImage = m_kingImage.transformed(transform);
   m_highlightRotatedImage = m_highlightImage.transformed(transform);
   m_selectRotatedImage = m_selectImage.transformed(transform);
+  m_deadRotatedImage = m_deadImage.transformed(transform);
 
   m_position.rx() -= 0.5 * m_turtleRotatedImage.width();
   m_position.ry() -= 0.5 * m_turtleRotatedImage.height();
@@ -38,6 +41,7 @@ TurtlePiece::TurtlePiece(
   m_isKinged = false;
   m_isHighlighted = false;
   m_isSelected = false;
+  m_isDead = false;
 }
 
 std::string &TurtlePiece::getName()
@@ -95,6 +99,21 @@ void TurtlePiece::toggleIsSelected(bool isSelected)
   m_isSelected = isSelected;
 }
 
+bool TurtlePiece::getIsDead()
+{
+  return m_isDead;
+}
+
+void TurtlePiece::toggleIsDead()
+{
+  m_isDead = !m_isDead;
+}
+
+void TurtlePiece::toggleIsDead(bool isDead)
+{
+  m_isDead = isDead;
+}
+
 void TurtlePiece::move(
     const QPointF &newPosition)
 {
@@ -117,5 +136,9 @@ void TurtlePiece::paint(QPainter &painter)
   if (m_isSelected)
   {
     painter.drawImage(m_position, m_selectRotatedImage);
+  }
+  if (m_isDead)
+  {
+    painter.drawImage(m_position, m_deadRotatedImage);
   }
 }

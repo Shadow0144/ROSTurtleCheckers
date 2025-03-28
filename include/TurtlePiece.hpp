@@ -21,6 +21,7 @@ public:
         const QImage &kingImage,
         const QImage &highlightImage,
         const QImage &selectImage,
+        const QImage &deadImage,
         const QPointF &position,
         int angleDegrees);
 
@@ -40,6 +41,10 @@ public:
     void toggleIsSelected();
     void toggleIsSelected(bool isSelected);
 
+    bool getIsDead();
+    void toggleIsDead();
+    void toggleIsDead(bool isDead);
+
     void move(const QPointF &newPosition);
 
     void paint(QPainter &painter);
@@ -57,6 +62,8 @@ private:
     QImage m_highlightRotatedImage;
     QImage m_selectImage;
     QImage m_selectRotatedImage;
+    QImage m_deadImage;
+    QImage m_deadRotatedImage;
 
     QPointF m_position;
     int m_angleDegrees; // In degrees
@@ -64,6 +71,7 @@ private:
     bool m_isKinged;
     bool m_isHighlighted;
     bool m_isSelected;
+    bool m_isDead;
 };
 
 typedef std::shared_ptr<TurtlePiece> TurtlePiecePtr;

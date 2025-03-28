@@ -22,7 +22,7 @@ CheckersGameLobby::CheckersGameLobby(
     {
         for (size_t c = 0u; c < NUM_PLAYABLE_COLS; c++)
         {
-            m_tiles.push_back(std::make_shared<Tile>(r, 2 * c + ((r + 1u) % 2))); // Every other column is offset by 1
+            m_tiles.push_back(std::make_shared<Tile>(static_cast<int>(r), static_cast<int>(2u * c + ((r + 1u) % 2u)))); // Every other column is offset by 1
         }
     }
 
@@ -52,6 +52,22 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName)
     else if (m_redPlayerName.empty())
     {
         m_redPlayerName = playerName;
+        return TurtlePieceColor::Red;
+    }
+    else
+    {
+        return TurtlePieceColor::None;
+    }
+}
+
+TurtlePieceColor CheckersGameLobby::getColorFromPieceName(const std::string &pieceName) const
+{
+    if (pieceName.rfind("Black", 0) == 0)
+    {
+        return TurtlePieceColor::Black;
+    }
+    else if (pieceName.rfind("Red", 0) == 0)
+    {
         return TurtlePieceColor::Red;
     }
     else
@@ -98,6 +114,10 @@ bool CheckersGameLobby::requestPieceMove(const std::string &requestedPieceName, 
         if (m_tiles[sourceTileIndex]->getTurtlePieceName() == requestedPieceName && m_tiles[destinationTileIndex]->getTurtlePieceName().empty())
         {
             m_tiles[sourceTileIndex]->moveTurtlePiece(m_tiles[destinationTileIndex]);
+            if (wasPieceKinged(requestedPieceName, destinationTileIndex))
+            {
+                m_tiles[destinationTileIndex]->kingTurtlePiece();
+            }
             return true;
         }
         else
@@ -114,7 +134,7 @@ int CheckersGameLobby::getJumpedPieceTileIndex(int sourceTileIndex, int destinat
         destinationTileIndex > -1 &&
         sourceTileIndex < static_cast<int>(m_tiles.size()) &&
         destinationTileIndex < static_cast<int>(m_tiles.size()) &&
-        std::abs(sourceTileIndex - destinationTileIndex) > NUM_COLS_ROWS)
+        std::abs(m_tiles[sourceTileIndex]->getRow() - m_tiles[destinationTileIndex]->getRow()) > 1) // Moved more than one row
     {
         if (m_tiles[sourceTileIndex]->getRow() < m_tiles[destinationTileIndex]->getRow()) // Jumped down
         {
@@ -140,6 +160,30 @@ int CheckersGameLobby::getJumpedPieceTileIndex(int sourceTileIndex, int destinat
         }
     }
     return -1;
+}
+
+bool CheckersGameLobby::wasPieceKinged(const std::string &pieceName, int destinationTileIndex) const
+{
+    auto pieceColor = getColorFromPieceName(pieceName);
+    switch (pieceColor)
+    {
+    case TurtlePieceColor::Black:
+    {
+        return (destinationTileIndex < static_cast<int>(NUM_PLAYABLE_COLS));
+    }
+    break;
+    case TurtlePieceColor::Red:
+    {
+        return (destinationTileIndex >= static_cast<int>(NUM_PLAYABLE_TILES - NUM_PLAYABLE_COLS));
+    }
+    break;
+    case TurtlePieceColor::None:
+    {
+        return false;
+    }
+    break;
+    }
+    return false;
 }
 
 std::string CheckersGameLobby::getLobbyName() const
@@ -171,20 +215,22 @@ void CheckersGameLobby::slayTurtleAtTileIndex(int tileIndex)
 {
     switch (m_tiles[tileIndex]->getTurtlePieceColor())
     {
-        case TurtlePieceColor::Black:
-        {
-            m_blackPiecesRemaining--;
-        }
-        break;
-        case TurtlePieceColor::Red:
-        {
-            m_redPiecesRemaining--;
-        }
-        break;
-        case TurtlePieceColor::None:
-        {
-            // Do nothing
-        }
-        break;
+    case TurtlePieceColor::Black:
+    {
+
+        m_blackPiecesRemaining--;
     }
+    break;
+    case TurtlePieceColor::Red:
+    {
+        m_redPiecesRemaining--;
+    }
+    break;
+    case TurtlePieceColor::None:
+    {
+        // Do nothing
+    }
+    break;
+    }
+    m_tiles[tileIndex]->clearTurtlePiece();
 }

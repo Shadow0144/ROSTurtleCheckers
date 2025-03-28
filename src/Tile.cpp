@@ -4,7 +4,7 @@
 
 #include "CheckersConsts.hpp"
 
-Tile::Tile(size_t row, size_t col)
+Tile::Tile(int row, int col)
     : m_row(row),
       m_col(col)
 {
@@ -35,17 +35,22 @@ std::string Tile::getTurtlePieceName() const
     return m_turtlePieceName;
 }
 
+void Tile::kingTurtlePiece()
+{
+    m_isTurtlePieceKinged = true;
+}
+
 bool Tile::getIsTurtlePieceKinged() const
 {
     return m_isTurtlePieceKinged;
 }
 
-size_t Tile::getRow() const
+int Tile::getRow() const
 {
     return m_row;
 }
 
-size_t Tile::getCol() const
+int Tile::getCol() const
 {
     return m_col;
 }
@@ -75,8 +80,8 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
     int topLeftJumpableIndex = -1;
     int topRightJumpableIndex = -1;
 
-    auto tileCount = tiles.size();
-    for (uint64_t i = 0u; i < tileCount; i++)
+    auto tileCount = static_cast<int>(tiles.size());
+    for (int i = 0u; i < tileCount; i++)
     {
         // Check the tile to the top left of this one
         if (m_row > 0u && m_col > 0u &&
@@ -93,7 +98,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check the tile to the top right of this one
-        else if (m_row > 0u && m_col < MAX_COL_ROW_INDEX &&
+        if (m_row > 0u && m_col < MAX_COL_ROW_INDEX &&
                  m_row - 1u == tiles[i]->m_row &&
                  m_col + 1u == tiles[i]->m_col)
         {
@@ -107,7 +112,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the top left of this one
-        else if (m_row > 1u && m_col > 1u &&
+        if (m_row > 1u && m_col > 1u &&
                  m_row - 2u == tiles[i]->m_row &&
                  m_col - 2u == tiles[i]->m_col)
         {
@@ -117,7 +122,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        else if (m_row > 1u && m_col < MAX_JUMP_INDEX &&
+        if (m_row > 1u && m_col < MAX_JUMP_INDEX &&
                  m_row - 2u == tiles[i]->m_row &&
                  m_col + 2u == tiles[i]->m_col)
         {
@@ -167,7 +172,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check the tile to the bottom right of this one
-        else if (m_row < MAX_COL_ROW_INDEX && m_col < MAX_COL_ROW_INDEX &&
+        if (m_row < MAX_COL_ROW_INDEX && m_col < MAX_COL_ROW_INDEX &&
                  m_row + 1u == tiles[i]->m_row &&
                  m_col + 1u == tiles[i]->m_col)
         {
@@ -181,7 +186,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the bottom left of this one
-        else if (m_row < MAX_JUMP_INDEX && m_col > 1u &&
+        if (m_row < MAX_JUMP_INDEX && m_col > 1u &&
                  m_row + 2u == tiles[i]->m_row &&
                  m_col - 2u == tiles[i]->m_col)
         {
@@ -191,7 +196,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        else if (m_row < MAX_JUMP_INDEX && m_col < MAX_JUMP_INDEX &&
+        if (m_row < MAX_JUMP_INDEX && m_col < MAX_JUMP_INDEX &&
                  m_row + 2u == tiles[i]->m_row &&
                  m_col + 2u == tiles[i]->m_col)
         {

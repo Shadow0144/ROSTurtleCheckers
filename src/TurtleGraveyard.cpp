@@ -10,28 +10,19 @@
 
 #include "CheckersConsts.hpp"
 
-TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor)
-    : m_owningPlayerColor(owningPlayerColor)
+TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePieceColor viewingPlayerColor)
 {
-    switch (m_owningPlayerColor)
-    {
-    case TurtlePieceColor::Black:
+    if (owningPlayerColor == viewingPlayerColor)
     {
         m_left = WINDOW_WIDTH - TILE_WIDTH;
         m_nextPosition = QPointF(WINDOW_WIDTH - TILE_HALF_WIDTH, WINDOW_HEIGHT - TILE_HALF_HEIGHT);
+        m_positionIncrement = QPointF(0, -TILE_HEIGHT);
     }
-    break;
-    case TurtlePieceColor::Red:
+    else
     {
         m_left = 0;
         m_nextPosition = QPointF(TILE_HALF_WIDTH, HUD_HEIGHT + TILE_HALF_HEIGHT);
-    }
-    break;
-    case TurtlePieceColor::None:
-    {
-        // Do nothing
-    }
-    break;
+        m_positionIncrement = QPointF(0, TILE_HEIGHT);
     }
 }
 
@@ -41,26 +32,10 @@ void TurtleGraveyard::addTurtlePiece(const std::shared_ptr<TileRender> &tile)
     if (turtlePiece)
     {
         m_slainTurtles.push_back(turtlePiece);
+        turtlePiece->toggleIsDead(true);
         turtlePiece->move(m_nextPosition);
         tile->clearTurtlePiece();
-        switch (m_owningPlayerColor)
-        {
-        case TurtlePieceColor::Black:
-        {
-            m_nextPosition -= QPointF(TILE_HALF_WIDTH, TILE_HALF_HEIGHT);
-        }
-        break;
-        case TurtlePieceColor::Red:
-        {
-            m_nextPosition += QPointF(TILE_HALF_WIDTH, TILE_HALF_HEIGHT);
-        }
-        break;
-        case TurtlePieceColor::None:
-        {
-            // Do nothing
-        }
-        break;
-        }
+        m_nextPosition += m_positionIncrement;
     }
 }
 

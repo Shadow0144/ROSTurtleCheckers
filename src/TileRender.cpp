@@ -74,6 +74,14 @@ bool TileRender::containsPiece(TurtlePieceColor color) const
     return (m_containedTurtle && (m_containedTurtle->getColor() == color));
 }
 
+void TileRender::kingTurtlePiece()
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->toggleIsKinged(true);
+    }
+}
+
 bool TileRender::getIsPieceHighlighted() const
 {
     if (m_containedTurtle)

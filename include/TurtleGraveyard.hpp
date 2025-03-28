@@ -15,7 +15,7 @@
 class TurtleGraveyard
 {
 public:
-    TurtleGraveyard(TurtlePieceColor owningPlayerColor);
+    TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePieceColor viewingPlayerColor);
 
     void addTurtlePiece(const std::shared_ptr<TileRender> &tile);
     void clear();
@@ -23,12 +23,11 @@ public:
     void paint(QPainter &painter);
 
 private:
-    TurtlePieceColor m_owningPlayerColor;
-
     std::vector<TurtlePiecePtr> m_slainTurtles;
 
     float m_left;
     QPointF m_nextPosition;
+    QPointF m_positionIncrement;
 };
 
 typedef std::shared_ptr<TurtleGraveyard> TurtleGraveyardPtr;

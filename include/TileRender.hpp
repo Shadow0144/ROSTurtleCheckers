@@ -26,6 +26,8 @@ public:
 
     bool containsPiece(TurtlePieceColor color) const;
 
+    void kingTurtlePiece();
+
     bool getIsPieceHighlighted() const;
     bool toggleIsPieceHighlighted();
     void toggleIsPieceHighlighted(bool isHighlighted);

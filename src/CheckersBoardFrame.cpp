@@ -100,6 +100,9 @@ CheckersBoardFrame::CheckersBoardFrame(
 		QImage sImg;
 		sImg.load(imagesPath + turtlesImageNames[i] + "_select.png");
 		m_selectTurtleImages.append(sImg);
+		QImage dImg;
+		dImg.load(imagesPath + turtlesImageNames[i] + "_dead.png");
+		m_deadTurtleImages.append(dImg);
 	}
 
 	m_selectedPieceName = "";
@@ -108,9 +111,6 @@ CheckersBoardFrame::CheckersBoardFrame(
 	m_moveSelected = false;
 
 	clear();
-
-	m_blackPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Black);
-	m_redPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Red);
 
 	RCLCPP_INFO(
 		m_nodeHandle->get_logger(), "Starting turtle checkers board with node name %s", m_nodeHandle->get_fully_qualified_name());
@@ -122,7 +122,7 @@ CheckersBoardFrame::CheckersBoardFrame(
 	m_updateBoardSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10, std::bind(&CheckersBoardFrame::updateBoardCallback, this, _1));
 
 	m_connectToGameClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::ConnectToGame>("ConnectToGame");
-	while (!m_connectToGameClient->wait_for_service(std::chrono::seconds(1)))
+	while (!m_connectToGameClient->wait_for_service(std::chrono::seconds(10)))
 	{
 		if (!rclcpp::ok())
 		{
@@ -157,35 +157,6 @@ void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_in
 {
 	auto result = future.get();
 
-	switch (result->game_state)
-	{
-	case 0: // Connecting
-	{
-		m_gameState = GameState::Connecting;
-	}
-	break;
-	case 1: // Connected
-	{
-		m_gameState = GameState::Connected;
-	}
-	break;
-	case 2: // Black turn
-	{
-		m_gameState = GameState::BlackMove;
-	}
-	break;
-	case 3: // Red turn
-	{
-		m_gameState = GameState::RedMove;
-	}
-	break;
-	case 4: // Game over
-	{
-		m_gameState = GameState::GameFinished;
-	}
-	break;
-	}
-
 	if (result->player_color == 1) // Black
 	{
 		m_playerColor = TurtlePieceColor::Black;
@@ -201,6 +172,15 @@ void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_in
 		m_playerColor = TurtlePieceColor::None;
 		RCLCPP_WARN(m_nodeHandle->get_logger(), "Failed to connect to a game.");
 	}
+
+	if (m_gameState == GameState::Connecting)
+	{
+		m_gameState = GameState::Connected;
+	}
+
+	// Create the graveyards now that we know which side of the screen they are on
+	m_blackPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Black, m_playerColor);
+	m_redPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Red, m_playerColor);
 
 	m_hud->setPlayerColor(m_playerColor);
 	m_hud->setGameState(m_gameState);
@@ -237,35 +217,7 @@ void CheckersBoardFrame::requestPieceMoveResponse(rclcpp::Client<turtle_checkers
 
 void CheckersBoardFrame::updateGameStateCallback(const turtle_checkers_interfaces::msg::UpdateGameState::SharedPtr message)
 {
-	switch (message->game_state)
-	{
-	case 0: // Connecting
-	{
-		m_gameState = GameState::Connecting;
-	}
-	break;
-	case 1: // Connected
-	{
-		m_gameState = GameState::Connected;
-	}
-	break;
-	case 2: // Black turn
-	{
-		m_gameState = GameState::BlackMove;
-	}
-	break;
-	case 3: // Red turn
-	{
-		m_gameState = GameState::RedMove;
-	}
-	break;
-	case 4: // Game over
-	{
-		m_gameState = GameState::GameFinished;
-	}
-	break;
-	}
-
+	m_gameState = static_cast<GameState>(message->game_state);
 	m_hud->setGameState(m_gameState);
 
 	update();
@@ -316,34 +268,12 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 		}
 	}
 
-	switch (message->game_state)
+	if (message->king_piece)
 	{
-	case 0: // Connecting
-	{
-		m_gameState = GameState::Connecting;
+		m_tileRenders[message->destination_tile_index]->kingTurtlePiece();
 	}
-	break;
-	case 1: // Connected
-	{
-		m_gameState = GameState::Connected;
-	}
-	break;
-	case 2: // Black turn
-	{
-		m_gameState = GameState::BlackMove;
-	}
-	break;
-	case 3: // Red turn
-	{
-		m_gameState = GameState::RedMove;
-	}
-	break;
-	case 4: // Game over
-	{
-		m_gameState = GameState::GameFinished;
-	}
-	break;
-	}
+
+	m_gameState = static_cast<GameState>(message->game_state);
 
 	m_hud->setGameState(m_gameState);
 	m_hud->setPiecesRemaining(m_blackTurtlesRemaining, m_redTurtlesRemaining);
@@ -665,6 +595,7 @@ void CheckersBoardFrame::spawnTurtle(const std::string &name,
 			m_kingTurtleImages[static_cast<int>(imageIndex)],
 			m_highlightTurtleImages[static_cast<int>(imageIndex)],
 			m_selectTurtleImages[static_cast<int>(imageIndex)],
+			m_deadTurtleImages[static_cast<int>(imageIndex)],
 			QPointF(x, y),
 			angle);
 		/*RCLCPP_INFO(
@@ -680,6 +611,7 @@ void CheckersBoardFrame::spawnTurtle(const std::string &name,
 			m_kingTurtleImages[static_cast<int>(imageIndex)],
 			m_highlightTurtleImages[static_cast<int>(imageIndex)],
 			m_selectTurtleImages[static_cast<int>(imageIndex)],
+			m_deadTurtleImages[static_cast<int>(imageIndex)],
 			QPointF(x, y),
 			angle);
 		/*RCLCPP_INFO(
