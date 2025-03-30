@@ -58,11 +58,6 @@ constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT;
 
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
-constexpr size_t MAX_ROW_INDEX = NUM_PLAYABLE_ROWS - 1u;
-constexpr size_t MAX_ROW_JUMP_INDEX = MAX_ROW_INDEX - 1u;
-constexpr size_t MAX_COL_INDEX = NUM_PLAYABLE_COLS - 1u;
-constexpr size_t MAX_COL_JUMP_INDEX = MAX_COL_INDEX - 1u;
-
 constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
 constexpr int REACHABLE_SQUARES_BG_RGB[3] = {0u, 0u, 255u};
 constexpr int HIGHLIGHTED_SQUARES_BG_RGB[3] = {0u, 150u, 255u};

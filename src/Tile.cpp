@@ -279,13 +279,12 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
     int topRightJumpableIndex = -1;
 
     auto tileCount = static_cast<int>(tiles.size());
-    for (int i = 0u; i < tileCount; i++)
+    for (int i = 0; i < tileCount; i++)
     {
         auto tileIColor = tiles[i]->getTurtlePieceColor();
 
         // Check the tile to the top left of this one
-        if (m_row > 0 && m_col > 0 &&
-            m_row - 1 == tiles[i]->m_row &&
+        if (m_row - 1 == tiles[i]->m_row &&
             m_col - 1 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
@@ -298,9 +297,8 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check the tile to the top right of this one
-        if (m_row > 0 && m_col < static_cast<int>(MAX_COL_INDEX) &&
-            m_row - 1 == tiles[i]->m_row &&
-            m_col + 1 == tiles[i]->m_col)
+        else if (m_row - 1 == tiles[i]->m_row &&
+                 m_col + 1 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
             {
@@ -312,9 +310,8 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the top left of this one
-        if (m_row > 1 && m_col > 1 &&
-            m_row - 2 == tiles[i]->m_row &&
-            m_col - 2 == tiles[i]->m_col)
+        else if (m_row - 2 == tiles[i]->m_row &&
+                 m_col - 2 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
             {
@@ -322,9 +319,8 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        if (m_row > 1 && m_col < static_cast<int>(MAX_COL_JUMP_INDEX) &&
-            m_row - 2 == tiles[i]->m_row &&
-            m_col + 2 == tiles[i]->m_col)
+        else if (m_row - 2 == tiles[i]->m_row &&
+                 m_col + 2 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
             {
@@ -354,15 +350,13 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
     int bottomLeftJumpableIndex = -1;
     int bottomRightJumpableIndex = -1;
 
-    auto tileCount = tiles.size();
-    for (uint64_t i = 0u; i < tileCount; i++)
+    auto tileCount = static_cast<int>(tiles.size());
+    for (int i = 0; i < tileCount; i++)
     {
         auto tileIColor = tiles[i]->getTurtlePieceColor();
 
         // Check the tile to the bottom left of this one
-        if (m_row < static_cast<int>(MAX_ROW_INDEX) &&
-            m_col > 0 &&
-            m_row + 1 == tiles[i]->m_row &&
+        if (m_row + 1 == tiles[i]->m_row &&
             m_col - 1 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
@@ -375,9 +369,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check the tile to the bottom right of this one
-        if (m_row < static_cast<int>(MAX_ROW_INDEX) &&
-            m_col < static_cast<int>(MAX_COL_INDEX) &&
-            m_row + 1 == tiles[i]->m_row &&
+        else if (m_row + 1 == tiles[i]->m_row &&
             m_col + 1 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
@@ -390,9 +382,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the bottom left of this one
-        if (m_row < static_cast<int>(MAX_ROW_JUMP_INDEX) &&
-            m_col > 1 &&
-            m_row + 2 == tiles[i]->m_row &&
+        else if (m_row + 2 == tiles[i]->m_row &&
             m_col - 2 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
@@ -401,9 +391,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        if (m_row < static_cast<int>(MAX_ROW_JUMP_INDEX) &&
-            m_col < static_cast<int>(MAX_COL_JUMP_INDEX) &&
-            m_row + 2 == tiles[i]->m_row &&
+        else if (m_row + 2 == tiles[i]->m_row &&
             m_col + 2 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)

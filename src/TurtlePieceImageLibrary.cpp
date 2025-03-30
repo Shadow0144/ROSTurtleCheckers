@@ -50,7 +50,7 @@ void TurtlePieceImageLibrary::createLibraryInstance()
     }
 }
 
-const QImage &TurtlePieceImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
+QImage TurtlePieceImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -61,12 +61,12 @@ const QImage &TurtlePieceImageLibrary::getTurtleImage(TurtlePieceColor turtleCol
     {
     case TurtlePieceColor::Black:
     {
-        return s_libraryInstance->m_blackTurtleImages[s_libraryInstance->m_blackImageIndex];
+        return s_libraryInstance->m_blackTurtleImages[s_libraryInstance->m_blackImagesIndex];
     }
     break;
     case TurtlePieceColor::Red:
     {
-        return s_libraryInstance->m_redTurtleImages[s_libraryInstance->m_redImageIndex];
+        return s_libraryInstance->m_redTurtleImages[s_libraryInstance->m_redImagesIndex];
     }
     break;
     case TurtlePieceColor::None:
@@ -78,7 +78,7 @@ const QImage &TurtlePieceImageLibrary::getTurtleImage(TurtlePieceColor turtleCol
     return QImage();
 }
 
-const QImage &TurtlePieceImageLibrary::getKingImage(TurtlePieceColor turtleColor)
+QImage TurtlePieceImageLibrary::getKingImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -89,12 +89,12 @@ const QImage &TurtlePieceImageLibrary::getKingImage(TurtlePieceColor turtleColor
     {
     case TurtlePieceColor::Black:
     {
-        return s_libraryInstance->m_kingImages[s_libraryInstance->m_blackImageIndex];
+        return s_libraryInstance->m_kingImages[s_libraryInstance->m_blackImagesIndex];
     }
     break;
     case TurtlePieceColor::Red:
     {
-        return s_libraryInstance->m_kingImages[s_libraryInstance->m_redImageIndex];
+        return s_libraryInstance->m_kingImages[s_libraryInstance->m_redImagesIndex];
     }
     break;
     case TurtlePieceColor::None:
@@ -106,7 +106,7 @@ const QImage &TurtlePieceImageLibrary::getKingImage(TurtlePieceColor turtleColor
     return QImage();
 }
 
-const QImage &TurtlePieceImageLibrary::getHighlightImage(TurtlePieceColor turtleColor)
+QImage TurtlePieceImageLibrary::getHighlightImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -117,12 +117,12 @@ const QImage &TurtlePieceImageLibrary::getHighlightImage(TurtlePieceColor turtle
     {
     case TurtlePieceColor::Black:
     {
-        return s_libraryInstance->m_highlightImages[s_libraryInstance->m_blackImageIndex];
+        return s_libraryInstance->m_highlightImages[s_libraryInstance->m_blackImagesIndex];
     }
     break;
     case TurtlePieceColor::Red:
     {
-        return s_libraryInstance->m_highlightImages[s_libraryInstance->m_redImageIndex];
+        return s_libraryInstance->m_highlightImages[s_libraryInstance->m_redImagesIndex];
     }
     break;
     case TurtlePieceColor::None:
@@ -134,7 +134,7 @@ const QImage &TurtlePieceImageLibrary::getHighlightImage(TurtlePieceColor turtle
     return QImage();
 }
 
-const QImage &TurtlePieceImageLibrary::getSelectImage(TurtlePieceColor turtleColor)
+QImage TurtlePieceImageLibrary::getSelectImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -145,12 +145,12 @@ const QImage &TurtlePieceImageLibrary::getSelectImage(TurtlePieceColor turtleCol
     {
     case TurtlePieceColor::Black:
     {
-        return s_libraryInstance->m_selectImages[s_libraryInstance->m_blackImageIndex];
+        return s_libraryInstance->m_selectImages[s_libraryInstance->m_blackImagesIndex];
     }
     break;
     case TurtlePieceColor::Red:
     {
-        return s_libraryInstance->m_selectImages[s_libraryInstance->m_redImageIndex];
+        return s_libraryInstance->m_selectImages[s_libraryInstance->m_redImagesIndex];
     }
     break;
     case TurtlePieceColor::None:
@@ -162,7 +162,7 @@ const QImage &TurtlePieceImageLibrary::getSelectImage(TurtlePieceColor turtleCol
     return QImage();
 }
 
-const QImage &TurtlePieceImageLibrary::getDeadImage(TurtlePieceColor turtleColor)
+QImage TurtlePieceImageLibrary::getDeadImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -173,12 +173,12 @@ const QImage &TurtlePieceImageLibrary::getDeadImage(TurtlePieceColor turtleColor
     {
     case TurtlePieceColor::Black:
     {
-        return s_libraryInstance->m_deadImages[s_libraryInstance->m_blackImageIndex];
+        return s_libraryInstance->m_deadImages[s_libraryInstance->m_blackImagesIndex];
     }
     break;
     case TurtlePieceColor::Red:
     {
-        return s_libraryInstance->m_deadImages[s_libraryInstance->m_redImageIndex];
+        return s_libraryInstance->m_deadImages[s_libraryInstance->m_redImagesIndex];
     }
     break;
     case TurtlePieceColor::None:
@@ -190,22 +190,22 @@ const QImage &TurtlePieceImageLibrary::getDeadImage(TurtlePieceColor turtleColor
     return QImage();
 }
 
-void TurtlePieceImageLibrary::setBlackImageIndex(size_t blackImageIndex)
+void TurtlePieceImageLibrary::setBlackImageIndex(size_t blackImagesIndex)
 {
     if (!s_libraryInstance)
     {
         createLibraryInstance();
     }
 
-    s_libraryInstance->m_blackImageIndex = blackImageIndex;
+    s_libraryInstance->m_blackImagesIndex = blackImagesIndex;
 }
 
-void TurtlePieceImageLibrary::setRedImageIndex(size_t redImageIndex)
+void TurtlePieceImageLibrary::setRedImageIndex(size_t redImagesIndex)
 {
     if (!s_libraryInstance)
     {
         createLibraryInstance();
     }
 
-    s_libraryInstance->m_redImageIndex = redImageIndex;
+    s_libraryInstance->m_redImagesIndex = redImagesIndex;
 }

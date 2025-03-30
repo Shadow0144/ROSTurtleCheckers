@@ -31,7 +31,9 @@ std::vector<TileRenderPtr> TileRenderFactory::createTileRenders(
             {
                 tileCenterY = WINDOW_HEIGHT - (r * TILE_HEIGHT) - TILE_HALF_HEIGHT;
             }
-            tileRenders.push_back(std::make_shared<TileRender>(r, c, QPointF(tileCenterX, tileCenterY)));
+            // Rows and columns start at 1
+            tileRenders.push_back(std::make_shared<TileRender>(
+                (r + 1u), (r % 2u == 0u) ? ((2u * c) + 2u) : ((2u * c) + 1u), QPointF(tileCenterX, tileCenterY)));
         }
     }
     return tileRenders;

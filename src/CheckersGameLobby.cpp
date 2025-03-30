@@ -78,7 +78,6 @@ bool CheckersGameLobby::isPieceValidForTurn(const std::string &requestedPieceNam
 
 std::vector<uint64_t> CheckersGameLobby::requestReachableTiles(const std::string &requestedPieceName) const
 {
-    std::cout << "6" << std::endl;
     if (isPieceValidForTurn(requestedPieceName))
     {
         for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
