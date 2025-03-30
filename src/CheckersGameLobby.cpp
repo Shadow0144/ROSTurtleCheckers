@@ -1,11 +1,12 @@
 #include "CheckersGameLobby.hpp"
 
 #include "CheckersConsts.hpp"
+#include "TileFactory.hpp"
+#include "TurtlePieceFactory.hpp"
 
-using std::placeholders::_1;
+#include <iostream>
 
-CheckersGameLobby::CheckersGameLobby(
-    const std::string &lobbyName)
+CheckersGameLobby::CheckersGameLobby(const std::string &lobbyName)
     : m_lobbyName(lobbyName)
 {
     m_winner = Winner::None;
@@ -18,23 +19,10 @@ CheckersGameLobby::CheckersGameLobby(
     m_redPiecesRemaining = NUM_PIECES_PER_PLAYER;
 
     // Create the tiles
-    for (size_t r = 0u; r < NUM_PLAYABLE_ROWS; r++)
-    {
-        for (size_t c = 0u; c < NUM_PLAYABLE_COLS; c++)
-        {
-            m_tiles.push_back(std::make_shared<Tile>(static_cast<int>(r), static_cast<int>(2u * c + ((r + 1u) % 2u)))); // Every other column is offset by 1
-        }
-    }
+    m_tiles = TileFactory::createTiles(NUM_PLAYABLE_ROWS, NUM_PLAYABLE_COLS);
 
     // Add the pieces
-    for (size_t r = 0u; r < NUM_PIECES_PER_PLAYER; r++)
-    {
-        m_tiles[r]->setTurtlePiece(TurtlePieceColor::Red, "Red" + std::to_string(r + 1), false);
-    }
-    for (size_t b = 0u; b < NUM_PIECES_PER_PLAYER; b++)
-    {
-        m_tiles[b + BLACK_OFFSET]->setTurtlePiece(TurtlePieceColor::Black, "Black" + std::to_string(b + 1), false);
-    }
+    m_turtlePieces = TurtlePieceFactory::createTurtlePieces(NUM_PIECES_PER_PLAYER, m_tiles);
 }
 
 bool CheckersGameLobby::playerSlotAvailable() const
@@ -90,6 +78,7 @@ bool CheckersGameLobby::isPieceValidForTurn(const std::string &requestedPieceNam
 
 std::vector<uint64_t> CheckersGameLobby::requestReachableTiles(const std::string &requestedPieceName) const
 {
+    std::cout << "6" << std::endl;
     if (isPieceValidForTurn(requestedPieceName))
     {
         for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
@@ -116,7 +105,7 @@ bool CheckersGameLobby::requestPieceMove(const std::string &requestedPieceName, 
             m_tiles[sourceTileIndex]->moveTurtlePiece(m_tiles[destinationTileIndex]);
             if (wasPieceKinged(requestedPieceName, destinationTileIndex))
             {
-                m_tiles[destinationTileIndex]->kingTurtlePiece();
+                m_tiles[destinationTileIndex]->setIsTurtlePieceKinged(true);
             }
             return true;
         }

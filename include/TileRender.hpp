@@ -1,58 +1,31 @@
 #pragma once
 
+#include "Tile.hpp"
+
 #include "CheckersConsts.hpp"
-#include "TurtlePiece.hpp"
+#include "TurtlePieceRender.hpp"
+#include "TurtleGraveyard.hpp"
 
 #include <QPainter>
-#include <QPen>
 #include <QPointF>
 
 #include <memory>
 
-class TileRender
+class TileRender : public Tile
 {
 public:
-    TileRender(const QPointF &centerPosition);
+    TileRender(int row, int col, const QPointF &centerPosition);
 
-    QPointF getCenterPosition() const;
+    const QPointF &getCenterPosition() const;
 
-    bool containsPoint(QPoint point) const;
+    bool containsPoint(const QPointF &point) const;
 
-    void setTurtlePiece(const TurtlePiecePtr &turtle);
-    const TurtlePiecePtr &getTurtlePiece() const;
-    TurtlePieceColor getTurtlePieceColor() const;
-    void moveTurtlePiece(const std::shared_ptr<TileRender> &destinationTile);
-    void clearTurtlePiece();
+    void setTurtlePiece(const TurtlePiecePtr &turtle) override;
 
-    bool containsPiece(TurtlePieceColor color) const;
+    void moveTurtlePiece(const std::shared_ptr<TileRender> &destinationTileRender);
+    void moveTurtlePiece(const TurtleGraveyardPtr &destinationGraveyard);
 
-    void kingTurtlePiece();
-
-    bool getIsPieceHighlighted() const;
-    bool toggleIsPieceHighlighted();
-    void toggleIsPieceHighlighted(bool isHighlighted);
-
-    bool getIsPieceSelected() const;
-    bool toggleIsPieceSelected();
-    void toggleIsPieceSelected(bool isSelected);
-
-    bool getIsTileReachable() const;
-    void toggleIsTileReachable();
-    void toggleIsTileReachable(bool isReachable);
-
-    bool getIsTileHighlighted() const;
-    void toggleIsTileHighlighted();
-    void toggleIsTileHighlighted(bool isHighlighted);
-
-    bool getIsTileSelected() const;
-    void toggleIsTileSelected();
-    void toggleIsTileSelected(bool isSelected);
-
-    bool getIsTileLastSelected() const;
-    void toggleIsTileLastSelected();
-    void toggleIsTileLastSelected(bool isLastSelected);
-
-    void paint(QPainter &painter);
+    void paint(QPainter &painter) const;
 
 private:
     QPointF m_centerPosition;
@@ -61,13 +34,6 @@ private:
     float m_top;
     float m_right;
     float m_bottom;
-
-    bool m_isReachable;
-    bool m_isHighlighted;
-    bool m_isSelected;
-    bool m_isLastSelected;
-
-    TurtlePiecePtr m_containedTurtle;
 };
 
 typedef std::shared_ptr<TileRender> TileRenderPtr;

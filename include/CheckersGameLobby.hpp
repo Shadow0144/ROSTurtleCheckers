@@ -1,7 +1,5 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -9,12 +7,12 @@
 
 #include "CheckersConsts.hpp"
 #include "Tile.hpp"
+#include "TurtlePiece.hpp"
 
 class CheckersGameLobby
 {
 public:
-    CheckersGameLobby(
-        const std::string &lobbyName);
+    CheckersGameLobby(const std::string &lobbyName);
 
     std::string getLobbyName() const;
 
@@ -49,6 +47,7 @@ private:
     std::vector<uint32_t> m_validPiecesPerPlayer_[2]; // Black and red
     std::unordered_map<uint32_t, std::vector<uint32_t>> m_validMovesPerPiece;
     std::vector<TilePtr> m_tiles;
+    std::vector<TurtlePiecePtr> m_turtlePieces;
     Winner m_winner;
 };
 

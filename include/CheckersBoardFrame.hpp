@@ -3,7 +3,7 @@
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
 #include "CheckersConsts.hpp" // NO LINT
 #include "TileRender.hpp"
-#include "TurtlePiece.hpp"
+#include "TurtlePieceRender.hpp"
 #include "TurtleGraveyard.hpp"
 #include "HUD.hpp"
 #endif
@@ -26,8 +26,8 @@
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_game_state.hpp"
 
-#include <map>
 #include <string>
+#include <vector>
 #endif
 
 // A single animation frame of the Turtle Checkers game
@@ -48,20 +48,12 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;
 
-	void paintEvent(QPaintEvent *event);
+	void paintEvent(QPaintEvent *event) override;
 
 private slots:
 	void onUpdate();
 
 private:
-	void clear();
-
-	void spawnTiles();
-
-	void clearPieces();
-	void spawnPieces();
-	void spawnTurtle(const std::string &name, bool black, float x, float y, float angle, size_t imageIndex);
-
 	void connectToGameResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedFuture future);
 	void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
 	void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
@@ -95,21 +87,8 @@ private:
 	rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateGameState>::SharedPtr m_updateGameStateSubscription;
 	rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
 
-	typedef std::map<std::string, TurtlePiecePtr> TurtlePiecesMap;
-	TurtlePiecesMap m_blackTurtles;
-	TurtlePiecesMap m_redTurtles;
-
-	QVector<QImage> m_blackTurtleImages;
-	size_t m_blackImageIndex = 0u;
-	QVector<QImage> m_redTurtleImages;
-	size_t m_redImageIndex = 0u;
-	QVector<QImage> m_kingTurtleImages;
-	QVector<QImage> m_highlightTurtleImages;
-	QVector<QImage> m_selectTurtleImages;
-	QVector<QImage> m_deadTurtleImages;
-
-	TileRenderPtr m_tileRenders[NUM_PLAYABLE_TILES];
-	int m_highlightedTile = -1; // No tile is highlighted
+	std::vector<TileRenderPtr> m_tileRenders;
+	std::vector<TurtlePieceRenderPtr> m_turtlePieceRenders;
 
 	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
 	TurtleGraveyardPtr m_redPlayerGraveyard; // Red player's graveyard containing the slain black pieces
@@ -118,6 +97,8 @@ private:
 
 	size_t m_blackTurtlesRemaining;
 	size_t m_redTurtlesRemaining;
+
+	int m_highlightedTileIndex = -1; // No tile is highlighted
 	
 	QTimer *m_updateTimer;
 };

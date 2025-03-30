@@ -4,11 +4,8 @@
 #include <QPointF>
 #include <QRgb>
 
-#include <math.h>
-
-#include "rclcpp/rclcpp.hpp"
-
 #include "CheckersConsts.hpp"
+#include "TurtlePieceRender.hpp"
 
 TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePieceColor viewingPlayerColor)
 {
@@ -26,15 +23,13 @@ TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePiece
     }
 }
 
-void TurtleGraveyard::addTurtlePiece(const std::shared_ptr<TileRender> &tile)
+void TurtleGraveyard::addTurtlePiece(TurtlePieceRenderPtr &turtlePieceRender)
 {
-    auto &turtlePiece = tile->getTurtlePiece();
-    if (turtlePiece)
+    if (turtlePieceRender)
     {
-        m_slainTurtles.push_back(turtlePiece);
-        turtlePiece->toggleIsDead(true);
-        turtlePiece->move(m_nextPosition);
-        tile->clearTurtlePiece();
+        m_slainTurtles.push_back(turtlePieceRender);
+        turtlePieceRender->setIsDead(true);
+        turtlePieceRender->setCenterPosition(m_nextPosition);
         m_nextPosition += m_positionIncrement;
     }
 }
@@ -44,7 +39,7 @@ void TurtleGraveyard::clear()
     m_slainTurtles.clear();
 }
 
-void TurtleGraveyard::paint(QPainter &painter)
+void TurtleGraveyard::paint(QPainter &painter) const
 {
     int r = GRAVEYARD_BG_RGB[0];
     int g = GRAVEYARD_BG_RGB[1];

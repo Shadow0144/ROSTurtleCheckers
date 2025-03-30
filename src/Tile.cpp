@@ -8,41 +8,10 @@ Tile::Tile(int row, int col)
     : m_row(row),
       m_col(col)
 {
-    clearTurtlePiece();
-}
-
-void Tile::clearTurtlePiece()
-{
-    m_turtlePieceColor = TurtlePieceColor::None;
-    m_turtlePieceName = "";
-    m_isTurtlePieceKinged = false;
-}
-
-void Tile::setTurtlePiece(const TurtlePieceColor &turtlePieceColor, const std::string &turtlePieceName, bool isTurtlePieceKinged)
-{
-    m_turtlePieceColor = turtlePieceColor;
-    m_turtlePieceName = turtlePieceName;
-    m_isTurtlePieceKinged = isTurtlePieceKinged;
-}
-
-TurtlePieceColor Tile::getTurtlePieceColor() const
-{
-    return m_turtlePieceColor;
-}
-
-std::string Tile::getTurtlePieceName() const
-{
-    return m_turtlePieceName;
-}
-
-void Tile::kingTurtlePiece()
-{
-    m_isTurtlePieceKinged = true;
-}
-
-bool Tile::getIsTurtlePieceKinged() const
-{
-    return m_isTurtlePieceKinged;
+    m_isReachable = false;
+    m_isHighlighted = false;
+    m_isSelected = false;
+    m_isLastSelected = false;
 }
 
 int Tile::getRow() const
@@ -55,18 +24,247 @@ int Tile::getCol() const
     return m_col;
 }
 
+/// Tile statuses
+
+bool Tile::getIsTileReachable() const
+{
+    return m_isReachable;
+}
+
+void Tile::setIsTileReachable(bool isReachable)
+{
+    m_isReachable = isReachable;
+}
+
+bool Tile::toggleIsTileReachable()
+{
+    m_isReachable = !m_isReachable;
+    return m_isReachable;
+}
+
+bool Tile::getIsTileHighlighted() const
+{
+    return m_isHighlighted;
+}
+
+void Tile::setIsTileHighlighted(bool isHighlighted)
+{
+    m_isHighlighted = isHighlighted;
+}
+
+bool Tile::toggleIsTileHighlighted()
+{
+    m_isHighlighted = !m_isHighlighted;
+    return m_isHighlighted;
+}
+
+bool Tile::getIsTileSelected() const
+{
+    return m_isSelected;
+}
+
+void Tile::setIsTileSelected(bool isSelected)
+{
+    m_isSelected = isSelected;
+}
+
+bool Tile::toggleIsTileSelected()
+{
+    m_isSelected = !m_isSelected;
+    return m_isSelected;
+}
+
+bool Tile::getIsTileLastSelected() const
+{
+    return m_isLastSelected;
+}
+
+void Tile::setIsTileLastSelected(bool isLastSelected)
+{
+    m_isLastSelected = isLastSelected;
+}
+
+bool Tile::toggleIsTileLastSelected()
+{
+    m_isLastSelected = !m_isLastSelected;
+    return m_isLastSelected;
+}
+
+/// Turtle piece statuses
+
+void Tile::setTurtlePiece(const TurtlePiecePtr &turtle)
+{
+    m_containedTurtle = turtle;
+}
+
+const TurtlePiecePtr &Tile::getTurtlePiece() const
+{
+    return m_containedTurtle;
+}
+
+bool Tile::containsPiece(TurtlePieceColor color) const
+{
+    switch (color)
+    {
+    case TurtlePieceColor::Black:
+    {
+        return (m_containedTurtle && m_containedTurtle->getColor() == TurtlePieceColor::Black);
+    }
+    break;
+    case TurtlePieceColor::Red:
+    {
+        return (m_containedTurtle && m_containedTurtle->getColor() == TurtlePieceColor::Red);
+    }
+    break;
+    case TurtlePieceColor::None:
+    {
+        return (!m_containedTurtle || m_containedTurtle->getColor() == TurtlePieceColor::None);
+    }
+    break;
+    }
+    return false;
+}
+
+void Tile::clearTurtlePiece()
+{
+    m_containedTurtle.reset();
+}
+
+TurtlePieceColor Tile::getTurtlePieceColor() const
+{
+    return ((m_containedTurtle) ? m_containedTurtle->getColor() : TurtlePieceColor::None);
+}
+
+std::string Tile::getTurtlePieceName() const
+{
+    return ((m_containedTurtle) ? m_containedTurtle->getName() : "");
+}
+
+bool Tile::getIsTurtlePieceHighlighted() const
+{
+    if (m_containedTurtle)
+    {
+        return m_containedTurtle->getIsHighlighted();
+    }
+    return false;
+}
+
+void Tile::setIsTurtlePieceHighlighted(bool isHighlighted)
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->setIsHighlighted(isHighlighted);
+    }
+}
+
+bool Tile::toggleIsTurtlePieceHighlighted()
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->toggleIsHighlighted();
+        return m_containedTurtle->getIsHighlighted();
+    }
+    return false;
+}
+
+bool Tile::getIsTurtlePieceSelected() const
+{
+    if (m_containedTurtle)
+    {
+        return m_containedTurtle->getIsSelected();
+    }
+    return false;
+}
+
+void Tile::setIsTurtlePieceSelected(bool isSelected)
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->setIsSelected(isSelected);
+    }
+}
+
+bool Tile::toggleIsTurtlePieceSelected()
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->toggleIsSelected();
+        return m_containedTurtle->getIsSelected();
+    }
+    return false;
+}
+
+bool Tile::getIsTurtlePieceKinged() const
+{
+    if (m_containedTurtle)
+    {
+        return m_containedTurtle->getIsKinged();
+    }
+    return false;
+}
+
+void Tile::setIsTurtlePieceKinged(bool isKinged)
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->setIsKinged(isKinged);
+    }
+}
+
+bool Tile::toggleIsTurtlePieceKinged()
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->toggleIsKinged();
+        return m_containedTurtle->getIsKinged();
+    }
+    return false;
+}
+
+bool Tile::getIsTurtlePieceDead() const
+{
+    if (m_containedTurtle)
+    {
+        return m_containedTurtle->getIsDead();
+    }
+    return false;
+}
+
+void Tile::setIsTurtlePieceDead(bool isDead)
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->setIsDead(isDead);
+    }
+}
+
+bool Tile::toggleIsTurtlePieceDead()
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->toggleIsDead();
+        return m_containedTurtle->getIsDead();
+    }
+    return false;
+}
+
 void Tile::moveTurtlePiece(const TilePtr &destinationTile)
 {
-    destinationTile->m_turtlePieceColor = m_turtlePieceColor;
-    destinationTile->m_turtlePieceName = m_turtlePieceName;
-    destinationTile->m_isTurtlePieceKinged = m_isTurtlePieceKinged;
+    destinationTile->setTurtlePiece(m_containedTurtle);
     clearTurtlePiece();
 }
 
 bool Tile::canJumpPiece(TurtlePieceColor otherPieceColor) const
 {
-    return ((m_turtlePieceColor == TurtlePieceColor::Black && otherPieceColor == TurtlePieceColor::Red) ||
-            (m_turtlePieceColor == TurtlePieceColor::Red && otherPieceColor == TurtlePieceColor::Black));
+    if (m_containedTurtle)
+    {
+        return ((m_containedTurtle->getColor() == TurtlePieceColor::Black && otherPieceColor == TurtlePieceColor::Red) ||
+                (m_containedTurtle->getColor() == TurtlePieceColor::Red && otherPieceColor == TurtlePieceColor::Black));
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64_t> &reachableTiles) const
@@ -83,50 +281,52 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
     auto tileCount = static_cast<int>(tiles.size());
     for (int i = 0u; i < tileCount; i++)
     {
+        auto tileIColor = tiles[i]->getTurtlePieceColor();
+
         // Check the tile to the top left of this one
-        if (m_row > 0u && m_col > 0u &&
-            m_row - 1u == tiles[i]->m_row &&
-            m_col - 1u == tiles[i]->m_col)
+        if (m_row > 0 && m_col > 0 &&
+            m_row - 1 == tiles[i]->m_row &&
+            m_col - 1 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
+            else if (canJumpPiece(tileIColor))
             {
                 topLeftJumpable = true;
             }
         }
         // Check the tile to the top right of this one
-        if (m_row > 0u && m_col < MAX_COL_ROW_INDEX &&
-                 m_row - 1u == tiles[i]->m_row &&
-                 m_col + 1u == tiles[i]->m_col)
+        if (m_row > 0 && m_col < static_cast<int>(MAX_COL_INDEX) &&
+            m_row - 1 == tiles[i]->m_row &&
+            m_col + 1 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
+            else if (canJumpPiece(tileIColor))
             {
                 topRightJumpable = true;
             }
         }
         // Check if the tile is jumpable to the top left of this one
-        if (m_row > 1u && m_col > 1u &&
-                 m_row - 2u == tiles[i]->m_row &&
-                 m_col - 2u == tiles[i]->m_col)
+        if (m_row > 1 && m_col > 1 &&
+            m_row - 2 == tiles[i]->m_row &&
+            m_col - 2 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 topLeftJumpableIndex = i;
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        if (m_row > 1u && m_col < MAX_JUMP_INDEX &&
-                 m_row - 2u == tiles[i]->m_row &&
-                 m_col + 2u == tiles[i]->m_col)
+        if (m_row > 1 && m_col < static_cast<int>(MAX_COL_JUMP_INDEX) &&
+            m_row - 2 == tiles[i]->m_row &&
+            m_col + 2 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 topRightJumpableIndex = i;
             }
@@ -157,50 +357,56 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
     auto tileCount = tiles.size();
     for (uint64_t i = 0u; i < tileCount; i++)
     {
+        auto tileIColor = tiles[i]->getTurtlePieceColor();
+
         // Check the tile to the bottom left of this one
-        if (m_row < MAX_COL_ROW_INDEX && m_col > 0u &&
-            m_row + 1u == tiles[i]->m_row &&
-            m_col - 1u == tiles[i]->m_col)
+        if (m_row < static_cast<int>(MAX_ROW_INDEX) &&
+            m_col > 0 &&
+            m_row + 1 == tiles[i]->m_row &&
+            m_col - 1 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
+            else if (canJumpPiece(tileIColor))
             {
                 bottomLeftJumpable = true;
             }
         }
         // Check the tile to the bottom right of this one
-        if (m_row < MAX_COL_ROW_INDEX && m_col < MAX_COL_ROW_INDEX &&
-                 m_row + 1u == tiles[i]->m_row &&
-                 m_col + 1u == tiles[i]->m_col)
+        if (m_row < static_cast<int>(MAX_ROW_INDEX) &&
+            m_col < static_cast<int>(MAX_COL_INDEX) &&
+            m_row + 1 == tiles[i]->m_row &&
+            m_col + 1 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tiles[i]->m_turtlePieceColor))
+            else if (canJumpPiece(tileIColor))
             {
                 bottomRightJumpable = true;
             }
         }
         // Check if the tile is jumpable to the bottom left of this one
-        if (m_row < MAX_JUMP_INDEX && m_col > 1u &&
-                 m_row + 2u == tiles[i]->m_row &&
-                 m_col - 2u == tiles[i]->m_col)
+        if (m_row < static_cast<int>(MAX_ROW_JUMP_INDEX) &&
+            m_col > 1 &&
+            m_row + 2 == tiles[i]->m_row &&
+            m_col - 2 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 bottomLeftJumpableIndex = i;
             }
         }
         // Check if the tile is jumpable to the top right of this one
-        if (m_row < MAX_JUMP_INDEX && m_col < MAX_JUMP_INDEX &&
-                 m_row + 2u == tiles[i]->m_row &&
-                 m_col + 2u == tiles[i]->m_col)
+        if (m_row < static_cast<int>(MAX_ROW_JUMP_INDEX) &&
+            m_col < static_cast<int>(MAX_COL_JUMP_INDEX) &&
+            m_row + 2 == tiles[i]->m_row &&
+            m_col + 2 == tiles[i]->m_col)
         {
-            if (tiles[i]->m_turtlePieceColor == TurtlePieceColor::None)
+            if (tileIColor == TurtlePieceColor::None)
             {
                 bottomRightJumpableIndex = i;
             }
@@ -221,27 +427,30 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
 {
     std::vector<uint64_t> reachableTiles;
 
-    switch (m_turtlePieceColor)
+    if (m_containedTurtle)
     {
-    case TurtlePieceColor::None:
-        // Nothing is reachable
-        break;
-    case TurtlePieceColor::Black:
-        // Black moves up the board and can jump red pieces
-        checkTilesAbove(tiles, reachableTiles);
-        if (m_isTurtlePieceKinged) // Kings can move in the opposite direction too
+        switch (m_containedTurtle->getColor())
         {
-            checkTilesBelow(tiles, reachableTiles);
-        }
-        break;
-    case TurtlePieceColor::Red:
-        // Red moves down the board and can jump black pieces
-        checkTilesBelow(tiles, reachableTiles);
-        if (m_isTurtlePieceKinged) // Kings can move in the opposite direction too
-        {
+        case TurtlePieceColor::None:
+            // Nothing is reachable
+            break;
+        case TurtlePieceColor::Black:
+            // Black moves up the board and can jump red pieces
             checkTilesAbove(tiles, reachableTiles);
+            if (m_containedTurtle->getIsKinged()) // Kings can move in the opposite direction too
+            {
+                checkTilesBelow(tiles, reachableTiles);
+            }
+            break;
+        case TurtlePieceColor::Red:
+            // Red moves down the board and can jump black pieces
+            checkTilesBelow(tiles, reachableTiles);
+            if (m_containedTurtle->getIsKinged()) // Kings can move in the opposite direction too
+            {
+                checkTilesAbove(tiles, reachableTiles);
+            }
+            break;
         }
-        break;
     }
 
     return reachableTiles;

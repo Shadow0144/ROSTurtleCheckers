@@ -7,6 +7,7 @@
 #include <functional>
 #include <string>
 #include <chrono>
+#include <vector>
 
 #include "rcl_interfaces/msg/floating_point_range.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
@@ -20,6 +21,8 @@
 #include "turtle_checkers_interfaces/msg/update_game_state.hpp"
 
 #include "CheckersConsts.hpp"
+#include "TileRenderFactory.hpp"
+#include "TurtlePieceRenderFactory.hpp"
 
 using std::placeholders::_1;
 
@@ -31,18 +34,21 @@ CheckersBoardFrame::CheckersBoardFrame(
 	: QFrame(parent, windowFlags),
 	  m_playerName(playerName)
 {
+	m_nodeHandle = nodeHandle;
+
+	m_selectedPieceName = "";
+	m_sourceTileIndex = -1;
+	m_destinationTileIndex = -1;
+	m_moveSelected = false;
+	m_gameState = GameState::Connecting;
+	m_playerColor = TurtlePieceColor::None;
+
 	setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	setWindowTitle("TurtleCheckers");
 
 	srand(time(NULL));
 
 	setMouseTracking(true);
-
-	m_gameState = GameState::Connecting;
-	m_playerColor = TurtlePieceColor::None;
-
-	m_blackTurtlesRemaining = NUM_PIECES_PER_PLAYER;
-	m_redTurtlesRemaining = NUM_PIECES_PER_PLAYER;
 
 	m_hud = std::make_shared<HUD>();
 	m_hud->setPiecesRemaining(m_blackTurtlesRemaining, m_redTurtlesRemaining);
@@ -52,8 +58,6 @@ CheckersBoardFrame::CheckersBoardFrame(
 	m_updateTimer->setInterval(16);
 	m_updateTimer->start();
 	connect(m_updateTimer, SIGNAL(timeout()), this, SLOT(onUpdate()));
-
-	m_nodeHandle = nodeHandle;
 
 	rcl_interfaces::msg::FloatingPointRange range;
 	range.from_value = 0.01f;
@@ -67,50 +71,6 @@ CheckersBoardFrame::CheckersBoardFrame(
 	rcl_interfaces::msg::ParameterDescriptor holonomicDescriptor;
 	holonomicDescriptor.description = "If true, then turtles will be holonomic";
 	m_nodeHandle->declare_parameter("holonomic", rclcpp::ParameterValue(false), holonomicDescriptor);
-
-	QVector<QString> turtlesImageNames;
-	/*turtlesImageNames.append("ardent.png");
-	turtlesImageNames.append("bouncy.png");
-	turtlesImageNames.append("crystal.png");
-	turtlesImageNames.append("dashing.png");
-	turtlesImageNames.append("eloquent.png");
-	turtlesImageNames.append("foxy.png");
-	turtlesImageNames.append("galactic.png");
-	turtlesImageNames.append("humble.png");
-	turtlesImageNames.append("iron.png");
-	turtlesImageNames.append("jazzy.png");*/
-	turtlesImageNames.append("rolling");
-
-	QString imagesPath =
-		(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/img/").c_str();
-	for (int i = 0; i < turtlesImageNames.size(); ++i)
-	{
-		QImage bImg;
-		bImg.load(imagesPath + turtlesImageNames[i] + "_black.png");
-		m_blackTurtleImages.append(bImg);
-		QImage rImg;
-		rImg.load(imagesPath + turtlesImageNames[i] + "_red.png");
-		m_redTurtleImages.append(rImg);
-		QImage kImg;
-		kImg.load(imagesPath + turtlesImageNames[i] + "_king.png");
-		m_kingTurtleImages.append(kImg);
-		QImage hImg;
-		hImg.load(imagesPath + turtlesImageNames[i] + "_highlight.png");
-		m_highlightTurtleImages.append(hImg);
-		QImage sImg;
-		sImg.load(imagesPath + turtlesImageNames[i] + "_select.png");
-		m_selectTurtleImages.append(sImg);
-		QImage dImg;
-		dImg.load(imagesPath + turtlesImageNames[i] + "_dead.png");
-		m_deadTurtleImages.append(dImg);
-	}
-
-	m_selectedPieceName = "";
-	m_sourceTileIndex = -1;
-	m_destinationTileIndex = -1;
-	m_moveSelected = false;
-
-	clear();
 
 	RCLCPP_INFO(
 		m_nodeHandle->get_logger(), "Starting turtle checkers board with node name %s", m_nodeHandle->get_fully_qualified_name());
@@ -185,22 +145,26 @@ void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_in
 	m_hud->setPlayerColor(m_playerColor);
 	m_hud->setGameState(m_gameState);
 
-	spawnTiles();
-	spawnPieces();
+	m_tileRenders = TileRenderFactory::createTileRenders(NUM_PLAYABLE_ROWS, NUM_PLAYABLE_COLS, m_playerColor);
+	m_turtlePieceRenders = TurtlePieceRenderFactory::createTurtlePieceRenders(NUM_PIECES_PER_PLAYER, m_tileRenders, m_playerColor);
+
+	m_blackTurtlesRemaining = NUM_PIECES_PER_PLAYER;
+	m_redTurtlesRemaining = NUM_PIECES_PER_PLAYER;
 }
 
 void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future)
 {
 	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
-		m_tileRenders[i]->toggleIsTileReachable(false);
+		m_tileRenders[i]->setIsTileReachable(false);
 	}
 	auto result = future.get();
-	const auto &highlightedTiles = result->reachable_tile_indices;
-	for (size_t i = 0u; i < highlightedTiles.size(); i++)
+	const auto &highlightedTileIndices = result->reachable_tile_indices;
+	for (size_t i = 0u; i < highlightedTileIndices.size(); i++)
 	{
-		m_tileRenders[highlightedTiles[i]]->toggleIsTileReachable(true);
+		m_tileRenders[highlightedTileIndices[i]]->setIsTileReachable(true);
 	}
+
 	update();
 }
 
@@ -227,16 +191,15 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 {
 	clearSelections();
 
-	if (!message->piece_name.empty() &&
-		message->source_tile_index < NUM_PLAYABLE_TILES &&
+	if (message->source_tile_index < NUM_PLAYABLE_TILES &&
 		message->destination_tile_index < NUM_PLAYABLE_TILES)
 	{
 		m_tileRenders[message->source_tile_index]->moveTurtlePiece(m_tileRenders[message->destination_tile_index]);
 		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 		{
-			m_tileRenders[i]->toggleIsTileLastSelected(false);
+			m_tileRenders[i]->setIsTileLastSelected(false);
 		}
-		m_tileRenders[message->destination_tile_index]->toggleIsTileLastSelected(true);
+		m_tileRenders[message->destination_tile_index]->setIsTileLastSelected(true);
 	}
 
 	if (message->slain_piece_tile_index > -1)
@@ -249,13 +212,13 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 			{
 			case TurtlePieceColor::Black:
 			{
-				m_redPlayerGraveyard->addTurtlePiece(m_tileRenders[slainPieceTileIndex]);
+				m_tileRenders[slainPieceTileIndex]->moveTurtlePiece(m_redPlayerGraveyard);
 				m_blackTurtlesRemaining--;
 			}
 			break;
 			case TurtlePieceColor::Red:
 			{
-				m_blackPlayerGraveyard->addTurtlePiece(m_tileRenders[slainPieceTileIndex]);
+				m_tileRenders[slainPieceTileIndex]->moveTurtlePiece(m_blackPlayerGraveyard);
 				m_redTurtlesRemaining--;
 			}
 			break;
@@ -270,7 +233,7 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 
 	if (message->king_piece)
 	{
-		m_tileRenders[message->destination_tile_index]->kingTurtlePiece();
+		m_tileRenders[message->destination_tile_index]->setIsTurtlePieceKinged(true);
 	}
 
 	m_gameState = static_cast<GameState>(message->game_state);
@@ -334,13 +297,13 @@ void CheckersBoardFrame::handleMouseMove(QMouseEvent *event)
 {
 	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
-		m_tileRenders[i]->toggleIsPieceHighlighted(false);
+		m_tileRenders[i]->setIsTurtlePieceHighlighted(false);
 	}
 	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
 		if (m_tileRenders[i]->containsPoint(event->pos()) && m_tileRenders[i]->containsPiece(m_playerColor))
 		{
-			m_tileRenders[i]->toggleIsPieceHighlighted(true);
+			m_tileRenders[i]->setIsTurtlePieceHighlighted(true);
 			break;
 		}
 	}
@@ -349,13 +312,13 @@ void CheckersBoardFrame::handleMouseMove(QMouseEvent *event)
 	{
 		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 		{
-			m_tileRenders[i]->toggleIsTileHighlighted(false);
+			m_tileRenders[i]->setIsTileHighlighted(false);
 		}
 		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 		{
 			if (m_tileRenders[i]->getIsTileReachable() && m_tileRenders[i]->containsPoint(event->pos()))
 			{
-				m_tileRenders[i]->toggleIsTileHighlighted(true);
+				m_tileRenders[i]->setIsTileHighlighted(true);
 				break;
 			}
 		}
@@ -424,21 +387,21 @@ void CheckersBoardFrame::handleMouseClick(QMouseEvent *event)
 	{
 		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 		{
-			m_tileRenders[i]->toggleIsPieceSelected(false);
-			m_tileRenders[i]->toggleIsTileReachable(false);
-			m_tileRenders[i]->toggleIsTileHighlighted(false);
-			m_tileRenders[i]->toggleIsTileSelected(false);
+			m_tileRenders[i]->setIsTurtlePieceSelected(false);
+			m_tileRenders[i]->setIsTileReachable(false);
+			m_tileRenders[i]->setIsTileHighlighted(false);
+			m_tileRenders[i]->setIsTileSelected(false);
 		}
 		bool selected = false;
 		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 		{
 			if (m_tileRenders[i]->containsPoint(event->pos()) && m_tileRenders[i]->containsPiece(m_playerColor))
 			{
-				if (m_selectedPieceName != m_tileRenders[i]->getTurtlePiece()->getName()) // If we've clicked a new piece, select it
+				if (m_selectedPieceName != m_tileRenders[i]->getTurtlePieceName()) // If we've clicked a new piece, select it
 				{
 					m_sourceTileIndex = i;
-					m_selectedPieceName = m_tileRenders[m_sourceTileIndex]->getTurtlePiece()->getName();
-					m_tileRenders[m_sourceTileIndex]->toggleIsPieceSelected(true);
+					m_selectedPieceName = m_tileRenders[m_sourceTileIndex]->getTurtlePieceName();
+					m_tileRenders[m_sourceTileIndex]->setIsTurtlePieceSelected(true);
 					auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestReachableTiles::Request>();
 					request->piece_name = m_selectedPieceName;
 					m_requestReachableTilesClient->async_send_request(request,
@@ -467,7 +430,7 @@ void CheckersBoardFrame::handleMouseClick(QMouseEvent *event)
 				if (m_tileRenders[i]->getIsTileReachable())
 				{
 					m_destinationTileIndex = i;
-					m_tileRenders[i]->toggleIsTileSelected(true);
+					m_tileRenders[i]->setIsTileSelected(true);
 					auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestPieceMove::Request>();
 					request->piece_name = m_selectedPieceName;
 					request->source_tile_index = m_sourceTileIndex;
@@ -491,138 +454,15 @@ void CheckersBoardFrame::clearSelections()
 {
 	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 	{
-		m_tileRenders[i]->toggleIsPieceSelected(false);
-		m_tileRenders[i]->toggleIsTileReachable(false);
-		m_tileRenders[i]->toggleIsTileHighlighted(false);
-		m_tileRenders[i]->toggleIsTileSelected(false);
+		m_tileRenders[i]->setIsTurtlePieceSelected(false);
+		m_tileRenders[i]->setIsTileReachable(false);
+		m_tileRenders[i]->setIsTileHighlighted(false);
+		m_tileRenders[i]->setIsTileSelected(false);
 	}
 	m_selectedPieceName.clear();
 	m_sourceTileIndex = -1;
 	m_destinationTileIndex = -1;
 	m_moveSelected = false;
-}
-
-void CheckersBoardFrame::spawnTiles()
-{
-	float tileCentersX[NUM_PLAYABLE_TILES];
-	float tileCentersY[NUM_PLAYABLE_TILES];
-	for (size_t i = 0u; i < NUM_COLS_ROWS; i++)
-	{
-		if (i % 2u == 0u)
-		{
-			tileCentersX[(i * 4) + 0] = (1 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-			tileCentersX[(i * 4) + 1] = (3 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-			tileCentersX[(i * 4) + 2] = (5 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-			tileCentersX[(i * 4) + 3] = (7 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-		}
-		else
-		{
-			tileCentersX[(i * 4) + 0] = (0 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-			tileCentersX[(i * 4) + 1] = (2 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-			tileCentersX[(i * 4) + 2] = (4 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-			tileCentersX[(i * 4) + 3] = (6 * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
-		}
-
-		if (m_playerColor == TurtlePieceColor::Black)
-		{
-			tileCentersY[(i * 4) + 0] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
-			tileCentersY[(i * 4) + 1] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
-			tileCentersY[(i * 4) + 2] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
-			tileCentersY[(i * 4) + 3] = (i * TILE_HEIGHT) + TILE_HALF_HEIGHT + HUD_HEIGHT;
-		}
-		else // Red - The red player faces the board from the other direction, so mirror it
-		{
-			tileCentersY[(i * 4) + 0] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
-			tileCentersY[(i * 4) + 1] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
-			tileCentersY[(i * 4) + 2] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
-			tileCentersY[(i * 4) + 3] = WINDOW_HEIGHT - (i * TILE_HEIGHT) - TILE_HALF_HEIGHT;
-		}
-	}
-	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-	{
-		m_tileRenders[i] = std::make_shared<TileRender>(QPointF(tileCentersX[i], tileCentersY[i]));
-	}
-}
-
-void CheckersBoardFrame::clearPieces()
-{
-}
-
-void CheckersBoardFrame::spawnPieces()
-{
-	// Spawn all the checkers pieces
-	// Red
-	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
-	{
-		std::string name = "Red" + std::to_string(i + 1);
-		auto center = m_tileRenders[i]->getCenterPosition();
-		spawnTurtle(name,
-					false,
-					center.x(),
-					center.y(),
-					(m_playerColor == TurtlePieceColor::Black) ? DOWNWARD_ANGLE : UPWARD_ANGLE,
-					m_redImageIndex);
-		m_tileRenders[i]->setTurtlePiece(m_redTurtles[name]);
-	}
-	// Black
-	for (size_t i = 0u; i < NUM_PIECES_PER_PLAYER; i++)
-	{
-		std::string name = "Black" + std::to_string(i + 1);
-		auto center = m_tileRenders[i + BLACK_OFFSET]->getCenterPosition();
-		spawnTurtle(name,
-					true,
-					center.x(),
-					center.y(),
-					(m_playerColor == TurtlePieceColor::Black) ? UPWARD_ANGLE : DOWNWARD_ANGLE,
-					m_blackImageIndex);
-		m_tileRenders[i + BLACK_OFFSET]->setTurtlePiece(m_blackTurtles[name]);
-	}
-}
-
-void CheckersBoardFrame::spawnTurtle(const std::string &name,
-									 bool black,
-									 float x,
-									 float y,
-									 float angle,
-									 size_t imageIndex)
-{
-	if (black)
-	{
-		m_blackTurtles[name] = std::make_shared<TurtlePiece>(
-			name,
-			TurtlePieceColor::Black,
-			m_blackTurtleImages[static_cast<int>(imageIndex)],
-			m_kingTurtleImages[static_cast<int>(imageIndex)],
-			m_highlightTurtleImages[static_cast<int>(imageIndex)],
-			m_selectTurtleImages[static_cast<int>(imageIndex)],
-			m_deadTurtleImages[static_cast<int>(imageIndex)],
-			QPointF(x, y),
-			angle);
-		/*RCLCPP_INFO(
-			m_nodeHandle->get_logger(), "Spawning black turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-			name.c_str(), x, y, angle);*/
-	}
-	else // red
-	{
-		m_redTurtles[name] = std::make_shared<TurtlePiece>(
-			name,
-			TurtlePieceColor::Red,
-			m_redTurtleImages[static_cast<int>(imageIndex)],
-			m_kingTurtleImages[static_cast<int>(imageIndex)],
-			m_highlightTurtleImages[static_cast<int>(imageIndex)],
-			m_selectTurtleImages[static_cast<int>(imageIndex)],
-			m_deadTurtleImages[static_cast<int>(imageIndex)],
-			QPointF(x, y),
-			angle);
-		/*RCLCPP_INFO(
-			m_nodeHandle->get_logger(), "Spawning red turtle [%s] at x=[%f], y=[%f], theta=[%f]",
-			name.c_str(), x, y, angle);*/
-	}
-	update();
-}
-
-void CheckersBoardFrame::clear()
-{
 }
 
 void CheckersBoardFrame::onUpdate()
@@ -650,29 +490,13 @@ void CheckersBoardFrame::paintEvent(QPaintEvent *event)
 	QRgb backgroundColor = qRgb(RED_SQUARES_BG_RGB[0], RED_SQUARES_BG_RGB[1], RED_SQUARES_BG_RGB[2]);
 	painter.fillRect(0, 0, width(), height(), backgroundColor);
 
-	// Draw the black tiles over the red background
-	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+	// Draw the black tiles over the red background and any turtles they contain
+	for (auto &tileRender : m_tileRenders)
 	{
-		m_tileRenders[i]->paint(painter);
+		tileRender->paint(painter);
 	}
 
-	// Draw the black turtles
-	TurtlePiecesMap::iterator bit = m_blackTurtles.begin();
-	TurtlePiecesMap::iterator bend = m_blackTurtles.end();
-	for (; bit != bend; ++bit)
-	{
-		bit->second->paint(painter);
-	}
-
-	// Draw the red turtles
-	TurtlePiecesMap::iterator rit = m_redTurtles.begin();
-	TurtlePiecesMap::iterator rend = m_redTurtles.end();
-	for (; rit != rend; ++rit)
-	{
-		rit->second->paint(painter);
-	}
-
-	// Draw the graveyards
+	// Draw the graveyards and any turtles they contain
 	m_blackPlayerGraveyard->paint(painter);
 	m_redPlayerGraveyard->paint(painter);
 

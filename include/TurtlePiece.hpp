@@ -1,10 +1,5 @@
 #pragma once
 
-#include <QImage>
-#include <QPainter>
-#include <QPen>
-#include <QPointF>
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,61 +11,36 @@ class TurtlePiece
 public:
     TurtlePiece(
         const std::string &name,
-        TurtlePieceColor color,
-        const QImage &turtleImage,
-        const QImage &kingImage,
-        const QImage &highlightImage,
-        const QImage &selectImage,
-        const QImage &deadImage,
-        const QPointF &position,
-        int angleDegrees);
+        TurtlePieceColor color);
 
     std::string &getName();
 
     TurtlePieceColor getColor();
 
-    bool getIsKinged();
-    void toggleIsKinged();
-    void toggleIsKinged(bool isKinged);
-
     bool getIsHighlighted();
+    void setIsHighlighted(bool isHighlighted);
     void toggleIsHighlighted();
-    void toggleIsHighlighted(bool isHighlighted);
 
     bool getIsSelected();
+    void setIsSelected(bool isSelected);
     void toggleIsSelected();
-    void toggleIsSelected(bool isSelected);
+
+    bool getIsKinged();
+    void setIsKinged(bool isKinged);
+    void toggleIsKinged();
 
     bool getIsDead();
+    void setIsDead(bool isDead);
     void toggleIsDead();
-    void toggleIsDead(bool isDead);
 
-    void move(const QPointF &newPosition);
-
-    void paint(QPainter &painter);
-
-private:
+protected:
     std::string m_name;
 
     TurtlePieceColor m_color;
 
-    QImage m_turtleImage;
-    QImage m_turtleRotatedImage;
-    QImage m_kingImage;
-    QImage m_kingRotatedImage;
-    QImage m_highlightImage;
-    QImage m_highlightRotatedImage;
-    QImage m_selectImage;
-    QImage m_selectRotatedImage;
-    QImage m_deadImage;
-    QImage m_deadRotatedImage;
-
-    QPointF m_position;
-    int m_angleDegrees; // In degrees
-
-    bool m_isKinged;
     bool m_isHighlighted;
     bool m_isSelected;
+    bool m_isKinged;
     bool m_isDead;
 };
 
