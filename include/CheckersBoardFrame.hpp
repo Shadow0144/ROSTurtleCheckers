@@ -23,6 +23,7 @@
 #include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_game_state.hpp"
 
@@ -58,6 +59,7 @@ private:
 	void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
 	void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
 
+	void declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message);
 	void updateGameStateCallback(const turtle_checkers_interfaces::msg::UpdateGameState::SharedPtr message);
 	void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
 
@@ -84,6 +86,7 @@ private:
 	rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesClient;
 	rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveClient;
 
+	rclcpp::Subscription<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerSubscription;
 	rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateGameState>::SharedPtr m_updateGameStateSubscription;
 	rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
 
@@ -97,6 +100,7 @@ private:
 
 	size_t m_blackTurtlesRemaining;
 	size_t m_redTurtlesRemaining;
+	Winner m_winner;
 
 	int m_highlightedTileIndex = -1; // No tile is highlighted
 	

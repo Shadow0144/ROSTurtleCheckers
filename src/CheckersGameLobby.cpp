@@ -124,26 +124,54 @@ int CheckersGameLobby::getJumpedPieceTileIndex(int sourceTileIndex, int destinat
         destinationTileIndex < static_cast<int>(m_tiles.size()) &&
         std::abs(m_tiles[sourceTileIndex]->getRow() - m_tiles[destinationTileIndex]->getRow()) > 1) // Moved more than one row
     {
-        if (m_tiles[sourceTileIndex]->getRow() < m_tiles[destinationTileIndex]->getRow()) // Jumped down
+        if (m_tiles[sourceTileIndex]->getRow() % 2 == 0) // Finding the index will depend on if the row is shifted or not
         {
-            if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+            if (m_tiles[sourceTileIndex]->getRow() < m_tiles[destinationTileIndex]->getRow()) // Jumped down
             {
-                return (sourceTileIndex + NUM_PLAYABLE_COLS);
+                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+                {
+                    return (sourceTileIndex + NUM_PLAYABLE_COLS);
+                }
+                else // Jumped left
+                {
+                    return (sourceTileIndex + NUM_PLAYABLE_COLS - 1);
+                }
             }
-            else // Jumped left
+            else // Jumped up
             {
-                return (sourceTileIndex + NUM_PLAYABLE_COLS - 1);
+                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+                {
+                    return (sourceTileIndex - NUM_PLAYABLE_COLS);
+                }
+                else // Jumped left
+                {
+                    return (sourceTileIndex - NUM_PLAYABLE_COLS - 1);
+                }
             }
         }
-        else // Jumped up
+        else // (m_tiles[sourceTileIndex]->getRow() % 2 == 1)
         {
-            if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+            if (m_tiles[sourceTileIndex]->getRow() < m_tiles[destinationTileIndex]->getRow()) // Jumped down
             {
-                return (sourceTileIndex - NUM_PLAYABLE_COLS + 1);
+                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+                {
+                    return (sourceTileIndex + NUM_PLAYABLE_COLS + 1);
+                }
+                else // Jumped left
+                {
+                    return (sourceTileIndex + NUM_PLAYABLE_COLS);
+                }
             }
-            else // Jumped left
+            else // Jumped up
             {
-                return (sourceTileIndex - NUM_PLAYABLE_COLS);
+                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
+                {
+                    return (sourceTileIndex - NUM_PLAYABLE_COLS + 1);
+                }
+                else // Jumped left
+                {
+                    return (sourceTileIndex - NUM_PLAYABLE_COLS);
+                }
             }
         }
     }
@@ -205,7 +233,6 @@ void CheckersGameLobby::slayTurtleAtTileIndex(int tileIndex)
     {
     case TurtlePieceColor::Black:
     {
-
         m_blackPiecesRemaining--;
     }
     break;
@@ -221,4 +248,55 @@ void CheckersGameLobby::slayTurtleAtTileIndex(int tileIndex)
     break;
     }
     m_tiles[tileIndex]->clearTurtlePiece();
+
+    // If all the pieces of a player are slain, the other player wins
+    if (m_blackPiecesRemaining == 0)
+    {
+        m_winner = Winner::Red;
+    }
+    else if (m_redPiecesRemaining == 0)
+    {
+        m_winner = Winner::Black;
+    }
+}
+
+void CheckersGameLobby::checkPlayersCanMove()
+{
+    // Check if both players have valid moves
+    // If they do not, check for a draw
+    // If only one can't move, that one loses; if both can't, it's a draw
+    bool blackPlayerHasMoves = false;
+    bool redPlayerHasMoves = false;
+
+    for (const auto &tile : m_tiles)
+    {
+        if (!tile->getCurrentlyReachableTiles(m_tiles).empty())
+        {
+            if (tile->getTurtlePieceColor() == TurtlePieceColor::Black)
+            {
+                blackPlayerHasMoves = true;
+            }
+            else if (tile->getTurtlePieceColor() == TurtlePieceColor::Red)
+            {
+                redPlayerHasMoves = true;
+            }
+        }
+        if (blackPlayerHasMoves && redPlayerHasMoves)
+        {
+            return; // No need to update the winner
+        }
+    }
+
+    if (!blackPlayerHasMoves && !redPlayerHasMoves)
+    {
+        m_winner = Winner::Draw;
+    }
+    else if (!blackPlayerHasMoves)
+    {
+        m_winner = Winner::Red;
+    }
+    else // if (!redPlayerHasMoves)
+    {
+        m_winner = Winner::Black;
+    }
 }

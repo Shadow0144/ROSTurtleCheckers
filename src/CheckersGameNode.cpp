@@ -6,6 +6,7 @@
 #include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_game_state.hpp"
 
@@ -32,6 +33,7 @@ GamePlayerNode::GamePlayerNode()
     m_requestPieceMoveService =
         this->create_service<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove", std::bind(&GamePlayerNode::requestPieceMoveRequest, this, std::placeholders::_1, std::placeholders::_2));
 
+    m_declareWinnerPublisher = this->create_publisher<turtle_checkers_interfaces::msg::DeclareWinner>("DeclareWinner", 10);
     m_updateGameStatePublisher = this->create_publisher<turtle_checkers_interfaces::msg::UpdateGameState>("UpdateGameState", 10);
     m_updateBoardPublisher = this->create_publisher<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10);
 
@@ -104,9 +106,17 @@ void GamePlayerNode::requestPieceMoveRequest(const std::shared_ptr<turtle_checke
         message.destination_tile_index = request->destination_tile_index;
         message.king_piece = m_checkersGameLobby->wasPieceKinged(request->piece_name, request->destination_tile_index);
         message.slain_piece_tile_index = jumpedPieceTileIndex;
-        if (m_checkersGameLobby->getWinner() != Winner::None)
+
+        // Check which players (if any) cannot move, which ends the game
+        m_checkersGameLobby->checkPlayersCanMove();
+
+        auto winner = m_checkersGameLobby->getWinner();
+        if (winner != Winner::None)
         {
             message.game_state = 4; // Game over
+            auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+            winnerMessage.winner = static_cast<size_t>(winner);
+            m_declareWinnerPublisher->publish(winnerMessage);
         }
         else if (m_checkersGameLobby->getIsBlackTurn())
         {

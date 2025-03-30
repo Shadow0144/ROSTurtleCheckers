@@ -42,6 +42,7 @@ CheckersBoardFrame::CheckersBoardFrame(
 	m_moveSelected = false;
 	m_gameState = GameState::Connecting;
 	m_playerColor = TurtlePieceColor::None;
+	m_winner = Winner::None;
 
 	setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	setWindowTitle("TurtleCheckers");
@@ -78,6 +79,7 @@ CheckersBoardFrame::CheckersBoardFrame(
 	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
 	m_requestPieceMoveClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove");
 
+	m_declareWinnerSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>("DeclareWinner", 10, std::bind(&CheckersBoardFrame::declareWinnerCallback, this, _1));
 	m_updateGameStateSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateGameState>("UpdateGameState", 10, std::bind(&CheckersBoardFrame::updateGameStateCallback, this, _1));
 	m_updateBoardSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10, std::bind(&CheckersBoardFrame::updateBoardCallback, this, _1));
 
@@ -179,6 +181,14 @@ void CheckersBoardFrame::requestPieceMoveResponse(rclcpp::Client<turtle_checkers
 	update();
 }
 
+void CheckersBoardFrame::declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message)
+{
+	m_winner = static_cast<Winner>(message->winner);
+	m_hud->setWinner(m_winner);
+
+	update();
+}
+
 void CheckersBoardFrame::updateGameStateCallback(const turtle_checkers_interfaces::msg::UpdateGameState::SharedPtr message)
 {
 	m_gameState = static_cast<GameState>(message->game_state);
@@ -197,16 +207,17 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 		m_tileRenders[message->source_tile_index]->moveTurtlePiece(m_tileRenders[message->destination_tile_index]);
 		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
 		{
-			m_tileRenders[i]->setIsTileLastSelected(false);
+			m_tileRenders[i]->setIsTileLastMovedFrom(false);
+			m_tileRenders[i]->setIsTileLastMovedTo(false);
 		}
-		m_tileRenders[message->destination_tile_index]->setIsTileLastSelected(true);
+		m_tileRenders[message->source_tile_index]->setIsTileLastMovedFrom(true);
+		m_tileRenders[message->destination_tile_index]->setIsTileLastMovedTo(true);
 	}
 
 	if (message->slain_piece_tile_index > -1)
 	{
 		auto slainPieceTileIndex = message->slain_piece_tile_index;
-		if (slainPieceTileIndex < static_cast<int>(NUM_PLAYABLE_TILES) &&
-			slainPieceTileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
+		if (slainPieceTileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
 		{
 			switch (m_tileRenders[slainPieceTileIndex]->getTurtlePieceColor())
 			{

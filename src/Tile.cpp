@@ -11,7 +11,8 @@ Tile::Tile(int row, int col)
     m_isReachable = false;
     m_isHighlighted = false;
     m_isSelected = false;
-    m_isLastSelected = false;
+    m_isLastMovedFrom = false;
+    m_isLastMovedTo = false;
 }
 
 int Tile::getRow() const
@@ -74,20 +75,36 @@ bool Tile::toggleIsTileSelected()
     return m_isSelected;
 }
 
-bool Tile::getIsTileLastSelected() const
+bool Tile::getIsTileLastMovedFrom() const
 {
-    return m_isLastSelected;
+    return m_isLastMovedFrom;
 }
 
-void Tile::setIsTileLastSelected(bool isLastSelected)
+void Tile::setIsTileLastMovedFrom(bool isLastMovedFrom)
 {
-    m_isLastSelected = isLastSelected;
+    m_isLastMovedFrom = isLastMovedFrom;
 }
 
-bool Tile::toggleIsTileLastSelected()
+bool Tile::toggleIsTileLastMovedFrom()
 {
-    m_isLastSelected = !m_isLastSelected;
-    return m_isLastSelected;
+    m_isLastMovedFrom = !m_isLastMovedFrom;
+    return m_isLastMovedFrom;
+}
+
+bool Tile::getIsTileLastMovedTo() const
+{
+    return m_isLastMovedTo;
+}
+
+void Tile::setIsTileLastMovedTo(bool isLastMovedTo)
+{
+    m_isLastMovedTo = isLastMovedTo;
+}
+
+bool Tile::toggleIsTileLastMovedTo()
+{
+    m_isLastMovedTo = !m_isLastMovedTo;
+    return m_isLastMovedTo;
 }
 
 /// Turtle piece statuses

@@ -31,6 +31,8 @@ public:
     bool wasPieceKinged(const std::string &pieceName, int destinationTileIndex) const;
     void slayTurtleAtTileIndex(int tileIndex);
 
+    void checkPlayersCanMove();
+
 private:
     TurtlePieceColor getColorFromPieceName(const std::string &pieceName) const;
     bool isPieceValidForTurn(const std::string &requestedPieceName) const;

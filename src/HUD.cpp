@@ -13,6 +13,7 @@ HUD::HUD()
     m_blackPiecesRemaining = 0u;
     m_redPiecesRemaining = 0u;
     m_gameState = GameState::Connecting;
+    m_winner = Winner::None;
 
     m_turtleFont = QFont("Times", 10, QFont::Bold);
     m_turtlePen = QPen(Qt::black);
@@ -32,6 +33,11 @@ void HUD::setPiecesRemaining(size_t blackPiecesRemaining, size_t redPiecesRemain
 void HUD::setGameState(GameState gameState)
 {
     m_gameState = gameState;
+}
+
+void HUD::setWinner(Winner winner)
+{
+    m_winner = winner;
 }
 
 void HUD::paint(QPainter &painter)
@@ -81,7 +87,36 @@ void HUD::paint(QPainter &painter)
     break;
     case GameState::GameFinished:
     {
-        // TODO
+        if (m_winner == Winner::Draw)
+        {
+            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Draw!");
+        }
+        else if (m_winner == Winner::Black)
+        {
+            if (m_playerColor == TurtlePieceColor::Black)
+            {
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
+            }
+            else
+            {
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
+            }
+        }
+        else if (m_winner == Winner::Red)
+        {
+            if (m_playerColor == TurtlePieceColor::Red)
+            {
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
+            }
+            else
+            {
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
+            }
+        }
+        else // if (m_winner == Winner::None)
+        {
+            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Draw!");
+        }
     }
     break;
     }

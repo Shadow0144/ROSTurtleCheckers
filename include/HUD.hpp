@@ -18,6 +18,7 @@ public:
     void setPlayerColor(TurtlePieceColor playerColor);
     void setPiecesRemaining(size_t blackPiecesRemaining, size_t redPiecesRemaining);
     void setGameState(GameState gameState);
+    void setWinner(Winner winner);
 
     void paint(QPainter &painter);
 
@@ -26,6 +27,7 @@ private:
     size_t m_blackPiecesRemaining;
     size_t m_redPiecesRemaining;
     GameState m_gameState;
+    Winner m_winner;
 
     QFont m_turtleFont;
     QPen m_turtlePen;

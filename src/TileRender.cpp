@@ -76,11 +76,17 @@ void TileRender::paint(QPainter &painter) const
         g = REACHABLE_SQUARES_BG_RGB[1];
         b = REACHABLE_SQUARES_BG_RGB[2];
     }
-    else if (m_isLastSelected)
+    else if (m_isLastMovedFrom)
     {
-        r = LAST_SELECTED_SQUARES_BG_RGB[0];
-        g = LAST_SELECTED_SQUARES_BG_RGB[1];
-        b = LAST_SELECTED_SQUARES_BG_RGB[2];
+        r = LAST_MOVED_FROM_SQUARES_BG_RGB[0];
+        g = LAST_MOVED_FROM_SQUARES_BG_RGB[1];
+        b = LAST_MOVED_FROM_SQUARES_BG_RGB[2];
+    }
+    else if (m_isLastMovedTo)
+    {
+        r = LAST_MOVED_TO_SQUARES_BG_RGB[0];
+        g = LAST_MOVED_TO_SQUARES_BG_RGB[1];
+        b = LAST_MOVED_TO_SQUARES_BG_RGB[2];
     }
     QRgb tileColor = qRgb(r, g, b);
     painter.fillRect(m_left, m_top, TILE_WIDTH, TILE_HEIGHT, tileColor);

@@ -30,9 +30,13 @@ public:
     void setIsTileSelected(bool isSelected);
     bool toggleIsTileSelected();
 
-    bool getIsTileLastSelected() const;
-    void setIsTileLastSelected(bool isLastSelected);
-    bool toggleIsTileLastSelected();
+    bool getIsTileLastMovedFrom() const;
+    void setIsTileLastMovedFrom(bool isLastMovedFrom);
+    bool toggleIsTileLastMovedFrom();
+
+    bool getIsTileLastMovedTo() const;
+    void setIsTileLastMovedTo(bool isLastMovedTo);
+    bool toggleIsTileLastMovedTo();
 
     // Turtle piece
     virtual void setTurtlePiece(const TurtlePiecePtr &turtle);
@@ -73,7 +77,8 @@ protected:
     bool m_isReachable;
     bool m_isHighlighted;
     bool m_isSelected;
-    bool m_isLastSelected;
+    bool m_isLastMovedFrom;
+    bool m_isLastMovedTo;
 
     TurtlePiecePtr m_containedTurtle;
 };
