@@ -38,6 +38,10 @@ public:
     void setIsTileLastMovedTo(bool isLastMovedTo);
     bool toggleIsTileLastMovedTo();
 
+    bool getIsTileLastJumpedOver() const;
+    void setIsTileLastJumpedOver(bool isLastJumpedOver);
+    bool toggleIsTileLastJumpedOver();
+
     // Turtle piece
     virtual void setTurtlePiece(const TurtlePiecePtr &turtle);
     const TurtlePiecePtr &getTurtlePiece() const;
@@ -79,6 +83,7 @@ protected:
     bool m_isSelected;
     bool m_isLastMovedFrom;
     bool m_isLastMovedTo;
+    bool m_isLastJumpedOver;
 
     TurtlePiecePtr m_containedTurtle;
 };

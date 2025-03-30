@@ -51,7 +51,7 @@ constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;
 constexpr int HUD_TEXT_Y_OFFSET = 5;
 
-constexpr int GRAVEYARD_WIDTH = TILE_WIDTH;
+constexpr int GRAVEYARD_WIDTH = 2u * TILE_WIDTH;
 
 constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH);
 constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT;
@@ -64,6 +64,7 @@ constexpr int HIGHLIGHTED_SQUARES_BG_RGB[3] = {0u, 150u, 255u};
 constexpr int SELECTED_SQUARES_BG_RGB[3] = {0u, 255u, 0u};
 constexpr int LAST_MOVED_FROM_SQUARES_BG_RGB[3] = {0u, 0u, 100u};
 constexpr int LAST_MOVED_TO_SQUARES_BG_RGB[3] = {0u, 0u, 150u};
+constexpr int LAST_JUMPED_OVER_SQUARES_BG_RGB[3] = {50u, 50u, 100u};
 constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
 constexpr int HUD_BG_RGB[3] = {100u, 100u, 100u};
 constexpr int GRAVEYARD_BG_RGB[3] = {50u, 50u, 50u};

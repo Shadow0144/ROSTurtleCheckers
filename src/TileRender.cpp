@@ -88,6 +88,12 @@ void TileRender::paint(QPainter &painter) const
         g = LAST_MOVED_TO_SQUARES_BG_RGB[1];
         b = LAST_MOVED_TO_SQUARES_BG_RGB[2];
     }
+    else if (m_isLastJumpedOver)
+    {
+        r = LAST_JUMPED_OVER_SQUARES_BG_RGB[0];
+        g = LAST_JUMPED_OVER_SQUARES_BG_RGB[1];
+        b = LAST_JUMPED_OVER_SQUARES_BG_RGB[2];
+    }
     QRgb tileColor = qRgb(r, g, b);
     painter.fillRect(m_left, m_top, TILE_WIDTH, TILE_HEIGHT, tileColor);
     if (m_containedTurtle)

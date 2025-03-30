@@ -26,7 +26,10 @@ private:
 
     float m_left;
     QPointF m_nextPosition;
-    QPointF m_positionIncrement;
+    QPointF m_initialRowPosition;
+    QPointF m_positionRowIncrement;
+    QPointF m_positionColIncrement;
+    size_t m_turtlesInColumn;
 };
 
 typedef std::shared_ptr<TurtleGraveyard> TurtleGraveyardPtr;

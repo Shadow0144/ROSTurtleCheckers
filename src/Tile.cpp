@@ -13,6 +13,7 @@ Tile::Tile(int row, int col)
     m_isSelected = false;
     m_isLastMovedFrom = false;
     m_isLastMovedTo = false;
+    m_isLastJumpedOver = false;
 }
 
 int Tile::getRow() const
@@ -105,6 +106,22 @@ bool Tile::toggleIsTileLastMovedTo()
 {
     m_isLastMovedTo = !m_isLastMovedTo;
     return m_isLastMovedTo;
+}
+
+bool Tile::getIsTileLastJumpedOver() const
+{
+    return m_isLastJumpedOver;
+}
+
+void Tile::setIsTileLastJumpedOver(bool isLastJumpedOver)
+{
+    m_isLastJumpedOver = isLastJumpedOver;
+}
+
+bool Tile::toggleIsTileLastJumpedOver()
+{
+    m_isLastJumpedOver = !m_isLastJumpedOver;
+    return m_isLastJumpedOver;
 }
 
 /// Turtle piece statuses

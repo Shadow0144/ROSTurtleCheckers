@@ -209,6 +209,7 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 		{
 			m_tileRenders[i]->setIsTileLastMovedFrom(false);
 			m_tileRenders[i]->setIsTileLastMovedTo(false);
+			m_tileRenders[i]->setIsTileLastJumpedOver(false);
 		}
 		m_tileRenders[message->source_tile_index]->setIsTileLastMovedFrom(true);
 		m_tileRenders[message->destination_tile_index]->setIsTileLastMovedTo(true);
@@ -219,6 +220,7 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 		auto slainPieceTileIndex = message->slain_piece_tile_index;
 		if (slainPieceTileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
 		{
+			m_tileRenders[message->slain_piece_tile_index]->setIsTileLastJumpedOver(true);
 			switch (m_tileRenders[slainPieceTileIndex]->getTurtlePieceColor())
 			{
 			case TurtlePieceColor::Black:

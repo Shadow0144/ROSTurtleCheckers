@@ -11,16 +11,21 @@ TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePiece
 {
     if (owningPlayerColor == viewingPlayerColor)
     {
-        m_left = WINDOW_WIDTH - TILE_WIDTH;
-        m_nextPosition = QPointF(WINDOW_WIDTH - TILE_HALF_WIDTH, WINDOW_HEIGHT - TILE_HALF_HEIGHT);
-        m_positionIncrement = QPointF(0, -TILE_HEIGHT);
+        m_left = WINDOW_WIDTH - TILE_WIDTH - TILE_WIDTH;
+        m_nextPosition = QPointF(WINDOW_WIDTH - TILE_HALF_WIDTH - TILE_WIDTH, WINDOW_HEIGHT - TILE_HALF_HEIGHT);
+        m_initialRowPosition = m_nextPosition;
+        m_positionRowIncrement = QPointF(0, -TILE_HEIGHT);
+        m_positionColIncrement = QPointF(TILE_WIDTH, 0);
     }
     else
     {
         m_left = 0;
-        m_nextPosition = QPointF(TILE_HALF_WIDTH, HUD_HEIGHT + TILE_HALF_HEIGHT);
-        m_positionIncrement = QPointF(0, TILE_HEIGHT);
+        m_nextPosition = QPointF(TILE_HALF_WIDTH + TILE_WIDTH, HUD_HEIGHT + TILE_HALF_HEIGHT);
+        m_initialRowPosition = m_nextPosition;
+        m_positionRowIncrement = QPointF(0, TILE_HEIGHT);
+        m_positionColIncrement = QPointF(-TILE_WIDTH, 0);
     }
+    m_turtlesInColumn = 0u;
 }
 
 void TurtleGraveyard::addTurtlePiece(TurtlePieceRenderPtr &turtlePieceRender)
@@ -30,7 +35,14 @@ void TurtleGraveyard::addTurtlePiece(TurtlePieceRenderPtr &turtlePieceRender)
         m_slainTurtles.push_back(turtlePieceRender);
         turtlePieceRender->setIsDead(true);
         turtlePieceRender->setCenterPosition(m_nextPosition);
-        m_nextPosition += m_positionIncrement;
+        m_nextPosition += m_positionRowIncrement;
+        m_turtlesInColumn++;
+        if (m_turtlesInColumn == NUM_PLAYABLE_ROWS)
+        {
+            m_nextPosition.setY(m_initialRowPosition.y());
+            m_nextPosition += m_positionColIncrement;
+            m_turtlesInColumn = 0u;
+        }
     }
 }
 
