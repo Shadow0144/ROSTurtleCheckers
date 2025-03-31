@@ -12,6 +12,7 @@ class TurtlePieceImageLibrary
 public:
     static QImage getTurtleImage(TurtlePieceColor turtleColor);
     static QImage getKingImage(TurtlePieceColor turtleColor);
+    static QImage getMovableImage(TurtlePieceColor turtleColor);
     static QImage getHighlightImage(TurtlePieceColor turtleColor);
     static QImage getSelectImage(TurtlePieceColor turtleColor);
     static QImage getDeadImage(TurtlePieceColor turtleColor);
@@ -25,10 +26,11 @@ private:
     QVector<QImage> m_blackTurtleImages;
     QVector<QImage> m_redTurtleImages;
     QVector<QImage> m_kingImages;
+    QVector<QImage> m_movableImages;
     QVector<QImage> m_highlightImages;
     QVector<QImage> m_selectImages;
     QVector<QImage> m_deadImages;
 
     size_t m_blackImagesIndex = 0u;
-    size_t m_redImagesIndex = 0;
+    size_t m_redImagesIndex = 0u;
 };

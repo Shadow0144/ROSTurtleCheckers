@@ -73,6 +73,9 @@ void GamePlayerNode::connectToGameRequest(const std::shared_ptr<turtle_checkers_
     {
         auto message = turtle_checkers_interfaces::msg::UpdateGameState();
         message.game_state = 2; // Black to move
+        std::vector<size_t> movableTileIndices;
+        m_checkersGameLobby->checkPlayersCanMove(movableTileIndices);
+        message.movable_tile_indices = movableTileIndices;
         m_updateGameStatePublisher->publish(message);
         RCLCPP_INFO(get_logger(), "Starting game!");
     }
@@ -91,16 +94,19 @@ void GamePlayerNode::requestPieceMoveRequest(const std::shared_ptr<turtle_checke
     response->move_accepted = moveAccepted;
     if (moveAccepted)
     {
+        auto message = turtle_checkers_interfaces::msg::UpdateBoard();
         auto jumpedPieceTileIndex = m_checkersGameLobby->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
-        if (jumpedPieceTileIndex == -1) // Toggle the player turn if no piece was jumped
+        if (jumpedPieceTileIndex > -1 &&
+            m_checkersGameLobby->canJumpAgainFromTileIndex(request->destination_tile_index))
         {
-            m_checkersGameLobby->togglePlayerTurn();
+            m_checkersGameLobby->addTileToJumpedTileIndices(jumpedPieceTileIndex);
+            message.mandatory_piece_name = request->piece_name; // Must kill again
         }
         else
         {
-            m_checkersGameLobby->slayTurtleAtTileIndex(jumpedPieceTileIndex);
+            m_checkersGameLobby->togglePlayerTurn();
+            m_checkersGameLobby->slayTurtlesAtJumpedTileIndices();
         }
-        auto message = turtle_checkers_interfaces::msg::UpdateBoard();
         message.piece_name = request->piece_name;
         message.source_tile_index = request->source_tile_index;
         message.destination_tile_index = request->destination_tile_index;
@@ -108,7 +114,9 @@ void GamePlayerNode::requestPieceMoveRequest(const std::shared_ptr<turtle_checke
         message.slain_piece_tile_index = jumpedPieceTileIndex;
 
         // Check which players (if any) cannot move, which ends the game
-        m_checkersGameLobby->checkPlayersCanMove();
+        std::vector<size_t> movableTileIndices;
+        m_checkersGameLobby->checkPlayersCanMove(movableTileIndices);
+        message.movable_tile_indices = movableTileIndices;
 
         auto winner = m_checkersGameLobby->getWinner();
         if (winner != Winner::None)

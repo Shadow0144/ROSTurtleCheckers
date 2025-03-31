@@ -8,6 +8,7 @@ TurtlePiece::TurtlePiece(
     : m_name(name),
       m_color(color)
 {
+  m_isMovable = false;
   m_isHighlighted = false;
   m_isSelected = false;
   m_isKinged = false;
@@ -22,6 +23,21 @@ std::string &TurtlePiece::getName()
 TurtlePieceColor TurtlePiece::getColor()
 {
   return m_color;
+}
+
+bool TurtlePiece::getIsMovable()
+{
+  return m_isMovable;
+}
+
+void TurtlePiece::setIsMovable(bool isMovable)
+{
+  m_isMovable = isMovable;
+}
+
+void TurtlePiece::toggleIsMovable()
+{
+  m_isMovable = !m_isMovable;
 }
 
 bool TurtlePiece::getIsHighlighted()

@@ -21,8 +21,8 @@ CheckersGameLobby::CheckersGameLobby(const std::string &lobbyName)
     // Create the tiles
     m_tiles = TileFactory::createTiles(NUM_PLAYABLE_ROWS, NUM_PLAYABLE_COLS);
 
-    // Add the pieces
-    m_turtlePieces = TurtlePieceFactory::createTurtlePieces(NUM_PIECES_PER_PLAYER, m_tiles);
+    // Create and add the pieces to the tiles
+    TurtlePieceFactory::createTurtlePieces(NUM_PIECES_PER_PLAYER, m_tiles);
 }
 
 bool CheckersGameLobby::playerSlotAvailable() const
@@ -227,40 +227,55 @@ void CheckersGameLobby::togglePlayerTurn()
     m_isBlackTurn = !m_isBlackTurn;
 }
 
-void CheckersGameLobby::slayTurtleAtTileIndex(int tileIndex)
+void CheckersGameLobby::addTileToJumpedTileIndices(int tileIndex)
 {
-    switch (m_tiles[tileIndex]->getTurtlePieceColor())
+    m_tiles[tileIndex]->setIsTurtlePieceDead(true);
+    m_jumpedPieceTileIndices.push_back(tileIndex);
+}
+
+void CheckersGameLobby::slayTurtlesAtJumpedTileIndices()
+{
+    for (auto tileIndex : m_jumpedPieceTileIndices)
     {
-    case TurtlePieceColor::Black:
-    {
-        m_blackPiecesRemaining--;
+        switch (m_tiles[tileIndex]->getTurtlePieceColor())
+        {
+        case TurtlePieceColor::Black:
+        {
+            m_blackPiecesRemaining--;
+        }
+        break;
+        case TurtlePieceColor::Red:
+        {
+            m_redPiecesRemaining--;
+        }
+        break;
+        case TurtlePieceColor::None:
+        {
+            // Do nothing
+        }
+        break;
+        }
+        m_tiles[tileIndex]->clearTurtlePiece();
     }
-    break;
-    case TurtlePieceColor::Red:
-    {
-        m_redPiecesRemaining--;
-    }
-    break;
-    case TurtlePieceColor::None:
-    {
-        // Do nothing
-    }
-    break;
-    }
-    m_tiles[tileIndex]->clearTurtlePiece();
+    m_jumpedPieceTileIndices.clear();
 
     // If all the pieces of a player are slain, the other player wins
-    if (m_blackPiecesRemaining == 0)
+    if (m_blackPiecesRemaining == 0u)
     {
         m_winner = Winner::Red;
     }
-    else if (m_redPiecesRemaining == 0)
+    else if (m_redPiecesRemaining == 0u)
     {
         m_winner = Winner::Black;
     }
 }
 
-void CheckersGameLobby::checkPlayersCanMove()
+bool CheckersGameLobby::canJumpAgainFromTileIndex(int tileIndex)
+{
+    return (!m_tiles[tileIndex]->getCurrentlyReachableTiles(m_tiles, true).empty());
+}
+
+void CheckersGameLobby::checkPlayersCanMove(std::vector<size_t> &movableTileIndices)
 {
     // Check if both players have valid moves
     // If they do not, check for a draw
@@ -268,22 +283,27 @@ void CheckersGameLobby::checkPlayersCanMove()
     bool blackPlayerHasMoves = false;
     bool redPlayerHasMoves = false;
 
-    for (const auto &tile : m_tiles)
+    for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
     {
+        auto &tile = m_tiles[i];
         if (!tile->getCurrentlyReachableTiles(m_tiles).empty())
         {
             if (tile->getTurtlePieceColor() == TurtlePieceColor::Black)
             {
                 blackPlayerHasMoves = true;
+                if (m_isBlackTurn)
+                {
+                    movableTileIndices.push_back(i);
+                }
             }
             else if (tile->getTurtlePieceColor() == TurtlePieceColor::Red)
             {
                 redPlayerHasMoves = true;
+                if (!m_isBlackTurn)
+                {
+                    movableTileIndices.push_back(i);
+                }
             }
-        }
-        if (blackPlayerHasMoves && redPlayerHasMoves)
-        {
-            return; // No need to update the winner
         }
     }
 
@@ -295,7 +315,7 @@ void CheckersGameLobby::checkPlayersCanMove()
     {
         m_winner = Winner::Red;
     }
-    else // if (!redPlayerHasMoves)
+    else if (!redPlayerHasMoves)
     {
         m_winner = Winner::Black;
     }

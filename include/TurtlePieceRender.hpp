@@ -28,6 +28,7 @@ private:
     
     QImage m_turtleRotatedImage;
     QImage m_kingRotatedImage;
+    QImage m_movableRotatedImage;
     QImage m_highlightRotatedImage;
     QImage m_selectRotatedImage;
     QImage m_deadRotatedImage;

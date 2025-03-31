@@ -174,6 +174,33 @@ std::string Tile::getTurtlePieceName() const
     return ((m_containedTurtle) ? m_containedTurtle->getName() : "");
 }
 
+bool Tile::getIsTurtlePieceMovable() const
+{
+    if (m_containedTurtle)
+    {
+        return m_containedTurtle->getIsMovable();
+    }
+    return false;
+}
+
+void Tile::setIsTurtlePieceMovable(bool isMovable)
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->setIsMovable(isMovable);
+    }
+}
+
+bool Tile::toggleIsTurtlePieceMovable()
+{
+    if (m_containedTurtle)
+    {
+        m_containedTurtle->toggleIsMovable();
+        return m_containedTurtle->getIsMovable();
+    }
+    return false;
+}
+
 bool Tile::getIsTurtlePieceHighlighted() const
 {
     if (m_containedTurtle)
@@ -301,7 +328,9 @@ bool Tile::canJumpPiece(TurtlePieceColor otherPieceColor) const
     }
 }
 
-void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64_t> &reachableTiles) const
+void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles,
+                           std::vector<uint64_t> &reachableTiles,
+                           std::vector<uint64_t> &jumpableTiles) const
 {
     // If a piece in this tile is an enemy piece or not
     bool topLeftJumpable = false;
@@ -316,6 +345,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
     for (int i = 0; i < tileCount; i++)
     {
         auto tileIColor = tiles[i]->getTurtlePieceColor();
+        bool tileITurtleDead = tiles[i]->getIsTurtlePieceDead();
 
         // Check the tile to the top left of this one
         if (m_row - 1 == tiles[i]->m_row &&
@@ -325,7 +355,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tileIColor))
+            else if (!tileITurtleDead && canJumpPiece(tileIColor))
             {
                 topLeftJumpable = true;
             }
@@ -338,7 +368,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tileIColor))
+            else if (!tileITurtleDead && canJumpPiece(tileIColor))
             {
                 topRightJumpable = true;
             }
@@ -350,6 +380,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             if (tileIColor == TurtlePieceColor::None)
             {
                 topLeftJumpableIndex = i;
+                jumpableTiles.push_back(topLeftJumpable);
             }
         }
         // Check if the tile is jumpable to the top right of this one
@@ -359,6 +390,7 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
             if (tileIColor == TurtlePieceColor::None)
             {
                 topRightJumpableIndex = i;
+                jumpableTiles.push_back(topRightJumpableIndex);
             }
         }
     }
@@ -373,7 +405,9 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles, std::vector<uint64
     }
 }
 
-void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64_t> &reachableTiles) const
+void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles,
+                           std::vector<uint64_t> &reachableTiles,
+                           std::vector<uint64_t> &jumpableTiles) const
 {
     // If a piece in this tile is an enemy piece or not
     bool bottomLeftJumpable = false;
@@ -388,6 +422,7 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
     for (int i = 0; i < tileCount; i++)
     {
         auto tileIColor = tiles[i]->getTurtlePieceColor();
+        bool tileITurtleDead = tiles[i]->getIsTurtlePieceDead();
 
         // Check the tile to the bottom left of this one
         if (m_row + 1 == tiles[i]->m_row &&
@@ -397,40 +432,42 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tileIColor))
+            else if (!tileITurtleDead && canJumpPiece(tileIColor))
             {
                 bottomLeftJumpable = true;
             }
         }
         // Check the tile to the bottom right of this one
         else if (m_row + 1 == tiles[i]->m_row &&
-            m_col + 1 == tiles[i]->m_col)
+                 m_col + 1 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
             {
                 reachableTiles.push_back(i);
             }
-            else if (canJumpPiece(tileIColor))
+            else if (!tileITurtleDead && canJumpPiece(tileIColor))
             {
                 bottomRightJumpable = true;
             }
         }
         // Check if the tile is jumpable to the bottom left of this one
         else if (m_row + 2 == tiles[i]->m_row &&
-            m_col - 2 == tiles[i]->m_col)
+                 m_col - 2 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
             {
                 bottomLeftJumpableIndex = i;
+                jumpableTiles.push_back(bottomLeftJumpableIndex);
             }
         }
         // Check if the tile is jumpable to the top right of this one
         else if (m_row + 2 == tiles[i]->m_row &&
-            m_col + 2 == tiles[i]->m_col)
+                 m_col + 2 == tiles[i]->m_col)
         {
             if (tileIColor == TurtlePieceColor::None)
             {
                 bottomRightJumpableIndex = i;
+                jumpableTiles.push_back(bottomRightJumpableIndex);
             }
         }
     }
@@ -445,9 +482,10 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles, std::vector<uint64
     }
 }
 
-std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr> &tiles) const
+std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr> &tiles, bool jumpsOnly) const
 {
     std::vector<uint64_t> reachableTiles;
+    std::vector<uint64_t> jumpableTiles;
 
     if (m_containedTurtle)
     {
@@ -458,22 +496,29 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
             break;
         case TurtlePieceColor::Black:
             // Black moves up the board and can jump red pieces
-            checkTilesAbove(tiles, reachableTiles);
+            checkTilesAbove(tiles, reachableTiles, jumpableTiles);
             if (m_containedTurtle->getIsKinged()) // Kings can move in the opposite direction too
             {
-                checkTilesBelow(tiles, reachableTiles);
+                checkTilesBelow(tiles, reachableTiles, jumpableTiles);
             }
             break;
         case TurtlePieceColor::Red:
             // Red moves down the board and can jump black pieces
-            checkTilesBelow(tiles, reachableTiles);
+            checkTilesBelow(tiles, reachableTiles, jumpableTiles);
             if (m_containedTurtle->getIsKinged()) // Kings can move in the opposite direction too
             {
-                checkTilesAbove(tiles, reachableTiles);
+                checkTilesAbove(tiles, reachableTiles, jumpableTiles);
             }
             break;
         }
     }
 
-    return reachableTiles;
+    if (!jumpsOnly)
+    {
+        return reachableTiles;
+    }
+    else
+    {
+        return jumpableTiles;
+    }
 }

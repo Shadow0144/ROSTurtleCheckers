@@ -152,6 +152,25 @@ void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_in
 
 	m_blackTurtlesRemaining = NUM_PIECES_PER_PLAYER;
 	m_redTurtlesRemaining = NUM_PIECES_PER_PLAYER;
+
+	if (m_tilesToHighlightOnStart.size() != 0)
+	{
+		for (auto &tileRender : m_tileRenders)
+		{
+			tileRender->setIsTurtlePieceMovable(false);
+		}
+		if (isOwnTurn())
+		{
+			for (auto movableTileIndex : m_tilesToHighlightOnStart)
+			{
+				if (movableTileIndex < NUM_PLAYABLE_TILES)
+				{
+					m_tileRenders[movableTileIndex]->setIsTurtlePieceMovable(true);
+				}
+			}
+		}
+		m_tilesToHighlightOnStart.clear();
+	}
 }
 
 void CheckersBoardFrame::requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future)
@@ -194,23 +213,46 @@ void CheckersBoardFrame::updateGameStateCallback(const turtle_checkers_interface
 	m_gameState = static_cast<GameState>(message->game_state);
 	m_hud->setGameState(m_gameState);
 
+	if (m_tileRenders.size() == 0)
+	{
+		m_tilesToHighlightOnStart = message->movable_tile_indices;
+	}
+	else
+	{
+		for (auto &tileRender : m_tileRenders)
+		{
+			tileRender->setIsTurtlePieceMovable(false);
+		}
+		if (isOwnTurn())
+		{
+			for (auto movableTileIndex : message->movable_tile_indices)
+			{
+				if (movableTileIndex < NUM_PLAYABLE_TILES)
+				{
+					m_tileRenders[movableTileIndex]->setIsTurtlePieceMovable(true);
+				}
+			}
+		}
+	}
+
 	update();
 }
 
 void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
 {
 	clearSelections();
+	for (auto &tileRender : m_tileRenders)
+	{
+		tileRender->setIsTileLastMovedFrom(false);
+		tileRender->setIsTileLastMovedTo(false);
+		tileRender->setIsTileLastJumpedOver(false);
+		tileRender->setIsTurtlePieceMovable(false);
+	}
 
 	if (message->source_tile_index < NUM_PLAYABLE_TILES &&
 		message->destination_tile_index < NUM_PLAYABLE_TILES)
 	{
 		m_tileRenders[message->source_tile_index]->moveTurtlePiece(m_tileRenders[message->destination_tile_index]);
-		for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-		{
-			m_tileRenders[i]->setIsTileLastMovedFrom(false);
-			m_tileRenders[i]->setIsTileLastMovedTo(false);
-			m_tileRenders[i]->setIsTileLastJumpedOver(false);
-		}
 		m_tileRenders[message->source_tile_index]->setIsTileLastMovedFrom(true);
 		m_tileRenders[message->destination_tile_index]->setIsTileLastMovedTo(true);
 	}
@@ -250,11 +292,27 @@ void CheckersBoardFrame::updateBoardCallback(const turtle_checkers_interfaces::m
 	}
 
 	m_gameState = static_cast<GameState>(message->game_state);
+	if (isOwnTurn())
+	{
+		for (auto movableTileIndex : message->movable_tile_indices)
+		{
+			if (movableTileIndex < NUM_PLAYABLE_TILES)
+			{
+				m_tileRenders[movableTileIndex]->setIsTurtlePieceMovable(true);
+			}
+		}
+	}
 
 	m_hud->setGameState(m_gameState);
 	m_hud->setPiecesRemaining(m_blackTurtlesRemaining, m_redTurtlesRemaining);
 
 	update();
+}
+
+bool CheckersBoardFrame::isOwnTurn()
+{
+	return ((m_playerColor == TurtlePieceColor::Black && m_gameState == GameState::BlackMove) ||
+			(m_playerColor == TurtlePieceColor::Red && m_gameState == GameState::RedMove));
 }
 
 void CheckersBoardFrame::mouseMoveEvent(QMouseEvent *event)
@@ -465,12 +523,12 @@ void CheckersBoardFrame::handleMouseClick(QMouseEvent *event)
 
 void CheckersBoardFrame::clearSelections()
 {
-	for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+	for (auto &tileRender : m_tileRenders)
 	{
-		m_tileRenders[i]->setIsTurtlePieceSelected(false);
-		m_tileRenders[i]->setIsTileReachable(false);
-		m_tileRenders[i]->setIsTileHighlighted(false);
-		m_tileRenders[i]->setIsTileSelected(false);
+		tileRender->setIsTileReachable(false);
+		tileRender->setIsTileHighlighted(false);
+		tileRender->setIsTileSelected(false);
+		tileRender->setIsTurtlePieceSelected(false);
 	}
 	m_selectedPieceName.clear();
 	m_sourceTileIndex = -1;

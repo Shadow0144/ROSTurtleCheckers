@@ -17,6 +17,10 @@ public:
 
     TurtlePieceColor getColor();
 
+    bool getIsMovable();
+    void setIsMovable(bool isMovable);
+    void toggleIsMovable();
+
     bool getIsHighlighted();
     void setIsHighlighted(bool isHighlighted);
     void toggleIsHighlighted();
@@ -38,6 +42,7 @@ protected:
 
     TurtlePieceColor m_color;
 
+    bool m_isMovable;
     bool m_isHighlighted;
     bool m_isSelected;
     bool m_isKinged;

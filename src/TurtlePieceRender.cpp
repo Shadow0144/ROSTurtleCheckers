@@ -22,6 +22,7 @@ void TurtlePieceRender::updateImages()
     transform.rotate(m_angleDegrees);
     m_turtleRotatedImage = TurtlePieceImageLibrary::getTurtleImage(m_color).transformed(transform);
     m_kingRotatedImage = TurtlePieceImageLibrary::getKingImage(m_color).transformed(transform);
+    m_movableRotatedImage = TurtlePieceImageLibrary::getMovableImage(m_color).transformed(transform);
     m_highlightRotatedImage = TurtlePieceImageLibrary::getHighlightImage(m_color).transformed(transform);
     m_selectRotatedImage = TurtlePieceImageLibrary::getSelectImage(m_color).transformed(transform);
     m_deadRotatedImage = TurtlePieceImageLibrary::getDeadImage(m_color).transformed(transform);
@@ -40,6 +41,10 @@ void TurtlePieceRender::paint(QPainter &painter)
     if (m_isKinged)
     {
         painter.drawImage(m_centerPosition, m_kingRotatedImage);
+    }
+    if (m_isMovable)
+    {
+        painter.drawImage(m_centerPosition, m_movableRotatedImage);
     }
     if (m_isHighlighted)
     {

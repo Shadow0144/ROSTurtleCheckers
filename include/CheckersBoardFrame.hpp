@@ -65,6 +65,8 @@ private:
 
 	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
 
+	bool isOwnTurn();
+
 	void handleMouseMove(QMouseEvent *event);
 	void handleMouseClick(QMouseEvent *event);
 
@@ -103,6 +105,8 @@ private:
 	Winner m_winner;
 
 	int m_highlightedTileIndex = -1; // No tile is highlighted
+
+	std::vector<size_t> m_tilesToHighlightOnStart; // Used if the game is started before the tiles are ready
 	
 	QTimer *m_updateTimer;
 };

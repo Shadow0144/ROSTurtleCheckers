@@ -38,6 +38,9 @@ void TurtlePieceImageLibrary::createLibraryInstance()
         QImage kImg;
         kImg.load(imagesPath + turtlesImageNames[i] + "_king.png");
         s_libraryInstance->m_kingImages.append(kImg);
+        QImage mImg;
+        mImg.load(imagesPath + turtlesImageNames[i] + "_movable.png");
+        s_libraryInstance->m_movableImages.append(mImg);
         QImage hImg;
         hImg.load(imagesPath + turtlesImageNames[i] + "_highlight.png");
         s_libraryInstance->m_highlightImages.append(hImg);
@@ -95,6 +98,34 @@ QImage TurtlePieceImageLibrary::getKingImage(TurtlePieceColor turtleColor)
     case TurtlePieceColor::Red:
     {
         return s_libraryInstance->m_kingImages[s_libraryInstance->m_redImagesIndex];
+    }
+    break;
+    case TurtlePieceColor::None:
+    {
+        return QImage();
+    }
+    break;
+    }
+    return QImage();
+}
+
+QImage TurtlePieceImageLibrary::getMovableImage(TurtlePieceColor turtleColor)
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    switch (turtleColor)
+    {
+    case TurtlePieceColor::Black:
+    {
+        return s_libraryInstance->m_movableImages[s_libraryInstance->m_blackImagesIndex];
+    }
+    break;
+    case TurtlePieceColor::Red:
+    {
+        return s_libraryInstance->m_movableImages[s_libraryInstance->m_redImagesIndex];
     }
     break;
     case TurtlePieceColor::None:

@@ -16,7 +16,7 @@ public:
 
     int getRow() const;
     int getCol() const;
-    
+
     // Tile statuses
     bool getIsTileReachable() const;
     void setIsTileReachable(bool isReachable);
@@ -50,6 +50,10 @@ public:
     bool containsPiece(TurtlePieceColor color) const;
     void clearTurtlePiece();
 
+    bool getIsTurtlePieceMovable() const;
+    void setIsTurtlePieceMovable(bool isMovable);
+    bool toggleIsTurtlePieceMovable();
+
     bool getIsTurtlePieceHighlighted() const;
     void setIsTurtlePieceHighlighted(bool isHighlighted);
     bool toggleIsTurtlePieceHighlighted();
@@ -68,12 +72,19 @@ public:
 
     void moveTurtlePiece(const std::shared_ptr<Tile> &destinationTile);
 
-    std::vector<uint64_t> getCurrentlyReachableTiles(const std::vector<std::shared_ptr<Tile>> &tiles) const; // Get the list of tiles the piece currently on this tile can reach (including by jumping)
+    // Get the list of tiles the piece currently on this tile can reach, including by jumping
+    // If jumpsOnly is true, then *only* tiles reachable by jumping will be returned
+    std::vector<uint64_t> getCurrentlyReachableTiles(const std::vector<std::shared_ptr<Tile>> &tiles,
+                                                     bool jumpsOnly = false) const;
 
 protected:
     bool canJumpPiece(TurtlePieceColor otherPieceColor) const;
-    void checkTilesAbove(const std::vector<std::shared_ptr<Tile>> &tiles, std::vector<uint64_t> &reachableTiles) const;
-    void checkTilesBelow(const std::vector<std::shared_ptr<Tile>> &tiles, std::vector<uint64_t> &reachableTiles) const;
+    void checkTilesAbove(const std::vector<std::shared_ptr<Tile>> &tiles,
+                         std::vector<uint64_t> &reachableTiles,
+                         std::vector<uint64_t> &jumpableTiles) const;
+    void checkTilesBelow(const std::vector<std::shared_ptr<Tile>> &tiles,
+                         std::vector<uint64_t> &reachableTiles,
+                         std::vector<uint64_t> &jumpableTiles) const;
 
     int m_row;
     int m_col;
