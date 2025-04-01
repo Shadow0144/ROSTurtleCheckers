@@ -55,20 +55,21 @@ ament_target_dependencies(checkers_player_node
 target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
-add_executable(checkers_game_node 
+add_executable(checkers_game_master_node 
   src/Tile.cpp
   src/TileFactory.cpp
   src/TurtlePiece.cpp
   src/TurtlePieceFactory.cpp
+  src/MasterBoard.cpp
   src/CheckersGameLobby.cpp
-  src/CheckersGameNode.cpp)
-ament_target_dependencies(checkers_game_node
+  src/CheckersGameMasterNode.cpp)
+ament_target_dependencies(checkers_game_master_node
   rclcpp 
   turtle_checkers_interfaces)
 
 install(TARGETS
   checkers_player_node
-  checkers_game_node
+  checkers_game_master_node
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

@@ -2,19 +2,23 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 #include <unordered_map>
 
-#include "CheckersConsts.hpp"
-#include "Tile.hpp"
-#include "TurtlePiece.hpp"
+#include "rclcpp/rclcpp.hpp"
+
+#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/update_board.hpp"
+
+#include "MasterBoard.hpp"
 
 class CheckersGameLobby
 {
 public:
-    CheckersGameLobby(const std::string &lobbyName);
-
-    std::string getLobbyName() const;
+CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const std::string &lobbyName);
 
     bool playerSlotAvailable() const;
     TurtlePieceColor addPlayer(const std::string &playerName);
@@ -22,31 +26,30 @@ public:
     void setPlayerReady(const std::string &playerName);
     bool getAreAllPlayersReady() const;
 
-    Winner getWinner() const;
-
     void setIsBlackTurn(bool isBlackTurn);
     bool getIsBlackTurn() const;
     void togglePlayerTurn();
 
-    bool getMustJump() const;
-    void setMustJump(bool mustJump);
-
-    std::vector<uint64_t> requestReachableTiles(int tileIndex) const;
-    std::vector<uint64_t> requestJumpableTiles(int tileIndex) const;
-    bool requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex);
-    int getJumpedPieceTileIndex(int sourceTileIndex, int destinationTileIndex) const; // Returns -1 when nothing was jumped
-    bool wasPieceKinged(const std::string &pieceName, int destinationTileIndex) const;
-    bool canJumpAgainFromTileIndex(int tileIndex);
-    void addTileToJumpedTileIndices(int tileIndex);
-    void slayTurtlesAtJumpedTileIndices();
-
-    void checkPlayersCanMove(std::vector<size_t> &movableTileIndices);
-
 private:
-    TurtlePieceColor getColorFromPieceName(const std::string &pieceName) const;
+    void requestReachableTilesRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Request> request,
+                                      std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Response> response);
+    void requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
+                                 std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response);
+
+    void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
+
     bool isPieceValidForTurn(const std::string &requestedPieceName) const;
 
-    void slayTurtleAtTileIndex(int tileIndex);
+	rclcpp::Node::SharedPtr m_nodeHandle;
+
+    rclcpp::Service<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesService;
+    rclcpp::Service<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveService;
+
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardPublisher;
+
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
 
     std::string m_lobbyName;
     std::string m_blackPlayerName;
@@ -55,17 +58,7 @@ private:
     bool m_redPlayerReady;
     bool m_isBlackTurn;
 
-    size_t m_blackPiecesRemaining;
-    size_t m_redPiecesRemaining;
-
-    std::vector<TilePtr> m_tiles;
-
-    std::vector<size_t> m_jumpedPieceTileIndices; // Slain turtles are only removed at the end of a turn (i.e. not during an extended jumping session)
-
-    Winner m_winner;
-
-    // Game parameters
-    bool m_mustJump = false; // If jumps available, a player must choose one over a regular move
+    MasterBoardPtr m_board;
 };
 
 typedef std::shared_ptr<CheckersGameLobby> CheckersGameLobbyPtr;

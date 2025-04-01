@@ -1,28 +1,52 @@
 #include "CheckersGameLobby.hpp"
 
-#include "CheckersConsts.hpp"
-#include "TileFactory.hpp"
-#include "TurtlePieceFactory.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
-#include <iostream>
+#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/update_board.hpp"
 
-CheckersGameLobby::CheckersGameLobby(const std::string &lobbyName)
+#include "MasterBoard.hpp"
+
+#include <memory>
+
+using std::placeholders::_1;
+using std::placeholders::_2;
+
+CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const std::string &lobbyName)
     : m_lobbyName(lobbyName)
 {
-    m_winner = Winner::None;
+    m_nodeHandle = nodeHandle;
+
+    m_board = std::make_shared<MasterBoard>();
+
     m_isBlackTurn = true;
 
     m_blackPlayerName = "";
     m_redPlayerName = "";
 
-    m_blackPiecesRemaining = NUM_PIECES_PER_PLAYER;
-    m_redPiecesRemaining = NUM_PIECES_PER_PLAYER;
+    m_requestReachableTilesService =
+        m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestReachableTiles>(
+            m_lobbyName + "/RequestReachableTiles", std::bind(&CheckersGameLobby::requestReachableTilesRequest, this, std::placeholders::_1, std::placeholders::_2));
+    m_requestPieceMoveService =
+        m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestPieceMove>(
+            m_lobbyName + "/RequestPieceMove", std::bind(&CheckersGameLobby::requestPieceMoveRequest, this, std::placeholders::_1, std::placeholders::_2));
 
-    // Create the tiles
-    m_tiles = TileFactory::createTiles(NUM_PLAYABLE_ROWS, NUM_PLAYABLE_COLS);
+    m_declareWinnerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::DeclareWinner>(
+        m_lobbyName + "/DeclareWinner", 10);
+    m_gameStartPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::GameStart>(
+        m_lobbyName + "/GameStart", 10);
+    m_updateBoardPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateBoard>(
+        m_lobbyName + "/UpdateBoard", 10);
 
-    // Create and add the pieces to the tiles
-    TurtlePieceFactory::createTurtlePieces(NUM_PIECES_PER_PLAYER, m_tiles);
+    m_playerReadySubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
+        m_lobbyName + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
+
+    RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting Turtles Checkers game node; now accepting players!");
 }
 
 bool CheckersGameLobby::playerSlotAvailable() const
@@ -65,181 +89,6 @@ bool CheckersGameLobby::getAreAllPlayersReady() const
     return (m_blackPlayerReady && m_redPlayerReady);
 }
 
-TurtlePieceColor CheckersGameLobby::getColorFromPieceName(const std::string &pieceName) const
-{
-    if (pieceName.rfind("Black", 0) == 0)
-    {
-        return TurtlePieceColor::Black;
-    }
-    else if (pieceName.rfind("Red", 0) == 0)
-    {
-        return TurtlePieceColor::Red;
-    }
-    else
-    {
-        return TurtlePieceColor::None;
-    }
-}
-
-bool CheckersGameLobby::isPieceValidForTurn(const std::string &requestedPieceName) const
-{
-    if (m_isBlackTurn)
-    {
-        return (requestedPieceName.rfind("Black", 0) == 0);
-    }
-    else
-    {
-        return (requestedPieceName.rfind("Red", 0) == 0);
-    }
-}
-
-std::vector<uint64_t> CheckersGameLobby::requestReachableTiles(int tileIndex) const
-{
-    if (tileIndex > -1 &&
-        tileIndex < static_cast<int>(m_tiles.size()))
-    {
-        return m_tiles[tileIndex]->getCurrentlyReachableTiles(m_tiles, m_mustJump);
-    }
-    else
-    {
-        return {};
-    }
-}
-
-std::vector<uint64_t> CheckersGameLobby::requestJumpableTiles(int tileIndex) const
-{
-    if (tileIndex > -1 &&
-        tileIndex < static_cast<int>(m_tiles.size()))
-    {
-        return m_tiles[tileIndex]->getCurrentlyReachableTiles(m_tiles, true);
-    }
-    else
-    {
-        return {};
-    }
-}
-
-bool CheckersGameLobby::requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex)
-{
-    if (isPieceValidForTurn(requestedPieceName) &&
-        sourceTileIndex > -1 &&
-        destinationTileIndex > -1 &&
-        sourceTileIndex < static_cast<int>(m_tiles.size()) &&
-        destinationTileIndex < static_cast<int>(m_tiles.size()))
-    {
-        if (m_tiles[sourceTileIndex]->getTurtlePieceName() == requestedPieceName && m_tiles[destinationTileIndex]->getTurtlePieceName().empty())
-        {
-            m_tiles[sourceTileIndex]->moveTurtlePiece(m_tiles[destinationTileIndex]);
-            if (wasPieceKinged(requestedPieceName, destinationTileIndex))
-            {
-                m_tiles[destinationTileIndex]->setIsTurtlePieceKinged(true);
-            }
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return false;
-}
-
-int CheckersGameLobby::getJumpedPieceTileIndex(int sourceTileIndex, int destinationTileIndex) const
-{
-    if (sourceTileIndex > -1 &&
-        destinationTileIndex > -1 &&
-        sourceTileIndex < static_cast<int>(m_tiles.size()) &&
-        destinationTileIndex < static_cast<int>(m_tiles.size()) &&
-        std::abs(m_tiles[sourceTileIndex]->getRow() - m_tiles[destinationTileIndex]->getRow()) > 1) // Moved more than one row
-    {
-        if (m_tiles[sourceTileIndex]->getRow() % 2 == 0) // Finding the index will depend on if the row is shifted or not
-        {
-            if (m_tiles[sourceTileIndex]->getRow() < m_tiles[destinationTileIndex]->getRow()) // Jumped down
-            {
-                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
-                {
-                    return (sourceTileIndex + NUM_PLAYABLE_COLS);
-                }
-                else // Jumped left
-                {
-                    return (sourceTileIndex + NUM_PLAYABLE_COLS - 1);
-                }
-            }
-            else // Jumped up
-            {
-                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
-                {
-                    return (sourceTileIndex - NUM_PLAYABLE_COLS);
-                }
-                else // Jumped left
-                {
-                    return (sourceTileIndex - NUM_PLAYABLE_COLS - 1);
-                }
-            }
-        }
-        else // (m_tiles[sourceTileIndex]->getRow() % 2 == 1)
-        {
-            if (m_tiles[sourceTileIndex]->getRow() < m_tiles[destinationTileIndex]->getRow()) // Jumped down
-            {
-                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
-                {
-                    return (sourceTileIndex + NUM_PLAYABLE_COLS + 1);
-                }
-                else // Jumped left
-                {
-                    return (sourceTileIndex + NUM_PLAYABLE_COLS);
-                }
-            }
-            else // Jumped up
-            {
-                if (m_tiles[sourceTileIndex]->getCol() < m_tiles[destinationTileIndex]->getCol()) // Jumped right
-                {
-                    return (sourceTileIndex - NUM_PLAYABLE_COLS + 1);
-                }
-                else // Jumped left
-                {
-                    return (sourceTileIndex - NUM_PLAYABLE_COLS);
-                }
-            }
-        }
-    }
-    return -1;
-}
-
-bool CheckersGameLobby::wasPieceKinged(const std::string &pieceName, int destinationTileIndex) const
-{
-    auto pieceColor = getColorFromPieceName(pieceName);
-    switch (pieceColor)
-    {
-    case TurtlePieceColor::Black:
-    {
-        return (destinationTileIndex < static_cast<int>(NUM_PLAYABLE_COLS));
-    }
-    break;
-    case TurtlePieceColor::Red:
-    {
-        return (destinationTileIndex >= static_cast<int>(NUM_PLAYABLE_TILES - NUM_PLAYABLE_COLS));
-    }
-    break;
-    case TurtlePieceColor::None:
-    {
-        return false;
-    }
-    break;
-    }
-    return false;
-}
-
-std::string CheckersGameLobby::getLobbyName() const
-{
-    return m_lobbyName;
-}
-
-Winner CheckersGameLobby::getWinner() const
-{
-    return m_winner;
-}
-
 void CheckersGameLobby::setIsBlackTurn(bool isBlackTurn)
 {
     m_isBlackTurn = isBlackTurn;
@@ -255,106 +104,111 @@ void CheckersGameLobby::togglePlayerTurn()
     m_isBlackTurn = !m_isBlackTurn;
 }
 
-bool CheckersGameLobby::getMustJump() const
+bool CheckersGameLobby::isPieceValidForTurn(const std::string &requestedPieceName) const
 {
-    return m_mustJump;
-}
-
-void CheckersGameLobby::setMustJump(bool mustJump)
-{
-    m_mustJump = mustJump;
-}
-
-void CheckersGameLobby::addTileToJumpedTileIndices(int tileIndex)
-{
-    m_tiles[tileIndex]->setIsTurtlePieceDead(true);
-    m_jumpedPieceTileIndices.push_back(tileIndex);
-}
-
-void CheckersGameLobby::slayTurtlesAtJumpedTileIndices()
-{
-    for (auto tileIndex : m_jumpedPieceTileIndices)
+    if (m_isBlackTurn)
     {
-        switch (m_tiles[tileIndex]->getTurtlePieceColor())
-        {
-        case TurtlePieceColor::Black:
-        {
-            m_blackPiecesRemaining--;
-        }
-        break;
-        case TurtlePieceColor::Red:
-        {
-            m_redPiecesRemaining--;
-        }
-        break;
-        case TurtlePieceColor::None:
-        {
-            // Do nothing
-        }
-        break;
-        }
-        m_tiles[tileIndex]->clearTurtlePiece();
+        return (requestedPieceName.rfind("Black", 0) == 0);
     }
-    m_jumpedPieceTileIndices.clear();
-
-    // If all the pieces of a player are slain, the other player wins
-    if (m_blackPiecesRemaining == 0u)
+    else
     {
-        m_winner = Winner::Red;
-    }
-    else if (m_redPiecesRemaining == 0u)
-    {
-        m_winner = Winner::Black;
+        return (requestedPieceName.rfind("Red", 0) == 0);
     }
 }
 
-bool CheckersGameLobby::canJumpAgainFromTileIndex(int tileIndex)
+void CheckersGameLobby::requestReachableTilesRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Request> request,
+                                                     std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Response> response)
 {
-    return (!m_tiles[tileIndex]->getCurrentlyReachableTiles(m_tiles, true).empty());
+    response->reachable_tile_indices = m_board->requestReachableTiles(request->tile_index);
 }
 
-void CheckersGameLobby::checkPlayersCanMove(std::vector<size_t> &movableTileIndices)
+void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
+                                                std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response)
 {
-    // Check if both players have valid moves
-    // If they do not, check for a draw
-    // If only one can't move, that one loses; if both can't, it's a draw
-    bool blackPlayerHasMoves = false;
-    bool redPlayerHasMoves = false;
-
-    for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
+    if (!isPieceValidForTurn(request->piece_name))
     {
-        auto &tile = m_tiles[i];
-        if (!tile->getCurrentlyReachableTiles(m_tiles).empty())
+        return;
+    }
+
+    bool moveAccepted = m_board->requestPieceMove(request->piece_name, request->source_tile_index, request->destination_tile_index);
+    response->move_accepted = moveAccepted;
+    if (moveAccepted)
+    {
+        auto message = turtle_checkers_interfaces::msg::UpdateBoard();
+        message.lobby_name = request->lobby_name;
+        auto jumpedPieceTileIndex = m_board->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
+        if (jumpedPieceTileIndex > -1)
         {
-            if (tile->getTurtlePieceColor() == TurtlePieceColor::Black)
+            m_board->addTileToJumpedTileIndices(jumpedPieceTileIndex);
+            if (m_board->canJumpAgainFromTileIndex(request->destination_tile_index))
             {
-                blackPlayerHasMoves = true;
-                if (m_isBlackTurn)
-                {
-                    movableTileIndices.push_back(i);
-                }
+                m_board->setMustJump(true);
+                message.mandatory_piece_name = request->piece_name; // Must kill again
             }
-            else if (tile->getTurtlePieceColor() == TurtlePieceColor::Red)
+            else
             {
-                redPlayerHasMoves = true;
-                if (!m_isBlackTurn)
-                {
-                    movableTileIndices.push_back(i);
-                }
+                togglePlayerTurn();
+                m_board->setMustJump(false);
+                m_board->slayTurtlesAtJumpedTileIndices();
             }
         }
-    }
+        else
+        {
+            togglePlayerTurn();
+            m_board->setMustJump(false);
+            m_board->slayTurtlesAtJumpedTileIndices();
+        }
+        message.piece_name = request->piece_name;
+        message.source_tile_index = request->source_tile_index;
+        message.destination_tile_index = request->destination_tile_index;
+        message.king_piece = m_board->wasPieceKinged(request->piece_name, request->destination_tile_index);
+        message.slain_piece_tile_index = jumpedPieceTileIndex;
 
-    if (!blackPlayerHasMoves && !redPlayerHasMoves)
-    {
-        m_winner = Winner::Draw;
+        // Check which players (if any) cannot move, which ends the game
+        std::vector<size_t> movableTileIndices;
+        m_board->checkPlayersCanMove(m_isBlackTurn, movableTileIndices);
+        if (!message.mandatory_piece_name.empty()) // If mid-jump, only the current piece can move
+        {
+            message.movable_tile_indices = {request->destination_tile_index};
+        }
+        else // Otherwise, any available piece
+        {
+            message.movable_tile_indices = movableTileIndices;
+        }
+
+        // Decide the next game state
+        auto winner = m_board->getWinner();
+        if (winner != Winner::None)
+        {
+            message.game_state = 4; // Game over
+            auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+            winnerMessage.winner = static_cast<size_t>(winner);
+            m_declareWinnerPublisher->publish(winnerMessage);
+        }
+        else if (getIsBlackTurn())
+        {
+            message.game_state = 2; // Black to move
+        }
+        else
+        {
+            message.game_state = 3; // Red to move
+        }
+
+        m_updateBoardPublisher->publish(message);
     }
-    else if (!blackPlayerHasMoves)
+}
+
+void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message)
+{
+    setPlayerReady(message->player_name);
+
+    if (getAreAllPlayersReady())
     {
-        m_winner = Winner::Red;
-    }
-    else if (!redPlayerHasMoves)
-    {
-        m_winner = Winner::Black;
+        auto startMessage = turtle_checkers_interfaces::msg::GameStart();
+        startMessage.lobby_name = message->lobby_name;
+        startMessage.game_state = 2; // Black to move
+        m_board->checkPlayersCanMove(m_isBlackTurn, startMessage.movable_tile_indices);
+        m_gameStartPublisher->publish(startMessage);
+        RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting game!");
     }
 }

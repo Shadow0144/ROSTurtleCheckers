@@ -78,15 +78,6 @@ CheckersBoardFrame::CheckersBoardFrame(
 	RCLCPP_INFO(
 		m_nodeHandle->get_logger(), "Starting turtle checkers board with node name %s", m_nodeHandle->get_fully_qualified_name());
 
-	m_requestPieceMoveClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>("RequestPieceMove");
-	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>("RequestReachableTiles");
-
-	m_declareWinnerSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>("DeclareWinner", 10, std::bind(&CheckersBoardFrame::declareWinnerCallback, this, _1));
-	m_gameStartSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::GameStart>("GameStart", 10, std::bind(&CheckersBoardFrame::gameStartCallback, this, _1));
-	m_updateBoardSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>("UpdateBoard", 10, std::bind(&CheckersBoardFrame::updateBoardCallback, this, _1));
-
-	m_playerReadyPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>("PlayerReady", 10);
-
 	m_connectToGameClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::ConnectToGame>("ConnectToGame");
 	while (!m_connectToGameClient->wait_for_service(std::chrono::seconds(10)))
 	{
@@ -124,6 +115,22 @@ void CheckersBoardFrame::connectToGameResponse(rclcpp::Client<turtle_checkers_in
 	auto result = future.get();
 
 	m_lobbyName = result->lobby_name;
+	
+	// Create the services, subscriptions, and publishers now that we have the full topic names
+	m_requestPieceMoveClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>(
+		m_lobbyName + "/RequestPieceMove");
+	m_requestReachableTilesClient = m_nodeHandle->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>(
+		m_lobbyName + "/RequestReachableTiles");
+
+	m_declareWinnerSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>(
+		m_lobbyName + "/DeclareWinner", 10, std::bind(&CheckersBoardFrame::declareWinnerCallback, this, _1));
+	m_gameStartSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::GameStart>(
+		m_lobbyName + "/GameStart", 10, std::bind(&CheckersBoardFrame::gameStartCallback, this, _1));
+	m_updateBoardSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>(
+		m_lobbyName + "/UpdateBoard", 10, std::bind(&CheckersBoardFrame::updateBoardCallback, this, _1));
+
+	m_playerReadyPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>(
+		m_lobbyName + "/PlayerReady", 10);
 
 	if (result->player_color == 1) // Black
 	{
