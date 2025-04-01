@@ -380,7 +380,6 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles,
             if (tileIColor == TurtlePieceColor::None)
             {
                 topLeftJumpableIndex = i;
-                jumpableTiles.push_back(topLeftJumpable);
             }
         }
         // Check if the tile is jumpable to the top right of this one
@@ -390,7 +389,6 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles,
             if (tileIColor == TurtlePieceColor::None)
             {
                 topRightJumpableIndex = i;
-                jumpableTiles.push_back(topRightJumpableIndex);
             }
         }
     }
@@ -398,10 +396,12 @@ void Tile::checkTilesAbove(const std::vector<TilePtr> &tiles,
     if (topLeftJumpable && topLeftJumpableIndex >= 0)
     {
         reachableTiles.push_back(topLeftJumpableIndex);
+        jumpableTiles.push_back(topLeftJumpableIndex);
     }
     if (topRightJumpable && topRightJumpableIndex >= 0)
     {
         reachableTiles.push_back(topRightJumpableIndex);
+        jumpableTiles.push_back(topRightJumpableIndex);
     }
 }
 
@@ -457,7 +457,6 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles,
             if (tileIColor == TurtlePieceColor::None)
             {
                 bottomLeftJumpableIndex = i;
-                jumpableTiles.push_back(bottomLeftJumpableIndex);
             }
         }
         // Check if the tile is jumpable to the top right of this one
@@ -467,7 +466,6 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles,
             if (tileIColor == TurtlePieceColor::None)
             {
                 bottomRightJumpableIndex = i;
-                jumpableTiles.push_back(bottomRightJumpableIndex);
             }
         }
     }
@@ -475,10 +473,12 @@ void Tile::checkTilesBelow(const std::vector<TilePtr> &tiles,
     if (bottomLeftJumpable && bottomLeftJumpableIndex >= 0)
     {
         reachableTiles.push_back(bottomLeftJumpableIndex);
+        jumpableTiles.push_back(bottomLeftJumpableIndex);
     }
     if (bottomRightJumpable && bottomRightJumpableIndex >= 0)
     {
         reachableTiles.push_back(bottomRightJumpableIndex);
+        jumpableTiles.push_back(bottomRightJumpableIndex);
     }
 }
 
@@ -513,12 +513,12 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
         }
     }
 
-    if (!jumpsOnly)
+    if (jumpsOnly)
     {
-        return reachableTiles;
+        return jumpableTiles;
     }
     else
     {
-        return jumpableTiles;
+        return reachableTiles;
     }
 }

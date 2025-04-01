@@ -48,6 +48,23 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName)
     }
 }
 
+void CheckersGameLobby::setPlayerReady(const std::string &playerName)
+{
+    if (m_blackPlayerName == playerName)
+    {
+        m_blackPlayerReady = true;
+    }
+    else if (m_redPlayerName == playerName)
+    {
+        m_redPlayerReady = true;
+    }
+}
+
+bool CheckersGameLobby::getAreAllPlayersReady() const
+{
+    return (m_blackPlayerReady && m_redPlayerReady);
+}
+
 TurtlePieceColor CheckersGameLobby::getColorFromPieceName(const std::string &pieceName) const
 {
     if (pieceName.rfind("Black", 0) == 0)
@@ -76,19 +93,30 @@ bool CheckersGameLobby::isPieceValidForTurn(const std::string &requestedPieceNam
     }
 }
 
-std::vector<uint64_t> CheckersGameLobby::requestReachableTiles(const std::string &requestedPieceName) const
+std::vector<uint64_t> CheckersGameLobby::requestReachableTiles(int tileIndex) const
 {
-    if (isPieceValidForTurn(requestedPieceName))
+    if (tileIndex > -1 &&
+        tileIndex < static_cast<int>(m_tiles.size()))
     {
-        for (size_t i = 0u; i < NUM_PLAYABLE_TILES; i++)
-        {
-            if (m_tiles[i]->getTurtlePieceName() == requestedPieceName)
-            {
-                return m_tiles[i]->getCurrentlyReachableTiles(m_tiles);
-            }
-        }
+        return m_tiles[tileIndex]->getCurrentlyReachableTiles(m_tiles, m_mustJump);
     }
-    return {};
+    else
+    {
+        return {};
+    }
+}
+
+std::vector<uint64_t> CheckersGameLobby::requestJumpableTiles(int tileIndex) const
+{
+    if (tileIndex > -1 &&
+        tileIndex < static_cast<int>(m_tiles.size()))
+    {
+        return m_tiles[tileIndex]->getCurrentlyReachableTiles(m_tiles, true);
+    }
+    else
+    {
+        return {};
+    }
 }
 
 bool CheckersGameLobby::requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex)
@@ -225,6 +253,16 @@ bool CheckersGameLobby::getIsBlackTurn() const
 void CheckersGameLobby::togglePlayerTurn()
 {
     m_isBlackTurn = !m_isBlackTurn;
+}
+
+bool CheckersGameLobby::getMustJump() const
+{
+    return m_mustJump;
+}
+
+void CheckersGameLobby::setMustJump(bool mustJump)
+{
+    m_mustJump = mustJump;
 }
 
 void CheckersGameLobby::addTileToJumpedTileIndices(int tileIndex)
