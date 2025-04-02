@@ -40,8 +40,10 @@ int CheckersPlayerNode::exec()
     // Try to subscribe to a game and connect to a lobby
     RCLCPP_INFO(m_playerNode->get_logger(), "Player " + m_playerName + " searching for lobby...");
 
-    m_checkersBoard = std::make_unique<CheckersBoardFrame>(m_playerNode, m_playerName);
-    m_checkersBoard->show();
+    // The game window creates the required ROS services and messages for a game and handles all game logic
+    // as well as displaying it all
+    m_checkersGame = std::make_unique<CheckersGameWindow>(m_playerNode, m_playerName);
+    m_checkersGame->show();
 
     return QApplication::exec();
 }

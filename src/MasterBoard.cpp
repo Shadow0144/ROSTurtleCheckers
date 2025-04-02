@@ -20,6 +20,24 @@ MasterBoard::MasterBoard()
     TurtlePieceFactory::createTurtlePieces(NUM_PIECES_PER_PLAYER, m_tiles);
 }
 
+std::string MasterBoard::getPieceNameAtTileIndex(int tileIndex) const
+{
+    if (tileIndex > -1 && tileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
+    {
+        return m_tiles[tileIndex]->getTurtlePieceName();
+    }
+    return "";
+}
+
+TurtlePieceColor MasterBoard::getPieceColorAtTileIndex(int tileIndex) const
+{
+    if (tileIndex > -1 && tileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
+    {
+        return m_tiles[tileIndex]->getTurtlePieceColor();
+    }
+    return TurtlePieceColor::None;
+}
+
 TurtlePieceColor MasterBoard::getColorFromPieceName(const std::string &pieceName) const
 {
     if (pieceName.rfind("Black", 0) == 0)
@@ -62,17 +80,17 @@ std::vector<uint64_t> MasterBoard::requestJumpableTiles(int tileIndex) const
     }
 }
 
-bool MasterBoard::requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex)
+bool MasterBoard::requestPieceMove(int sourceTileIndex, int destinationTileIndex)
 {
     if (sourceTileIndex > -1 &&
         destinationTileIndex > -1 &&
         sourceTileIndex < static_cast<int>(m_tiles.size()) &&
         destinationTileIndex < static_cast<int>(m_tiles.size()))
     {
-        if (m_tiles[sourceTileIndex]->getTurtlePieceName() == requestedPieceName && m_tiles[destinationTileIndex]->getTurtlePieceName().empty())
+        if (m_tiles[destinationTileIndex]->getTurtlePieceName().empty())
         {
             m_tiles[sourceTileIndex]->moveTurtlePiece(m_tiles[destinationTileIndex]);
-            if (wasPieceKinged(requestedPieceName, destinationTileIndex))
+            if (wasPieceKinged(destinationTileIndex))
             {
                 m_tiles[destinationTileIndex]->setIsTurtlePieceKinged(true);
             }
@@ -148,19 +166,19 @@ int MasterBoard::getJumpedPieceTileIndex(int sourceTileIndex, int destinationTil
     return -1;
 }
 
-bool MasterBoard::wasPieceKinged(const std::string &pieceName, int destinationTileIndex) const
+bool MasterBoard::wasPieceKinged(int tileIndex) const
 {
-    auto pieceColor = getColorFromPieceName(pieceName);
+    auto pieceColor = m_tiles[tileIndex]->getTurtlePieceColor();
     switch (pieceColor)
     {
     case TurtlePieceColor::Black:
     {
-        return (destinationTileIndex < static_cast<int>(NUM_PLAYABLE_COLS));
+        return (tileIndex < static_cast<int>(NUM_PLAYABLE_COLS));
     }
     break;
     case TurtlePieceColor::Red:
     {
-        return (destinationTileIndex >= static_cast<int>(NUM_PLAYABLE_TILES - NUM_PLAYABLE_COLS));
+        return (tileIndex >= static_cast<int>(NUM_PLAYABLE_TILES - NUM_PLAYABLE_COLS));
     }
     break;
     case TurtlePieceColor::None:

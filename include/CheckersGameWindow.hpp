@@ -1,7 +1,8 @@
 #pragma once
 
-#ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+#ifndef Q_MOC_RUN			  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
 #include "CheckersConsts.hpp" // NO LINT
+#include "CheckersBoardRender.hpp"
 #include "TileRender.hpp"
 #include "TurtlePieceRender.hpp"
 #include "TurtleGraveyard.hpp"
@@ -12,8 +13,8 @@
 #include <QImage>
 #include <QPainter>
 #include <QPaintEvent>
-#include <QTimer>
 #include <QVector>
+#include <QTimer>
 
 // This prevents a MOC error with versions of boost >= 1.48
 #ifndef Q_MOC_RUN // See: https://bugreports.qt-project.org/browse/QTBUG-22829
@@ -33,16 +34,16 @@
 #endif
 
 // A single animation frame of the Turtle Checkers game
-class CheckersBoardFrame : public QFrame
+class CheckersGameWindow : public QFrame
 {
 	Q_OBJECT
 public:
-	CheckersBoardFrame(
+	CheckersGameWindow(
 		rclcpp::Node::SharedPtr &nodeHandle,
 		const std::string &playerName,
 		QWidget *parent = 0,
 		Qt::WindowFlags windowFlags = Qt::WindowFlags());
-	~CheckersBoardFrame();
+	~CheckersGameWindow();
 
 	void setupGame();
 
@@ -64,12 +65,9 @@ private:
 	void gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message);
 	void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
 
-	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr);
+	void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event);
 
 	bool isOwnTurn();
-
-	void handleMouseMove(QMouseEvent *event);
-	void handleMouseClick(QMouseEvent *event);
 
 	void clearSelections();
 
@@ -81,10 +79,14 @@ private:
 
 	GameState m_gameState;
 
-	std::string m_selectedPieceName;
-	std::size_t m_sourceTileIndex;
-	std::size_t m_destinationTileIndex;
-	bool m_moveSelected;
+    Winner m_winner;
+
+	CheckersBoardRenderPtr m_board;
+	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
+	TurtleGraveyardPtr m_redPlayerGraveyard;   // Red player's graveyard containing the slain black pieces
+	HUDPtr m_hud;
+
+    QTimer *m_updateTimer;
 
 	rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedPtr m_connectToGameClient;
 	rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveClient;
@@ -95,24 +97,7 @@ private:
 	rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
 
 	rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadyPublisher;
-
-	std::vector<TileRenderPtr> m_tileRenders;
-	std::vector<TurtlePieceRenderPtr> m_turtlePieceRenders;
-
-	std::vector<size_t> m_tileIndicesOfSlainTurtles; // Indices of tiles containing turtles slain during a multijump
-	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
-	TurtleGraveyardPtr m_redPlayerGraveyard; // Red player's graveyard containing the slain black pieces
-
-	HUDPtr m_hud;
-
-	size_t m_blackTurtlesRemaining;
-	size_t m_redTurtlesRemaining;
-	Winner m_winner;
-
-	int m_highlightedTileIndex = -1; // No tile is highlighted
-	
-	QTimer *m_updateTimer;
 };
 
-typedef std::unique_ptr<CheckersBoardFrame> CheckersBoardFrameUniPtr;
-typedef std::shared_ptr<CheckersBoardFrame> CheckersBoardFrameShrPtr;
+typedef std::unique_ptr<CheckersGameWindow> CheckersGameWindowUniPtr;
+typedef std::shared_ptr<CheckersGameWindow> CheckersGameWindowShrPtr;

@@ -28,10 +28,11 @@ endif()
 
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
-qt5_wrap_cpp(CheckersBoardFrame_MOCS 
+qt5_wrap_cpp(CheckersGameWindow_MOCS 
   include/TileRender.hpp
   include/TurtlePieceRender.hpp
-  include/CheckersBoardFrame.hpp)
+  include/CheckersBoardRender.hpp
+  include/CheckersGameWindow.hpp)
 
 add_executable(checkers_player_node 
   src/Tile.cpp
@@ -45,9 +46,10 @@ add_executable(checkers_player_node
   src/TurtlePieceImageLibrary.cpp
   src/TurtleGraveyard.cpp
   src/HUD.cpp
-  src/CheckersBoardFrame.cpp 
+  src/CheckersBoardRender.cpp
+  src/CheckersGameWindow.cpp 
   src/CheckersPlayerNode.cpp
-  ${CheckersBoardFrame_MOCS})
+  ${CheckersGameWindow_MOCS})
 ament_target_dependencies(checkers_player_node
   ament_index_cpp
   rclcpp

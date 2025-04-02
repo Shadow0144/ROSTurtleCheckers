@@ -104,16 +104,10 @@ void CheckersGameLobby::togglePlayerTurn()
     m_isBlackTurn = !m_isBlackTurn;
 }
 
-bool CheckersGameLobby::isPieceValidForTurn(const std::string &requestedPieceName) const
+bool CheckersGameLobby::isPieceValidForTurn(int requestedPieceTileIndex) const
 {
-    if (m_isBlackTurn)
-    {
-        return (requestedPieceName.rfind("Black", 0) == 0);
-    }
-    else
-    {
-        return (requestedPieceName.rfind("Red", 0) == 0);
-    }
+    return (m_board->getPieceColorAtTileIndex(requestedPieceTileIndex) ==
+            ((m_isBlackTurn) ? TurtlePieceColor::Black : TurtlePieceColor::Red));
 }
 
 void CheckersGameLobby::requestReachableTilesRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Request> request,
@@ -125,17 +119,18 @@ void CheckersGameLobby::requestReachableTilesRequest(const std::shared_ptr<turtl
 void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
                                                 std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response)
 {
-    if (!isPieceValidForTurn(request->piece_name))
+    if (!isPieceValidForTurn(request->source_tile_index))
     {
         return;
     }
 
-    bool moveAccepted = m_board->requestPieceMove(request->piece_name, request->source_tile_index, request->destination_tile_index);
+    bool moveAccepted = m_board->requestPieceMove(request->source_tile_index, request->destination_tile_index);
     response->move_accepted = moveAccepted;
     if (moveAccepted)
     {
         auto message = turtle_checkers_interfaces::msg::UpdateBoard();
         message.lobby_name = request->lobby_name;
+        bool mustContinueJump = false;
         auto jumpedPieceTileIndex = m_board->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
         if (jumpedPieceTileIndex > -1)
         {
@@ -143,7 +138,7 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
             if (m_board->canJumpAgainFromTileIndex(request->destination_tile_index))
             {
                 m_board->setMustJump(true);
-                message.mandatory_piece_name = request->piece_name; // Must kill again
+                mustContinueJump = true; // Must kill again
             }
             else
             {
@@ -158,16 +153,15 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
             m_board->setMustJump(false);
             m_board->slayTurtlesAtJumpedTileIndices();
         }
-        message.piece_name = request->piece_name;
         message.source_tile_index = request->source_tile_index;
         message.destination_tile_index = request->destination_tile_index;
-        message.king_piece = m_board->wasPieceKinged(request->piece_name, request->destination_tile_index);
+        message.king_piece = m_board->wasPieceKinged(request->destination_tile_index);
         message.slain_piece_tile_index = jumpedPieceTileIndex;
 
         // Check which players (if any) cannot move, which ends the game
         std::vector<size_t> movableTileIndices;
         m_board->checkPlayersCanMove(m_isBlackTurn, movableTileIndices);
-        if (!message.mandatory_piece_name.empty()) // If mid-jump, only the current piece can move
+        if (mustContinueJump) // If mid-jump, only the current piece can move
         {
             message.movable_tile_indices = {request->destination_tile_index};
         }

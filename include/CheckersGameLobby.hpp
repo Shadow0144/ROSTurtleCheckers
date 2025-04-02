@@ -38,7 +38,7 @@ private:
 
     void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
 
-    bool isPieceValidForTurn(const std::string &requestedPieceName) const;
+    bool isPieceValidForTurn(int requestedPieceTileIndex) const;
 
 	rclcpp::Node::SharedPtr m_nodeHandle;
 

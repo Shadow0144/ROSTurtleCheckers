@@ -12,7 +12,7 @@
 
 #include "CheckersConsts.hpp"
 #include "TurtlePiece.hpp"
-#include "CheckersBoardFrame.hpp"
+#include "CheckersGameWindow.hpp"
 
 class CheckersPlayerNode : public QApplication
 {
@@ -24,7 +24,7 @@ public:
 private:
     std::shared_ptr<rclcpp::Node> m_playerNode;
 
-    CheckersBoardFrameUniPtr m_checkersBoard;
+    CheckersGameWindowUniPtr m_checkersGame;
 
     std::string m_playerName;
 };

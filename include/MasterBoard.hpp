@@ -19,11 +19,13 @@ public:
     bool getMustJump() const;
     void setMustJump(bool mustJump);
 
+    std::string getPieceNameAtTileIndex(int tileIndex) const;
+    TurtlePieceColor getPieceColorAtTileIndex(int tileIndex) const;
     std::vector<uint64_t> requestReachableTiles(int tileIndex) const;
     std::vector<uint64_t> requestJumpableTiles(int tileIndex) const;
-    bool requestPieceMove(const std::string &requestedPieceName, int sourceTileIndex, int destinationTileIndex);
+    bool requestPieceMove(int sourceTileIndex, int destinationTileIndex);
     int getJumpedPieceTileIndex(int sourceTileIndex, int destinationTileIndex) const; // Returns -1 when nothing was jumped
-    bool wasPieceKinged(const std::string &pieceName, int destinationTileIndex) const;
+    bool wasPieceKinged(int tileIndex) const;
     bool canJumpAgainFromTileIndex(int tileIndex);
     void addTileToJumpedTileIndices(int tileIndex);
     void slayTurtlesAtJumpedTileIndices();
