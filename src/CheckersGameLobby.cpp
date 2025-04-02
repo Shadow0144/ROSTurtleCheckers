@@ -176,6 +176,7 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
         {
             message.game_state = 4; // Game over
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+            winnerMessage.lobby_name = m_lobbyName;
             winnerMessage.winner = static_cast<size_t>(winner);
             m_declareWinnerPublisher->publish(winnerMessage);
         }

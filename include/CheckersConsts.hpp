@@ -48,6 +48,9 @@ constexpr float TILE_HALF_HEIGHT = 0.5f * TILE_HEIGHT;
 constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;
 constexpr int HUD_TEXT_Y_OFFSET = 5;
+constexpr int HUD_FONT_SIZE = 10;
+constexpr int VICTORY_TEXT_Y_OFFSET = -15;
+constexpr int VICTORY_TEXT_FONT_SIZE = 24;
 
 constexpr int GRAVEYARD_WIDTH = 2u * TILE_WIDTH;
 
@@ -58,6 +61,9 @@ constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
 
 constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH);
 constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT;
+
+constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);
+constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);
 
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 

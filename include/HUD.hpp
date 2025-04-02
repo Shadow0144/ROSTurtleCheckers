@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QFont>
+#include <QImage>
 #include <QPointF>
 
 #include "CheckersConsts.hpp"
@@ -31,6 +32,11 @@ private:
 
     QFont m_turtleFont;
     QPen m_turtlePen;
+
+    QFont m_victoryFont;
+    QPen m_victoryPen;
+
+    QPointF m_victoryPosition;
 };
 
 typedef std::shared_ptr<HUD> HUDPtr;

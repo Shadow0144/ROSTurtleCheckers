@@ -1,6 +1,6 @@
 #include "TurtlePieceRender.hpp"
 
-#include "TurtlePieceImageLibrary.hpp"
+#include "ImageLibrary.hpp"
 
 TurtlePieceRender::TurtlePieceRender(
     const std::string &name,
@@ -20,12 +20,12 @@ void TurtlePieceRender::updateImages()
 {
     QTransform transform;
     transform.rotate(m_angleDegrees);
-    m_turtleRotatedImage = TurtlePieceImageLibrary::getTurtleImage(m_color).transformed(transform);
-    m_kingRotatedImage = TurtlePieceImageLibrary::getKingImage(m_color).transformed(transform);
-    m_movableRotatedImage = TurtlePieceImageLibrary::getMovableImage(m_color).transformed(transform);
-    m_highlightRotatedImage = TurtlePieceImageLibrary::getHighlightImage(m_color).transformed(transform);
-    m_selectRotatedImage = TurtlePieceImageLibrary::getSelectImage(m_color).transformed(transform);
-    m_deadRotatedImage = TurtlePieceImageLibrary::getDeadImage(m_color).transformed(transform);
+    m_turtleRotatedImage = ImageLibrary::getTurtleImage(m_color).transformed(transform);
+    m_kingRotatedImage = ImageLibrary::getKingImage(m_color).transformed(transform);
+    m_movableRotatedImage = ImageLibrary::getMovableImage(m_color).transformed(transform);
+    m_highlightRotatedImage = ImageLibrary::getHighlightImage(m_color).transformed(transform);
+    m_selectRotatedImage = ImageLibrary::getSelectImage(m_color).transformed(transform);
+    m_deadRotatedImage = ImageLibrary::getDeadImage(m_color).transformed(transform);
 }
 
 void TurtlePieceRender::setCenterPosition(const QPointF &centerPosition)

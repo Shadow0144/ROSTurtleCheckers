@@ -207,35 +207,27 @@ void MasterBoard::setMustJump(bool mustJump)
 
 void MasterBoard::addTileToJumpedTileIndices(int tileIndex)
 {
+    // Slay the jumped turtle and update the piece count
     m_tiles[tileIndex]->setIsTurtlePieceDead(true);
     m_jumpedPieceTileIndices.push_back(tileIndex);
-}
-
-void MasterBoard::slayTurtlesAtJumpedTileIndices()
-{
-    for (auto tileIndex : m_jumpedPieceTileIndices)
+    switch (m_tiles[tileIndex]->getTurtlePieceColor())
     {
-        switch (m_tiles[tileIndex]->getTurtlePieceColor())
-        {
-        case TurtlePieceColor::Black:
-        {
-            m_blackPiecesRemaining--;
-        }
-        break;
-        case TurtlePieceColor::Red:
-        {
-            m_redPiecesRemaining--;
-        }
-        break;
-        case TurtlePieceColor::None:
-        {
-            // Do nothing
-        }
-        break;
-        }
-        m_tiles[tileIndex]->clearTurtlePiece();
+    case TurtlePieceColor::Black:
+    {
+        m_blackPiecesRemaining--;
     }
-    m_jumpedPieceTileIndices.clear();
+    break;
+    case TurtlePieceColor::Red:
+    {
+        m_redPiecesRemaining--;
+    }
+    break;
+    case TurtlePieceColor::None:
+    {
+        // Do nothing
+    }
+    break;
+    }
 
     // If all the pieces of a player are slain, the other player wins
     if (m_blackPiecesRemaining == 0u)
@@ -248,6 +240,16 @@ void MasterBoard::slayTurtlesAtJumpedTileIndices()
     }
 }
 
+void MasterBoard::slayTurtlesAtJumpedTileIndices()
+{
+    // After switching turns, remove the slain turtles from the battlefield
+    for (auto tileIndex : m_jumpedPieceTileIndices)
+    {
+        m_tiles[tileIndex]->clearTurtlePiece();
+    }
+    m_jumpedPieceTileIndices.clear();
+}
+
 bool MasterBoard::canJumpAgainFromTileIndex(int tileIndex)
 {
     return (!m_tiles[tileIndex]->getCurrentlyReachableTiles(m_tiles, true).empty());
@@ -255,6 +257,11 @@ bool MasterBoard::canJumpAgainFromTileIndex(int tileIndex)
 
 void MasterBoard::checkPlayersCanMove(bool isBlackTurn, std::vector<size_t> &movableTileIndices)
 {
+    if (m_blackPiecesRemaining == 0 || m_redPiecesRemaining == 0)
+    {
+        return; // The game is over, no one can move anymore
+    }
+
     // Check if both players have valid moves
     // If they do not, check for a draw
     // If only one can't move, that one loses; if both can't, it's a draw

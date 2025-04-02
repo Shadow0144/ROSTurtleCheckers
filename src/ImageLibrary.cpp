@@ -1,4 +1,4 @@
-#include "TurtlePieceImageLibrary.hpp"
+#include "ImageLibrary.hpp"
 
 #include "ament_index_cpp/get_package_share_directory.hpp" // For getting the image directory
 
@@ -6,11 +6,11 @@
 #include <QString>
 #include <QImage>
 
-static std::unique_ptr<TurtlePieceImageLibrary> s_libraryInstance;
+static std::unique_ptr<ImageLibrary> s_libraryInstance;
 
-void TurtlePieceImageLibrary::createLibraryInstance()
+void ImageLibrary::createLibraryInstance()
 {
-    s_libraryInstance = std::make_unique<TurtlePieceImageLibrary>();
+    s_libraryInstance = std::make_unique<ImageLibrary>();
 
     QVector<QString> turtlesImageNames;
     /*turtlesImageNames.append("ardent.png");
@@ -51,9 +51,12 @@ void TurtlePieceImageLibrary::createLibraryInstance()
         dImg.load(imagesPath + turtlesImageNames[i] + "_dead.png");
         s_libraryInstance->m_deadImages.append(dImg);
     }
+    
+    s_libraryInstance->m_winnerImage.load(imagesPath + "winner.png");
+    s_libraryInstance->m_loserImage.load(imagesPath + "loser.png");
 }
 
-QImage TurtlePieceImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
+QImage ImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -81,7 +84,7 @@ QImage TurtlePieceImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
     return QImage();
 }
 
-QImage TurtlePieceImageLibrary::getKingImage(TurtlePieceColor turtleColor)
+QImage ImageLibrary::getKingImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -109,7 +112,7 @@ QImage TurtlePieceImageLibrary::getKingImage(TurtlePieceColor turtleColor)
     return QImage();
 }
 
-QImage TurtlePieceImageLibrary::getMovableImage(TurtlePieceColor turtleColor)
+QImage ImageLibrary::getMovableImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -137,7 +140,7 @@ QImage TurtlePieceImageLibrary::getMovableImage(TurtlePieceColor turtleColor)
     return QImage();
 }
 
-QImage TurtlePieceImageLibrary::getHighlightImage(TurtlePieceColor turtleColor)
+QImage ImageLibrary::getHighlightImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -165,7 +168,7 @@ QImage TurtlePieceImageLibrary::getHighlightImage(TurtlePieceColor turtleColor)
     return QImage();
 }
 
-QImage TurtlePieceImageLibrary::getSelectImage(TurtlePieceColor turtleColor)
+QImage ImageLibrary::getSelectImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -193,7 +196,7 @@ QImage TurtlePieceImageLibrary::getSelectImage(TurtlePieceColor turtleColor)
     return QImage();
 }
 
-QImage TurtlePieceImageLibrary::getDeadImage(TurtlePieceColor turtleColor)
+QImage ImageLibrary::getDeadImage(TurtlePieceColor turtleColor)
 {
     if (!s_libraryInstance)
     {
@@ -221,7 +224,7 @@ QImage TurtlePieceImageLibrary::getDeadImage(TurtlePieceColor turtleColor)
     return QImage();
 }
 
-void TurtlePieceImageLibrary::setBlackImageIndex(size_t blackImagesIndex)
+void ImageLibrary::setBlackImageIndex(size_t blackImagesIndex)
 {
     if (!s_libraryInstance)
     {
@@ -231,7 +234,7 @@ void TurtlePieceImageLibrary::setBlackImageIndex(size_t blackImagesIndex)
     s_libraryInstance->m_blackImagesIndex = blackImagesIndex;
 }
 
-void TurtlePieceImageLibrary::setRedImageIndex(size_t redImagesIndex)
+void ImageLibrary::setRedImageIndex(size_t redImagesIndex)
 {
     if (!s_libraryInstance)
     {
@@ -239,4 +242,24 @@ void TurtlePieceImageLibrary::setRedImageIndex(size_t redImagesIndex)
     }
 
     s_libraryInstance->m_redImagesIndex = redImagesIndex;
+}
+
+QImage ImageLibrary::getWinnerImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_winnerImage;
+}
+
+QImage ImageLibrary::getLoserImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_loserImage;
 }

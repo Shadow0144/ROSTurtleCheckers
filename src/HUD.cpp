@@ -3,9 +3,11 @@
 #include <QPainter>
 #include <QPen>
 #include <QFont>
+#include <QImage>
 #include <QPointF>
 
 #include "CheckersConsts.hpp"
+#include "ImageLibrary.hpp"
 
 HUD::HUD()
 {
@@ -15,8 +17,16 @@ HUD::HUD()
     m_gameState = GameState::Connecting;
     m_winner = Winner::None;
 
-    m_turtleFont = QFont("Times", 10, QFont::Bold);
+    m_turtleFont = QFont("Times", HUD_FONT_SIZE, QFont::Bold);
     m_turtlePen = QPen(Qt::black);
+
+    m_victoryFont = QFont("Times", VICTORY_TEXT_FONT_SIZE, QFont::Bold);
+    m_victoryPen = QPen(Qt::black);
+
+    m_victoryPosition = QPointF(BOARD_CENTER_X, BOARD_CENTER_Y);
+    // Winner and loser images should be same size
+    m_victoryPosition.rx() -= 0.5 * ImageLibrary::getWinnerImage().width();
+    m_victoryPosition.ry() -= 0.5 * ImageLibrary::getWinnerImage().height();
 }
 
 void HUD::setPlayerColor(TurtlePieceColor playerColor)
@@ -96,10 +106,12 @@ void HUD::paint(QPainter &painter)
             if (m_playerColor == TurtlePieceColor::Black)
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
+                painter.drawImage(m_victoryPosition, ImageLibrary::getWinnerImage());
             }
             else
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
+                painter.drawImage(m_victoryPosition, ImageLibrary::getLoserImage());
             }
         }
         else if (m_winner == Winner::Red)
@@ -107,10 +119,12 @@ void HUD::paint(QPainter &painter)
             if (m_playerColor == TurtlePieceColor::Red)
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
+                painter.drawImage(m_victoryPosition, ImageLibrary::getWinnerImage());
             }
             else
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
+                painter.drawImage(m_victoryPosition, ImageLibrary::getLoserImage());
             }
         }
         else // if (m_winner == Winner::None)

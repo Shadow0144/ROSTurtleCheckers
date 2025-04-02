@@ -7,7 +7,7 @@
 
 #include "CheckersConsts.hpp"
 
-class TurtlePieceImageLibrary
+class ImageLibrary
 {
 public:
     static QImage getTurtleImage(TurtlePieceColor turtleColor);
@@ -20,6 +20,9 @@ public:
     static void setBlackImageIndex(size_t blackImagesIndex);
     static void setRedImageIndex(size_t redImagesIndex);
 
+    static QImage getWinnerImage();
+    static QImage getLoserImage();
+
 private:
     static void createLibraryInstance();
 
@@ -30,6 +33,9 @@ private:
     QVector<QImage> m_highlightImages;
     QVector<QImage> m_selectImages;
     QVector<QImage> m_deadImages;
+
+    QImage m_winnerImage;
+    QImage m_loserImage;
 
     size_t m_blackImagesIndex = 0u;
     size_t m_redImagesIndex = 0u;

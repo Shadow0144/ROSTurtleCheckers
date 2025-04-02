@@ -35,6 +35,7 @@ qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/CheckersGameWindow.hpp)
 
 add_executable(checkers_player_node 
+  src/ImageLibrary.cpp
   src/Tile.cpp
   src/TileRender.cpp
   src/TileFactory.cpp
@@ -43,7 +44,6 @@ add_executable(checkers_player_node
   src/TurtlePieceRender.cpp
   src/TurtlePieceFactory.cpp
   src/TurtlePieceRenderFactory.cpp
-  src/TurtlePieceImageLibrary.cpp
   src/TurtleGraveyard.cpp
   src/HUD.cpp
   src/CheckersBoardRender.cpp
