@@ -54,6 +54,7 @@ void ImageLibrary::createLibraryInstance()
     
     s_libraryInstance->m_winnerImage.load(imagesPath + "winner.png");
     s_libraryInstance->m_loserImage.load(imagesPath + "loser.png");
+    s_libraryInstance->m_drawImage.load(imagesPath + "draw.png");
 }
 
 QImage ImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
@@ -262,4 +263,14 @@ QImage ImageLibrary::getLoserImage()
     }
 
     return s_libraryInstance->m_loserImage;
+}
+
+QImage ImageLibrary::getDrawImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_drawImage;
 }

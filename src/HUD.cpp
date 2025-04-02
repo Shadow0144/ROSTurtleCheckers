@@ -21,12 +21,14 @@ HUD::HUD()
     m_turtlePen = QPen(Qt::black);
 
     m_victoryFont = QFont("Times", VICTORY_TEXT_FONT_SIZE, QFont::Bold);
-    m_victoryPen = QPen(Qt::black);
+    m_victoryPen = QPen(Qt::lightGray);
+    m_victoryTextCenteringRect = QRect(BOARD_LEFT, BOARD_CENTER_Y + VICTORY_TEXT_Y_OFFSET,
+                                       BOARD_WIDTH, VICTORY_TEXT_HEIGHT);
 
-    m_victoryPosition = QPointF(BOARD_CENTER_X, BOARD_CENTER_Y);
+    m_victoryImagePosition = QPointF(BOARD_CENTER_X, BOARD_CENTER_Y + VICTORY_IMAGE_Y_OFFSET);
     // Winner and loser images should be same size
-    m_victoryPosition.rx() -= 0.5 * ImageLibrary::getWinnerImage().width();
-    m_victoryPosition.ry() -= 0.5 * ImageLibrary::getWinnerImage().height();
+    m_victoryImagePosition.rx() -= 0.5 * ImageLibrary::getWinnerImage().width();
+    m_victoryImagePosition.ry() -= 0.5 * ImageLibrary::getWinnerImage().height();
 }
 
 void HUD::setPlayerColor(TurtlePieceColor playerColor)
@@ -106,12 +108,18 @@ void HUD::paint(QPainter &painter)
             if (m_playerColor == TurtlePieceColor::Black)
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
-                painter.drawImage(m_victoryPosition, ImageLibrary::getWinnerImage());
+                painter.setFont(m_victoryFont);
+                painter.setPen(m_victoryPen);
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Winner!");
+                painter.drawImage(m_victoryImagePosition, ImageLibrary::getWinnerImage());
             }
             else
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
-                painter.drawImage(m_victoryPosition, ImageLibrary::getLoserImage());
+                painter.setFont(m_victoryFont);
+                painter.setPen(m_victoryPen);
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Loser!");
+                painter.drawImage(m_victoryImagePosition, ImageLibrary::getLoserImage());
             }
         }
         else if (m_winner == Winner::Red)
@@ -119,17 +127,27 @@ void HUD::paint(QPainter &painter)
             if (m_playerColor == TurtlePieceColor::Red)
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
-                painter.drawImage(m_victoryPosition, ImageLibrary::getWinnerImage());
+                painter.setFont(m_victoryFont);
+                painter.setPen(m_victoryPen);
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Winner!");
+                painter.drawImage(m_victoryImagePosition, ImageLibrary::getWinnerImage());
             }
             else
             {
                 painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
-                painter.drawImage(m_victoryPosition, ImageLibrary::getLoserImage());
+                painter.setFont(m_victoryFont);
+                painter.setPen(m_victoryPen);
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Loser!");
+                painter.drawImage(m_victoryImagePosition, ImageLibrary::getLoserImage());
             }
         }
         else // if (m_winner == Winner::None)
         {
             painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Draw!");
+            painter.setFont(m_victoryFont);
+            painter.setPen(m_victoryPen);
+            painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Draw!");
+            painter.drawImage(m_victoryImagePosition, ImageLibrary::getDrawImage());
         }
     }
     break;

@@ -28,7 +28,7 @@ enum class TurtlePieceColor
 };
 
 // Constants
-constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
+constexpr size_t NUM_PIECES_PER_PLAYER = 1u;
 constexpr size_t NUM_PIECES = 2u * NUM_PIECES_PER_PLAYER;
 
 constexpr size_t NUM_PLAYABLE_ROWS = 8u;
@@ -49,8 +49,10 @@ constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;
 constexpr int HUD_TEXT_Y_OFFSET = 5;
 constexpr int HUD_FONT_SIZE = 10;
-constexpr int VICTORY_TEXT_Y_OFFSET = -15;
+constexpr int VICTORY_TEXT_Y_OFFSET = -35;
+constexpr int VICTORY_TEXT_HEIGHT = 24;
 constexpr int VICTORY_TEXT_FONT_SIZE = 24;
+constexpr int VICTORY_IMAGE_Y_OFFSET = 35;
 
 constexpr int GRAVEYARD_WIDTH = 2u * TILE_WIDTH;
 

@@ -22,6 +22,7 @@ public:
 
     static QImage getWinnerImage();
     static QImage getLoserImage();
+    static QImage getDrawImage();
 
 private:
     static void createLibraryInstance();
@@ -36,6 +37,7 @@ private:
 
     QImage m_winnerImage;
     QImage m_loserImage;
+    QImage m_drawImage;
 
     size_t m_blackImagesIndex = 0u;
     size_t m_redImagesIndex = 0u;

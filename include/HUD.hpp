@@ -5,6 +5,7 @@
 #include <QFont>
 #include <QImage>
 #include <QPointF>
+#include <QRect>
 
 #include "CheckersConsts.hpp"
 #include "TurtlePiece.hpp"
@@ -35,8 +36,8 @@ private:
 
     QFont m_victoryFont;
     QPen m_victoryPen;
-
-    QPointF m_victoryPosition;
+    QRect m_victoryTextCenteringRect;
+    QPointF m_victoryImagePosition;
 };
 
 typedef std::shared_ptr<HUD> HUDPtr;
