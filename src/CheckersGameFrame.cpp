@@ -9,6 +9,7 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <iostream>
 
 #include "CheckersPlayerWindow.hpp"
 
@@ -19,8 +20,6 @@ CheckersGameFrame::CheckersGameFrame(
 	Qt::WindowFlags windowFlags)
 	: QFrame(parent, windowFlags)
 {
-	setFrameStyle(QFrame::Panel | QFrame::Sunken);
-
 	m_playerApp = playerApp;
 	m_playerName = playerName;
 

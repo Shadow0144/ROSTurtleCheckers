@@ -1,6 +1,7 @@
 #include "CheckersPlayerWindow.hpp"
 
 #include <QMainWindow>
+#include <QVBoxLayout>
 
 #include "CheckersPlayerNode.hpp"
 #include "CheckersGameFrame.hpp"
@@ -17,8 +18,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     setMouseTracking(true);
 
     m_checkersGameFrame = std::make_shared<CheckersGameFrame>(weak_from_this(), playerName, this);
-
-    update();
+    setCentralWidget(m_checkersGameFrame.get());
 }
 
 const std::string &CheckersPlayerWindow::getLobbyName() const
