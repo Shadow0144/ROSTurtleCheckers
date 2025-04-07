@@ -21,6 +21,7 @@ public:
 CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const std::string &lobbyName);
 
     bool playerSlotAvailable() const;
+    bool containsPlayer(const std::string &playerName) const;
     TurtlePieceColor addPlayer(const std::string &playerName);
 
     void setPlayerReady(const std::string &playerName);

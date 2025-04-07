@@ -35,33 +35,40 @@ void CheckersGameMasterNode::connectToGameRequest(const std::shared_ptr<turtle_c
     response->player_color = 0;
 
     auto &checkersGameLobby = m_checkersGameLobbies[m_nextLobbyName];
-    auto playerColor = checkersGameLobby->addPlayer(request->player_name);
-    switch (playerColor)
+    if (!checkersGameLobby->containsPlayer(request->player_name))
     {
-    case TurtlePieceColor::None:
-    {
-        response->player_color = 0;
-    }
-    break;
-    case TurtlePieceColor::Black:
-    {
-        response->player_color = 1;
-        RCLCPP_INFO(m_gameMasterNode->get_logger(), "Black player connected: " + request->player_name + "!");
-    }
-    break;
-    case TurtlePieceColor::Red:
-    {
-        response->player_color = 2;
-        RCLCPP_INFO(m_gameMasterNode->get_logger(), "Red player connected: " + request->player_name + "!");
-    }
-    break;
-    }
+        auto playerColor = checkersGameLobby->addPlayer(request->player_name);
+        switch (playerColor)
+        {
+        case TurtlePieceColor::None:
+        {
+            response->player_color = 0;
+        }
+        break;
+        case TurtlePieceColor::Black:
+        {
+            response->player_color = 1;
+            RCLCPP_INFO(m_gameMasterNode->get_logger(), "Black player connected: " + request->player_name + "!");
+        }
+        break;
+        case TurtlePieceColor::Red:
+        {
+            response->player_color = 2;
+            RCLCPP_INFO(m_gameMasterNode->get_logger(), "Red player connected: " + request->player_name + "!");
+        }
+        break;
+        }
 
-    if (!checkersGameLobby->playerSlotAvailable()) // The game just filled, start it and open a new lobby
+        if (!checkersGameLobby->playerSlotAvailable()) // The game just filled, start it and open a new lobby
+        {
+            // Create the next lobby
+            m_nextLobbyName = c_LOBBY_NAME_PREFIX + std::to_string(m_nextLobbyNumber++);
+            m_checkersGameLobbies[m_nextLobbyName] = std::make_shared<CheckersGameLobby>(m_gameMasterNode, m_nextLobbyName);
+        }
+    }
+    else
     {
-        // Create the next lobby
-        m_nextLobbyName = c_LOBBY_NAME_PREFIX + std::to_string(m_nextLobbyNumber++);
-        m_checkersGameLobbies[m_nextLobbyName] = std::make_shared<CheckersGameLobby>(m_gameMasterNode, m_nextLobbyName);
+        RCLCPP_WARN(m_gameMasterNode->get_logger(), "Player " + request->player_name + " already connected to this lobby!");
     }
 }
 

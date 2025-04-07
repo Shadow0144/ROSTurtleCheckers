@@ -22,10 +22,12 @@ CheckersGameFrame::CheckersGameFrame(
 {
 	m_playerApp = playerApp;
 	m_playerName = playerName;
-
+	
 	m_gameState = GameState::Connecting;
 	m_playerColor = TurtlePieceColor::None;
 	m_winner = Winner::None;
+
+    setMouseTracking(true);
 
 	m_board = std::make_shared<CheckersBoardRender>();
 

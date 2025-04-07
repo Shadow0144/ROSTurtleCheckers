@@ -28,6 +28,9 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const 
 
     m_blackPlayerName = "";
     m_redPlayerName = "";
+    
+    m_blackPlayerReady = false;
+    m_redPlayerReady = false;
 
     m_requestReachableTilesService =
         m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestReachableTiles>(
@@ -52,6 +55,11 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const 
 bool CheckersGameLobby::playerSlotAvailable() const
 {
     return (m_blackPlayerName.empty() || m_redPlayerName.empty());
+}
+
+bool CheckersGameLobby::containsPlayer(const std::string &playerName) const
+{
+    return ((playerName == m_blackPlayerName) || (playerName == m_redPlayerName));
 }
 
 TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName)
