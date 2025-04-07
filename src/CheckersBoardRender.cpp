@@ -10,6 +10,7 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <iostream>
 
 #include "CheckersConsts.hpp"
 #include "TileRenderFactory.hpp"
@@ -151,32 +152,36 @@ size_t CheckersBoardRender::getRedTurtlesRemaining()
 
 void CheckersBoardRender::handleMouseMove(QMouseEvent *event)
 {
-    for (auto &tileRender : m_tileRenders)
-    {
-        tileRender->setIsTurtlePieceHighlighted(false);
-    }
-
-    if (!m_moveSelected && m_selectedPieceTileIndex > -1)
+    if (!m_moveSelected)
     {
         for (auto &tileRender : m_tileRenders)
         {
-            if (tileRender->containsPoint(event->pos()) &&
-                tileRender->getIsTurtlePieceMovable())
+            tileRender->setIsTurtlePieceHighlighted(false);
+        }
+        for (auto &tileRender : m_tileRenders)
+        {
+            if (tileRender->getIsTurtlePieceMovable() &&
+                tileRender->containsPoint(event->pos()))
             {
                 tileRender->setIsTurtlePieceHighlighted(true);
                 break;
             }
         }
-        for (auto &tileRender : m_tileRenders)
+
+        if (m_selectedPieceTileIndex > -1)
         {
-            tileRender->setIsTileHighlighted(false);
-        }
-        for (auto &tileRender : m_tileRenders)
-        {
-            if (tileRender->getIsTileReachable() && tileRender->containsPoint(event->pos()))
+            for (auto &tileRender : m_tileRenders)
             {
-                tileRender->setIsTileHighlighted(true);
-                break;
+                tileRender->setIsTileHighlighted(false);
+            }
+            for (auto &tileRender : m_tileRenders)
+            {
+                if (tileRender->getIsTileReachable() &&
+                    tileRender->containsPoint(event->pos()))
+                {
+                    tileRender->setIsTileHighlighted(true);
+                    break;
+                }
             }
         }
     }

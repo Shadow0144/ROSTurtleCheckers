@@ -17,7 +17,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
 
     setMouseTracking(true);
 
-    m_checkersGameFrame = std::make_shared<CheckersGameFrame>(weak_from_this(), playerName, this);
+    m_checkersGameFrame = std::make_shared<CheckersGameFrame>(this, playerName);
     setCentralWidget(m_checkersGameFrame.get());
 }
 

@@ -27,10 +27,8 @@ class CheckersGameFrame : public QFrame
 	Q_OBJECT
 public:
 	CheckersGameFrame(
-		const std::weak_ptr<CheckersPlayerWindow> &playerApp,
-		const std::string &playerName,
-		QWidget *parent = 0,
-		Qt::WindowFlags windowFlags = Qt::WindowFlags());
+		CheckersPlayerWindow *parentWindow,
+		const std::string &playerName);
 	~CheckersGameFrame();
 
 	const std::string &getLobbyName() const;
@@ -54,7 +52,7 @@ private:
 
 	void clearSelections();
 
-	std::weak_ptr<CheckersPlayerWindow> m_playerApp;
+	CheckersPlayerWindow* m_playerWindow;
 
 	std::string m_lobbyName;
 	std::string m_playerName;

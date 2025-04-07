@@ -46,7 +46,6 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
 
     rclcpp::init(argc, argv);
     m_playerNode = rclcpp::Node::make_shared("checkers_player_node");
-    m_checkersApp = std::make_unique<CheckersPlayerWindow>(weak_from_this(), m_playerName);
 
     m_updateTimer = new QTimer(this);
     m_updateTimer->setInterval(16);
@@ -66,6 +65,8 @@ int CheckersPlayerNode::exec()
         RCLCPP_ERROR(m_playerNode->get_logger(), "You need to provide a player name with -p or -player_name");
         return -1;
     }
+    
+    m_checkersApp = std::make_unique<CheckersPlayerWindow>(weak_from_this(), m_playerName);
 
     // Try to subscribe to a game and connect to a lobby
     RCLCPP_INFO(m_playerNode->get_logger(), "Player " + m_playerName + " searching for lobby...");

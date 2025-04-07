@@ -14,20 +14,18 @@
 #include "CheckersPlayerWindow.hpp"
 
 CheckersGameFrame::CheckersGameFrame(
-	const CheckersPlayerWindowWkPtr &playerApp,
-	const std::string &playerName,
-	QWidget *parent,
-	Qt::WindowFlags windowFlags)
-	: QFrame(parent, windowFlags)
+	CheckersPlayerWindow *parentWindow,
+	const std::string &playerName)
+	: QFrame(parentWindow, Qt::WindowFlags())
 {
-	m_playerApp = playerApp;
+	m_playerWindow = parentWindow;
 	m_playerName = playerName;
-	
+
 	m_gameState = GameState::Connecting;
 	m_playerColor = TurtlePieceColor::None;
 	m_winner = Winner::None;
 
-    setMouseTracking(true);
+	setMouseTracking(true);
 
 	m_board = std::make_shared<CheckersBoardRender>();
 
@@ -105,7 +103,7 @@ void CheckersGameFrame::gameStarted(GameState gameState, const std::vector<size_
 }
 
 void CheckersGameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
-									  int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices)
+									 int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices)
 {
 	m_board->clearSelections();
 	m_board->clearMovedTiles();
@@ -202,6 +200,7 @@ void CheckersGameFrame::mouseMoveEvent(QMouseEvent *event)
 
 void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 {
+	bool clicked = false;
 	if (event->button() == Qt::LeftButton)
 	{
 		switch (m_gameState)
@@ -220,7 +219,11 @@ void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 		{
 			if (m_playerColor == TurtlePieceColor::Black)
 			{
-				m_board->handleMouseClick(event);
+				if (m_board)
+				{
+					m_board->handleMouseClick(event);
+					clicked = true;
+				}
 			}
 			else
 			{
@@ -232,7 +235,11 @@ void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 		{
 			if (m_playerColor == TurtlePieceColor::Red)
 			{
-				m_board->handleMouseClick(event);
+				if (m_board)
+				{
+					m_board->handleMouseClick(event);
+					clicked = true;
+				}
 			}
 			else
 			{
@@ -247,24 +254,18 @@ void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 		}
 	}
 
-	if (m_board)
+	if (m_board && clicked)
 	{
 		if (m_board->getIsMoveSelected())
 		{
-			if (auto playerApp = m_playerApp.lock())
-			{
-				playerApp->requestPieceMove(m_board->getSourceTileIndex(), m_board->getDestinationTileIndex());
-			}
+			m_playerWindow->requestPieceMove(m_board->getSourceTileIndex(), m_board->getDestinationTileIndex());
 		}
 		else
 		{
 			int selectedPieceTileIndex = m_board->getSelectedPieceTileIndex();
 			if (selectedPieceTileIndex > -1)
 			{
-				if (auto playerApp = m_playerApp.lock())
-				{
-					playerApp->requestReachableTiles(selectedPieceTileIndex);
-				}
+				m_playerWindow->requestReachableTiles(selectedPieceTileIndex);
 			}
 		}
 	}
