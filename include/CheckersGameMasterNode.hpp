@@ -8,6 +8,7 @@
 
 #include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
 
+#include "RSAKeyGenerator.hpp"
 #include "CheckersGameLobby.hpp"
 
 class CheckersGameMasterNode   
@@ -29,4 +30,7 @@ private:
     size_t m_nextLobbyNumber;
     std::string m_nextLobbyName;
     std::unordered_map<std::string, CheckersGameLobbyPtr> m_checkersGameLobbies;
+
+    long long m_privateKey;
+    long long m_publicKey;
 };

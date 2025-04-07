@@ -80,3 +80,5 @@ constexpr int LAST_JUMPED_OVER_SQUARES_BG_RGB[3] = {50u, 50u, 100u};
 constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
 constexpr int HUD_BG_RGB[3] = {100u, 100u, 100u};
 constexpr int GRAVEYARD_BG_RGB[3] = {50u, 50u, 50u};
+
+constexpr int NUM_BITS_RSA = 20;

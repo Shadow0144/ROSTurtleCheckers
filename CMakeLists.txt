@@ -32,9 +32,12 @@ qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/TileRender.hpp
   include/TurtlePieceRender.hpp
   include/CheckersBoardRender.hpp
-  include/CheckersGameWindow.hpp)
+  include/CheckersGameFrame.hpp
+  include/CheckersPlayerWindow.hpp 
+  include/CheckersPlayerNode.hpp)
 
 add_executable(checkers_player_node 
+  src/RSAKeyGenerator.cpp
   src/ImageLibrary.cpp
   src/Tile.cpp
   src/TileRender.cpp
@@ -47,7 +50,8 @@ add_executable(checkers_player_node
   src/TurtleGraveyard.cpp
   src/HUD.cpp
   src/CheckersBoardRender.cpp
-  src/CheckersGameWindow.cpp 
+  src/CheckersGameFrame.cpp 
+  src/CheckersPlayerWindow.cpp 
   src/CheckersPlayerNode.cpp
   ${CheckersGameWindow_MOCS})
 ament_target_dependencies(checkers_player_node
@@ -58,6 +62,7 @@ target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
 add_executable(checkers_game_master_node 
+  src/RSAKeyGenerator.cpp
   src/Tile.cpp
   src/TileFactory.cpp
   src/TurtlePiece.cpp
