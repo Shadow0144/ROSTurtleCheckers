@@ -1,0 +1,16 @@
+launch:
+
+- node:
+    pkg: "turtle_checkers"
+    exec: "checkers_player_node"
+    name: "player1"
+
+- node:
+    pkg: "turtle_checkers"
+    exec: "checkers_player_node"
+    name: "player2"
+
+- node:
+    pkg: "turtle_checkers"
+    exec: "checkers_game_master_node"
+    name: "game_master"
