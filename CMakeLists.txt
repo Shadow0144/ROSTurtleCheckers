@@ -29,30 +29,28 @@ endif()
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
 qt5_wrap_cpp(CheckersGameWindow_MOCS 
-  include/TileRender.hpp
-  include/TurtlePieceRender.hpp
-  include/CheckersBoardRender.hpp
-  include/CheckersGameFrame.hpp
-  include/CheckersPlayerWindow.hpp 
-  include/CheckersPlayerNode.hpp)
+  include/player/TileRender.hpp
+  include/player/TurtlePieceRender.hpp
+  include/player/CheckersBoardRender.hpp
+  include/player/CheckersGameFrame.hpp
+  include/player/CheckersPlayerWindow.hpp 
+  include/player/CheckersPlayerNode.hpp)
 
 add_executable(checkers_player_node 
-  src/RSAKeyGenerator.cpp
-  src/ImageLibrary.cpp
-  src/Tile.cpp
-  src/TileRender.cpp
-  src/TileFactory.cpp
-  src/TileRenderFactory.cpp
-  src/TurtlePiece.cpp
-  src/TurtlePieceRender.cpp
-  src/TurtlePieceFactory.cpp
-  src/TurtlePieceRenderFactory.cpp
-  src/TurtleGraveyard.cpp
-  src/HUD.cpp
-  src/CheckersBoardRender.cpp
-  src/CheckersGameFrame.cpp 
-  src/CheckersPlayerWindow.cpp 
-  src/CheckersPlayerNode.cpp
+  src/shared/RSAKeyGenerator.cpp
+  src/player/ImageLibrary.cpp
+  src/shared/Tile.cpp
+  src/player/TileRender.cpp
+  src/player/TileRenderFactory.cpp
+  src/shared/TurtlePiece.cpp
+  src/player/TurtlePieceRender.cpp
+  src/player/TurtlePieceRenderFactory.cpp
+  src/player/TurtleGraveyard.cpp
+  src/player/HUD.cpp
+  src/player/CheckersBoardRender.cpp
+  src/player/CheckersGameFrame.cpp 
+  src/player/CheckersPlayerWindow.cpp 
+  src/player/CheckersPlayerNode.cpp
   ${CheckersGameWindow_MOCS})
 ament_target_dependencies(checkers_player_node
   ament_index_cpp
@@ -62,14 +60,14 @@ target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
 add_executable(checkers_game_master_node 
-  src/RSAKeyGenerator.cpp
-  src/Tile.cpp
-  src/TileFactory.cpp
-  src/TurtlePiece.cpp
-  src/TurtlePieceFactory.cpp
-  src/MasterBoard.cpp
-  src/CheckersGameLobby.cpp
-  src/CheckersGameMasterNode.cpp)
+  src/shared/RSAKeyGenerator.cpp
+  src/shared/Tile.cpp
+  src/game_master/TileFactory.cpp
+  src/shared/TurtlePiece.cpp
+  src/game_master/TurtlePieceFactory.cpp
+  src/game_master/MasterBoard.cpp
+  src/game_master/CheckersGameLobby.cpp
+  src/game_master/CheckersGameMasterNode.cpp)
 ament_target_dependencies(checkers_game_master_node
   rclcpp 
   turtle_checkers_interfaces)
