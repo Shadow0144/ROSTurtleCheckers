@@ -1,11 +1,14 @@
 #include "player/CheckersGameFrame.hpp"
 
+#include <QFrame>
+#include <QMouseEvent>
+#include <QPaintEvent>
 #include <QPointF>
-#include <QTimer>
 
 #include <cstdlib>
 #include <ctime>
 #include <functional>
+#include <memory>
 #include <string>
 #include <chrono>
 #include <vector>
@@ -280,14 +283,14 @@ void CheckersGameFrame::paintEvent(QPaintEvent *event)
 	(void)event; // NO LINT
 	QPainter painter(this);
 
+	// Fill the background
+	QRgb backgroundColor = qRgb(BG_RGB[0], BG_RGB[1], BG_RGB[2]);
+	painter.fillRect(0, 0, width(), height(), backgroundColor);
+
 	if (m_playerColor == TurtlePieceColor::None)
 	{
 		return; // If we haven't connected yet, don't draw a board
 	}
-
-	// Fill the background
-	QRgb backgroundColor = qRgb(BG_RGB[0], BG_RGB[1], BG_RGB[2]);
-	painter.fillRect(0, 0, width(), height(), backgroundColor);
 
 	m_board->paint(painter);
 

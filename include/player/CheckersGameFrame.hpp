@@ -10,6 +10,7 @@
 #include <QPaintEvent>
 #include <QVector>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -69,4 +70,3 @@ private:
 };
 
 typedef std::unique_ptr<CheckersGameFrame> CheckersGameFrameUniPtr;
-typedef std::shared_ptr<CheckersGameFrame> CheckersGameFrameShrPtr;

@@ -31,10 +31,15 @@ public:
 
     int exec();
 
+    void createLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
+    void joinLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
+    
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
 
     std::shared_ptr<rclcpp::Node> &getNodeHandle();
+
+    void shutdown();
 
 public slots:
     void onUpdate();

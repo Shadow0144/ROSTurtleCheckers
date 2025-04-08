@@ -45,6 +45,8 @@ constexpr int TILE_HEIGHT = 55;
 constexpr float TILE_HALF_WIDTH = 0.5f * TILE_WIDTH;
 constexpr float TILE_HALF_HEIGHT = 0.5f * TILE_HEIGHT;
 
+constexpr int TITLE_FONT_SIZE = 24;
+
 constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;
 constexpr int HUD_TEXT_Y_OFFSET = 5;
@@ -70,6 +72,9 @@ constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
 constexpr int BG_RGB[3] = {0u, 0u, 0u};
+constexpr int TEXT_RGB[3] = {255u, 255u, 255u};
+constexpr int TEXT_DISABLED_RGB[3] = {100u, 100u, 100u};
+
 constexpr int RED_SQUARES_BG_RGB[3] = {255u, 0u, 0u};
 constexpr int REACHABLE_SQUARES_BG_RGB[3] = {0u, 0u, 255u};
 constexpr int HIGHLIGHTED_SQUARES_BG_RGB[3] = {0u, 150u, 255u};

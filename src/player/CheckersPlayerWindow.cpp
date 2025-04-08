@@ -4,21 +4,42 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/CheckersPlayerNode.hpp"
+#include "player/CheckersMainMenuFrame.hpp"
 #include "player/CheckersGameFrame.hpp"
 
-CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &playerNode,
-                                           const std::string &playerName)
+CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &playerNode)
     : QMainWindow()
 {
     m_playerNode = playerNode;
+
+    m_windowState = WindowState::MainMenu;
 
     setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     setWindowTitle("TurtleCheckers");
 
     setMouseTracking(true);
 
-    m_checkersGameFrame = std::make_shared<CheckersGameFrame>(this, playerName);
-    setCentralWidget(m_checkersGameFrame.get());
+    m_checkersMainMenuFrame = std::make_unique<CheckersMainMenuFrame>(this);
+    setCentralWidget(m_checkersMainMenuFrame.get());
+}
+
+void CheckersPlayerWindow::closeEvent(QCloseEvent *event)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->shutdown();
+    }
+
+    QMainWindow::closeEvent(event);
+}
+
+void CheckersPlayerWindow::setConnectedToServer(bool connected)
+{
+    m_connectedToServer = connected;
+    if (m_checkersMainMenuFrame)
+    {
+        m_checkersMainMenuFrame->setConnectedToServer(connected);
+    }
 }
 
 const std::string &CheckersPlayerWindow::getLobbyName() const
@@ -26,9 +47,36 @@ const std::string &CheckersPlayerWindow::getLobbyName() const
     return m_checkersGameFrame->getLobbyName();
 }
 
-void CheckersPlayerWindow::connectedToGame(const std::string &lobbyName, TurtlePieceColor playerColor)
+void CheckersPlayerWindow::createLobby(const std::string &playerName,
+                                       const std::string &lobbyName,
+                                       TurtlePieceColor playerColor)
 {
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->createLobby(playerName, lobbyName, playerColor);
+    }
+}
+
+void CheckersPlayerWindow::joinLobby(const std::string &playerName,
+                                     const std::string &lobbyName,
+                                     TurtlePieceColor playerColor)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->joinLobby(playerName, lobbyName, playerColor);
+    }
+}
+
+void CheckersPlayerWindow::connectedToGame(
+    const std::string &playerName,
+    const std::string &lobbyName,
+    TurtlePieceColor playerColor)
+{
+    m_checkersGameFrame = std::make_unique<CheckersGameFrame>(this, playerName);
+    setCentralWidget(m_checkersGameFrame.get());
     m_checkersGameFrame->connectedToGame(lobbyName, playerColor);
+
+    update();
 }
 
 void CheckersPlayerWindow::requestedPieceMoveAccepted(bool moveAccepted)
@@ -77,18 +125,4 @@ void CheckersPlayerWindow::requestReachableTiles(size_t selectedPieceTileIndex)
 void CheckersPlayerWindow::update()
 {
     m_checkersGameFrame->update();
-}
-
-// void CheckersPlayerWindow::onUpdate()
-// {
-//     // m_checkersGameFrame->update();
-//     if (auto playerNode = m_playerNode.lock())
-//     {
-//         playerNode->onUpdate();
-//     }
-// }
-
-std::shared_ptr<CheckersGameFrame> &CheckersPlayerWindow::getGameWindow()
-{
-    return m_checkersGameFrame;
 }

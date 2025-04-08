@@ -8,20 +8,25 @@
 #include <string>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/CheckersMainMenuFrame.hpp"
+#include "player/CheckersGameFrame.hpp"
 
 class CheckersPlayerNode;
-class CheckersGameFrame;
 
 class CheckersPlayerWindow : public QMainWindow, public std::enable_shared_from_this<CheckersPlayerWindow>
 {
     Q_OBJECT
 public:
-    CheckersPlayerWindow(const std::weak_ptr<CheckersPlayerNode> &playerNode,
-                         const std::string &playerName);
+    CheckersPlayerWindow(const std::weak_ptr<CheckersPlayerNode> &playerNode);
+
+    void setConnectedToServer(bool connected);
 
     const std::string &getLobbyName() const;
 
-    void connectedToGame(const std::string &lobbyName, TurtlePieceColor playerColor);
+    void createLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
+    void joinLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
+
+    void connectedToGame(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
     void requestedPieceMoveAccepted(bool moveAccepted);
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
     void declaredWinner(Winner winner);
@@ -32,14 +37,25 @@ public:
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
 
-    std::shared_ptr<CheckersGameFrame> &getGameWindow();
-
     void update();
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
+    enum class WindowState
+    {
+        MainMenu,
+        InGame
+    };
+    WindowState m_windowState;
+
     std::weak_ptr<CheckersPlayerNode> m_playerNode;
 
-    std::shared_ptr<CheckersGameFrame> m_checkersGameFrame;
+    bool m_connectedToServer;
+
+    std::unique_ptr<CheckersMainMenuFrame> m_checkersMainMenuFrame;
+    std::unique_ptr<CheckersGameFrame> m_checkersGameFrame;
 };
 
 typedef std::unique_ptr<CheckersPlayerWindow> CheckersPlayerWindowUniPtr;
