@@ -33,6 +33,7 @@ public:
 	~CheckersGameFrame();
 
 	const std::string &getLobbyName() const;
+	void setLobbyName(const std::string &lobbyName);
 
 	void connectedToGame(const std::string &lobbyName, TurtlePieceColor playerColor);
 	void requestedPieceMoveAccepted(bool moveAccepted);

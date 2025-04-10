@@ -29,6 +29,7 @@ private:
 
     QVector<QImage> m_blackTurtleImages;
     QVector<QImage> m_redTurtleImages;
+    QVector<QImage> m_randomTurtleImages;
     QVector<QImage> m_kingImages;
     QVector<QImage> m_movableImages;
     QVector<QImage> m_highlightImages;

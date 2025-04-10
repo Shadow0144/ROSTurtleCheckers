@@ -2,7 +2,11 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
+#include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
+#include "turtle_checkers_interfaces/srv/create_lobby.hpp"
+#include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
+#include "turtle_checkers_interfaces/srv/join_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 
 #include <memory>
 
@@ -18,58 +22,125 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     // The game node publishes when it is ready for which player's next move, what the last move was, and when a winner is decided
     m_gameMasterNode = rclcpp::Node::make_shared("checkers_game_master_node");
 
-    m_nextLobbyNumber = 1u;
-    m_nextLobbyName = c_LOBBY_NAME_PREFIX + std::to_string(m_nextLobbyNumber++);
-    m_checkersGameLobbies[m_nextLobbyName] = std::make_shared<CheckersGameLobby>(m_gameMasterNode, m_nextLobbyName);
+    m_connectToGameMasterService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::ConnectToGameMaster>(
+        "ConnectToGameMaster", std::bind(&CheckersGameMasterNode::connectToGameMasterRequest,
+                                         this, std::placeholders::_1, std::placeholders::_2));
+    m_createLobbyService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::CreateLobby>(
+        "CreateLobby", std::bind(&CheckersGameMasterNode::createLobbyRequest,
+                                 this, std::placeholders::_1, std::placeholders::_2));
+    m_getLobbyListService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::GetLobbyList>(
+        "GetLobbyList", std::bind(&CheckersGameMasterNode::getLobbyListRequest,
+                              this, std::placeholders::_1, std::placeholders::_2));
+    m_joinLobbyService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::JoinLobby>(
+        "JoinLobby", std::bind(&CheckersGameMasterNode::joinLobbyRequest,
+                               this, std::placeholders::_1, std::placeholders::_2));
 
-    m_connectToGameService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::ConnectToGame>(
-        "ConnectToGame", std::bind(&CheckersGameMasterNode::connectToGameRequest,
-                                   this, std::placeholders::_1, std::placeholders::_2));
+    m_leaveLobbySubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LeaveLobby>(
+        "LeaveLobby", 10, std::bind(&CheckersGameMasterNode::leaveLobbyCallback, this, std::placeholders::_1));
 
     RCLCPP_INFO(m_gameMasterNode->get_logger(), "Starting Turtles Checkers game node; now accepting players!");
 }
 
-void CheckersGameMasterNode::connectToGameRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGame::Request> request,
-                                                  std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGame::Response> response)
+void CheckersGameMasterNode::connectToGameMasterRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request> request,
+                                                        std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Response> response)
 {
-    response->lobby_name = m_nextLobbyName;
-    response->player_color = 0;
+}
 
-    auto &checkersGameLobby = m_checkersGameLobbies[m_nextLobbyName];
-    if (!checkersGameLobby->containsPlayer(request->player_name))
+void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Request> request,
+                                                std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Response> response)
+{
+    response->created = false;
+
+    std::string lobbyName = request->lobby_name;
+    if (m_checkersGameLobbies.find(lobbyName) == m_checkersGameLobbies.end())
     {
-        auto playerColor = checkersGameLobby->addPlayer(request->player_name);
-        switch (playerColor)
-        {
-        case TurtlePieceColor::None:
-        {
-            response->player_color = 0;
-        }
-        break;
-        case TurtlePieceColor::Black:
-        {
-            response->player_color = 1;
-            RCLCPP_INFO(m_gameMasterNode->get_logger(), "Black player connected: " + request->player_name + "!");
-        }
-        break;
-        case TurtlePieceColor::Red:
-        {
-            response->player_color = 2;
-            RCLCPP_INFO(m_gameMasterNode->get_logger(), "Red player connected: " + request->player_name + "!");
-        }
-        break;
-        }
+        auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode, lobbyName);
+        m_checkersGameLobbies[lobbyName] = checkersGameLobby;
+        checkersGameLobby->addPlayer(request->player_name, static_cast<TurtlePieceColor>(request->desired_player_color));
+        response->created = true;
+        response->error_msg = "";
+        response->lobby_name = lobbyName;
+        response->black_player_name = checkersGameLobby->getBlackPlayerName();
+        response->red_player_name = checkersGameLobby->getRedPlayerName();
+        response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
+        response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+    }
+    else
+    {
+        std::string lobbyAlreadyExistsError = "Lobby already exists.";
+        response->error_msg = lobbyAlreadyExistsError;
+        RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyAlreadyExistsError);
+    }
+}
 
-        if (!checkersGameLobby->playerSlotAvailable()) // The game just filled, start it and open a new lobby
+void CheckersGameMasterNode::getLobbyListRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Request> request,
+                                                 std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Response> response)
+{
+    for (const auto &pair : m_checkersGameLobbies)
+    {
+        response->lobby_names.push_back(pair.first);
+        response->joined_black_player_names.push_back(pair.second->getBlackPlayerName());
+        response->joined_red_player_names.push_back(pair.second->getRedPlayerName());
+    }
+}
+
+void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Request> request,
+                                              std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Response> response)
+{
+    response->joined = false;
+
+    auto lobbyName = request->lobby_name;
+    if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
+    {
+        auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
+        if (checkersGameLobby->isPlayerSlotAvailable())
         {
-            // Create the next lobby
-            m_nextLobbyName = c_LOBBY_NAME_PREFIX + std::to_string(m_nextLobbyNumber++);
-            m_checkersGameLobbies[m_nextLobbyName] = std::make_shared<CheckersGameLobby>(m_gameMasterNode, m_nextLobbyName);
+            if (!checkersGameLobby->containsPlayer(request->player_name))
+            {
+                checkersGameLobby->addPlayer(request->player_name, static_cast<TurtlePieceColor>(request->desired_player_color));
+                response->joined = true;
+                response->error_msg = "";
+                response->lobby_name = lobbyName;
+                response->black_player_name = checkersGameLobby->getBlackPlayerName();
+                response->red_player_name = checkersGameLobby->getRedPlayerName();
+                response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
+                response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+            }
+            else
+            {
+                std::string playerAlreadyInLobbyError = "Player " + request->player_name + " already connected to this lobby.";
+                response->error_msg = playerAlreadyInLobbyError;
+                RCLCPP_WARN(m_gameMasterNode->get_logger(), playerAlreadyInLobbyError);
+            }
+        }
+        else
+        {
+            std::string lobbyFullError = "Lobby is full.";
+            response->error_msg = lobbyFullError;
+            RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyFullError);
         }
     }
     else
     {
-        RCLCPP_WARN(m_gameMasterNode->get_logger(), "Player " + request->player_name + " already connected to this lobby!");
+        std::string lobbyDoesNotExistError = "Lobby does not exist.";
+        response->error_msg = lobbyDoesNotExistError;
+        RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyDoesNotExistError);
+    }
+}
+
+void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message)
+{
+    auto lobbyName = message->lobby_name;
+    if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
+    {
+        auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
+        checkersGameLobby->removePlayer(message->player_name);
+
+        if (checkersGameLobby->isLobbyEmpty())
+        {
+            // If the lobby is empty, close it
+            m_checkersGameLobbies.erase(lobbyName);
+        }
     }
 }
 

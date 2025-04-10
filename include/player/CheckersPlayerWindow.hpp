@@ -21,16 +21,30 @@ public:
 
     void setConnectedToServer(bool connected);
 
-    const std::string &getLobbyName() const;
-
     void createLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
     void joinLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
+    void getLobbyList();
+    void updateLobbyList(const std::vector<std::string> &lobbyNames,
+                         const std::vector<std::string> &blackPlayerNames,
+                         const std::vector<std::string> &redPlayerNames);
+    void leaveLobby();
 
-    void connectedToGame(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
+    void setReady(bool ready);
+
+    void connectedToLobby(const std::string &lobbyName,
+                          const std::string &blackPlayerName,
+                          const std::string &redPlayerName,
+                          bool blackPlayerReady,
+                          bool redPlayerReady);
+
     void requestedPieceMoveAccepted(bool moveAccepted);
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
     void declaredWinner(Winner winner);
-    void gameStarted(GameState gameState, const std::vector<size_t> &movableTileIndices);
+    void gameStarted(GameState gameState,
+                     const std::string &playerName,
+                     const std::string &lobbyName,
+                     TurtlePieceColor playerColor,
+                     const std::vector<size_t> &movableTileIndices);
     void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
                       int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices);
 

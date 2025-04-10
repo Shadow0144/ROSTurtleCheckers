@@ -3,6 +3,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
@@ -10,7 +11,9 @@
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
+#include <ctime>
 #include <memory>
+#include <random>
 
 #include "game_master/MasterBoard.hpp"
 
@@ -24,11 +27,13 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const 
 
     m_board = std::make_shared<MasterBoard>();
 
+    std::srand(std::time({}));
+
     m_isBlackTurn = true;
 
     m_blackPlayerName = "";
     m_redPlayerName = "";
-    
+
     m_blackPlayerReady = false;
     m_redPlayerReady = false;
 
@@ -52,7 +57,12 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const 
     RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting Turtles Checkers game node; now accepting players!");
 }
 
-bool CheckersGameLobby::playerSlotAvailable() const
+bool CheckersGameLobby::isLobbyEmpty() const
+{
+    return (m_blackPlayerName.empty() && m_redPlayerName.empty());
+}
+
+bool CheckersGameLobby::isPlayerSlotAvailable() const
 {
     return (m_blackPlayerName.empty() || m_redPlayerName.empty());
 }
@@ -62,9 +72,32 @@ bool CheckersGameLobby::containsPlayer(const std::string &playerName) const
     return ((playerName == m_blackPlayerName) || (playerName == m_redPlayerName));
 }
 
-TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName)
+TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, TurtlePieceColor desiredColor)
 {
-    if (m_blackPlayerName.empty())
+    if (desiredColor == TurtlePieceColor::Black && m_blackPlayerName.empty())
+    {
+        m_blackPlayerName = playerName;
+        return TurtlePieceColor::Black;
+    }
+    else if (desiredColor == TurtlePieceColor::Red && m_redPlayerName.empty())
+    {
+        m_redPlayerName = playerName;
+        return TurtlePieceColor::Red;
+    }
+    else if (m_blackPlayerName.empty() && m_redPlayerName.empty())
+    {
+        if (std::rand() % 2 == 0)
+        {
+            m_blackPlayerName = playerName;
+            return TurtlePieceColor::Black;
+        }
+        else
+        {
+            m_redPlayerName = playerName;
+            return TurtlePieceColor::Red;
+        }
+    }
+    else if (m_blackPlayerName.empty())
     {
         m_blackPlayerName = playerName;
         return TurtlePieceColor::Black;
@@ -76,19 +109,54 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName)
     }
     else
     {
+        // Do nothing
         return TurtlePieceColor::None;
     }
 }
 
-void CheckersGameLobby::setPlayerReady(const std::string &playerName)
+void CheckersGameLobby::removePlayer(const std::string &playerName)
+{
+    if (playerName == m_blackPlayerName)
+    {
+        m_blackPlayerName.clear();
+        m_blackPlayerReady = false;
+    }
+    else if (playerName == m_redPlayerName)
+    {
+        m_redPlayerName.clear();
+        m_redPlayerReady = false;
+    }
+}
+
+const std::string &CheckersGameLobby::getBlackPlayerName() const
+{
+    return m_blackPlayerName;
+}
+
+const std::string &CheckersGameLobby::getRedPlayerName() const
+{
+    return m_redPlayerName;
+}
+
+bool CheckersGameLobby::getBlackPlayerReady() const
+{
+    return m_blackPlayerReady;
+}
+
+bool CheckersGameLobby::getRedPlayerReady() const
+{
+    return m_redPlayerReady;
+}
+
+void CheckersGameLobby::setPlayerReady(const std::string &playerName, bool ready)
 {
     if (m_blackPlayerName == playerName)
     {
-        m_blackPlayerReady = true;
+        m_blackPlayerReady = ready;
     }
     else if (m_redPlayerName == playerName)
     {
-        m_redPlayerReady = true;
+        m_redPlayerReady = ready;
     }
 }
 
@@ -203,13 +271,15 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
 
 void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message)
 {
-    setPlayerReady(message->player_name);
+    setPlayerReady(message->player_name, message->ready);
 
     if (getAreAllPlayersReady())
     {
         auto startMessage = turtle_checkers_interfaces::msg::GameStart();
         startMessage.lobby_name = message->lobby_name;
         startMessage.game_state = 2; // Black to move
+        startMessage.black_player_name = m_blackPlayerName;
+        startMessage.red_player_name = m_redPlayerName;
         m_board->checkPlayersCanMove(m_isBlackTurn, startMessage.movable_tile_indices);
         m_gameStartPublisher->publish(startMessage);
         RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting game!");

@@ -35,6 +35,9 @@ void ImageLibrary::createLibraryInstance()
         QImage rImg;
         rImg.load(imagesPath + turtlesImageNames[i] + "_red.png");
         s_libraryInstance->m_redTurtleImages.append(rImg);
+        QImage randImg;
+        randImg.load(imagesPath + turtlesImageNames[i] + "_random.png");
+        s_libraryInstance->m_randomTurtleImages.append(randImg);
         QImage kImg;
         kImg.load(imagesPath + turtlesImageNames[i] + "_king.png");
         s_libraryInstance->m_kingImages.append(kImg);
@@ -78,7 +81,8 @@ QImage ImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
     break;
     case TurtlePieceColor::None:
     {
-        return QImage();
+        // TODO: Split into left and right halves
+        return s_libraryInstance->m_randomTurtleImages[s_libraryInstance->m_blackImagesIndex];
     }
     break;
     }

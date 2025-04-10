@@ -8,6 +8,7 @@
 
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
@@ -18,13 +19,20 @@
 class CheckersGameLobby
 {
 public:
-CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const std::string &lobbyName);
+    CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const std::string &lobbyName);
 
-    bool playerSlotAvailable() const;
+    bool isLobbyEmpty() const;
+    bool isPlayerSlotAvailable() const;
     bool containsPlayer(const std::string &playerName) const;
-    TurtlePieceColor addPlayer(const std::string &playerName);
+    TurtlePieceColor addPlayer(const std::string &playerName, TurtlePieceColor desiredColor);
+    void removePlayer(const std::string &playerName);
 
-    void setPlayerReady(const std::string &playerName);
+    const std::string &getBlackPlayerName() const;
+    const std::string &getRedPlayerName() const;
+
+    bool getBlackPlayerReady() const;
+    bool getRedPlayerReady() const;
+    void setPlayerReady(const std::string &playerName, bool ready);
     bool getAreAllPlayersReady() const;
 
     void setIsBlackTurn(bool isBlackTurn);
@@ -36,15 +44,18 @@ private:
                                       std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Response> response);
     void requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
                                  std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response);
+    void requestBoardStateRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Request> request,
+                                  std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Response> response);
 
     void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
 
     bool isPieceValidForTurn(int requestedPieceTileIndex) const;
 
-	rclcpp::Node::SharedPtr m_nodeHandle;
+    rclcpp::Node::SharedPtr m_nodeHandle;
 
     rclcpp::Service<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesService;
     rclcpp::Service<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveService;
+    rclcpp::Service<turtle_checkers_interfaces::srv::RequestBoardState>::SharedPtr m_requestBoardStateService;
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartPublisher;

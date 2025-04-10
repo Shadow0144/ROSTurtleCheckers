@@ -1,22 +1,26 @@
 #pragma once
 
-#include <chrono>
-#include <functional>
-#include <memory>
-#include <string>
-
 #include "rclcpp/rclcpp.hpp"
 
-#include "turtle_checkers_interfaces/srv/connect_to_game.hpp"
+#include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
+#include "turtle_checkers_interfaces/srv/create_lobby.hpp"
+#include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
+#include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
 #include <QApplication>
 #include <QTimer>
+
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <string>
 
 #include "shared/CheckersConsts.hpp"
 
@@ -31,9 +35,12 @@ public:
 
     int exec();
 
-    void createLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
-    void joinLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
-    
+    void createLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerDesiredColor);
+    void joinLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerDesiredColor);
+    void getLobbyList();
+    void leaveLobby();
+    void setReady(bool ready);
+
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
 
@@ -45,7 +52,10 @@ public slots:
     void onUpdate();
 
 private:
-    void connectToGameResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedFuture future);
+    void connectToGameMasterResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedFuture future);
+    void createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future);
+    void getLobbyListResponse(rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedFuture future);
+    void joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future);
     void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
     void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
 
@@ -55,13 +65,19 @@ private:
 
     void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event);
 
+    void createLobbyInterfaces(const std::string &lobbyName);
+
     std::shared_ptr<rclcpp::Node> m_playerNode;
 
     std::unique_ptr<CheckersPlayerWindow> m_checkersApp;
 
     std::string m_playerName;
+    std::string m_lobbyName;
 
-    rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGame>::SharedPtr m_connectToGameClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedPtr m_getLobbyListClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesClient;
 
@@ -69,6 +85,7 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
 
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadyPublisher;
 
     long long m_privateKey;
