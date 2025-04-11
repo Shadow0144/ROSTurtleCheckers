@@ -11,6 +11,8 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
@@ -35,8 +37,13 @@ public:
 
     int exec();
 
-    void createLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerDesiredColor);
-    void joinLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerDesiredColor);
+    void createLobby(const std::string &playerName,
+                     const std::string &lobbyName,
+                     TurtlePieceColor playerDesiredColor);
+    void joinLobby(const std::string &playerName,
+                   const std::string &lobbyName,
+                   const std::string &lobbyId,
+                   TurtlePieceColor playerDesiredColor);
     void getLobbyList();
     void leaveLobby();
     void setReady(bool ready);
@@ -62,10 +69,13 @@ private:
     void declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message);
     void gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message);
     void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
+    void playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message);
+    void playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message);
+    void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
 
     void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event);
 
-    void createLobbyInterfaces(const std::string &lobbyName);
+    void createLobbyInterfaces(const std::string &lobbyName, const std::string &lobbyId);
 
     std::shared_ptr<rclcpp::Node> m_playerNode;
 
@@ -73,6 +83,7 @@ private:
 
     std::string m_playerName;
     std::string m_lobbyName;
+    std::string m_lobbyId;
 
     rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyClient;
@@ -84,6 +95,9 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadyPublisher;

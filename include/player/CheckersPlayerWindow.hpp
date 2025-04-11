@@ -21,10 +21,16 @@ public:
 
     void setConnectedToServer(bool connected);
 
-    void createLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
-    void joinLobby(const std::string &playerName, const std::string &lobbyName, TurtlePieceColor playerColor);
+    void createLobby(const std::string &playerName,
+                     const std::string &lobbyName,
+                     TurtlePieceColor playerColor);
+    void joinLobby(const std::string &playerName,
+                   const std::string &lobbyName,
+                   const std::string &lobbyId,
+                   TurtlePieceColor playerColor);
     void getLobbyList();
     void updateLobbyList(const std::vector<std::string> &lobbyNames,
+                         const std::vector<std::string> &lobbyIds,
                          const std::vector<std::string> &blackPlayerNames,
                          const std::vector<std::string> &redPlayerNames);
     void leaveLobby();
@@ -32,10 +38,15 @@ public:
     void setReady(bool ready);
 
     void connectedToLobby(const std::string &lobbyName,
+                          const std::string &lobbyId,
                           const std::string &blackPlayerName,
                           const std::string &redPlayerName,
                           bool blackPlayerReady,
                           bool redPlayerReady);
+
+    void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
+    void playerLeftLobby(const std::string &playerName);
+    void setPlayerReady(const std::string &playerName, bool ready);
 
     void requestedPieceMoveAccepted(bool moveAccepted);
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
@@ -43,6 +54,7 @@ public:
     void gameStarted(GameState gameState,
                      const std::string &playerName,
                      const std::string &lobbyName,
+                     const std::string &lobbyId,
                      TurtlePieceColor playerColor,
                      const std::vector<size_t> &movableTileIndices);
     void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,

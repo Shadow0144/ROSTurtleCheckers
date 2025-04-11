@@ -11,6 +11,8 @@
 #include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
@@ -19,7 +21,12 @@
 class CheckersGameLobby
 {
 public:
-    CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const std::string &lobbyName);
+    CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
+                      const std::string &lobbyName,
+                      const std::string &lobbyId);
+
+    const std::string &getLobbyName() const;
+    const std::string &getLobbyId() const;
 
     bool isLobbyEmpty() const;
     bool isPlayerSlotAvailable() const;
@@ -60,10 +67,13 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbyPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbyPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
 
     std::string m_lobbyName;
+    std::string m_lobbyId;
     std::string m_blackPlayerName;
     bool m_blackPlayerReady;
     std::string m_redPlayerName;

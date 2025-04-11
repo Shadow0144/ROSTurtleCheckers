@@ -35,17 +35,24 @@ public:
 	void setConnectedToServer(bool connected);
 
 	void connectedToLobby(const std::string &lobbyName,
+						  const std::string &lobbyId,
 						  const std::string &blackPlayerName,
 						  const std::string &redPlayerName,
 						  bool blackPlayerReady,
 						  bool redPlayerReady);
 
 	void displayLobbyList(const std::vector<std::string> &lobbyNames,
+						  const std::vector<std::string> &lobbyIds,
 						  const std::vector<std::string> &blackPlayerNames,
 						  const std::vector<std::string> &redPlayerNames);
 
 	const std::string &getPlayerName() const;
 	const std::string &getLobbyName() const;
+	const std::string &getLobbyId() const;
+
+	void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
+	void playerLeftLobby(const std::string &playerName);
+	void setPlayerReady(const std::string &playerName, bool ready);
 
 public slots:
 	void validatePlayerNameText(const QString &playerName);
@@ -121,8 +128,9 @@ private:
 	QString m_disabledReadyButtonStyleSheet;
 	QString m_readyButtonStyleSheet;
 
-	std::string m_lobbyName;
 	std::string m_playerName;
+	std::string m_lobbyName;
+	std::string m_lobbyId;
 	TurtlePieceColor m_playerDesiredColor;
 	TurtlePieceColor m_playerColor;
 	std::string m_blackPlayerName;
@@ -131,6 +139,7 @@ private:
 	bool m_redPlayerReady;
 
 	std::vector<std::string> m_lobbyNames;
+	std::vector<std::string> m_lobbyIds;
 	std::vector<std::string> m_blackPlayerNames;
 	std::vector<std::string> m_redPlayerNames;
 };

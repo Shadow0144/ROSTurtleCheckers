@@ -54,11 +54,12 @@ void CheckersPlayerWindow::createLobby(const std::string &playerName,
 
 void CheckersPlayerWindow::joinLobby(const std::string &playerName,
                                      const std::string &lobbyName,
+                                     const std::string &lobbyId,
                                      TurtlePieceColor playerColor)
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->joinLobby(playerName, lobbyName, playerColor);
+        playerNode->joinLobby(playerName, lobbyName, lobbyId, playerColor);
     }
 }
 
@@ -71,10 +72,11 @@ void CheckersPlayerWindow::getLobbyList()
 }
 
 void CheckersPlayerWindow::updateLobbyList(const std::vector<std::string> &lobbyNames,
+                                           const std::vector<std::string> &lobbyIds,
                                            const std::vector<std::string> &blackPlayerNames,
                                            const std::vector<std::string> &redPlayerNames)
 {
-    m_checkersMainMenuFrame->displayLobbyList(lobbyNames, blackPlayerNames, redPlayerNames);
+    m_checkersMainMenuFrame->displayLobbyList(lobbyNames, lobbyIds, blackPlayerNames, redPlayerNames);
 }
 
 void CheckersPlayerWindow::leaveLobby()
@@ -94,12 +96,33 @@ void CheckersPlayerWindow::setReady(bool ready)
 }
 
 void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
+                                            const std::string &lobbyId,
                                             const std::string &blackPlayerName,
                                             const std::string &redPlayerName,
                                             bool blackPlayerReady,
                                             bool redPlayerReady)
 {
-    m_checkersMainMenuFrame->connectedToLobby(lobbyName, blackPlayerName, redPlayerName, blackPlayerReady, redPlayerReady);
+    m_checkersMainMenuFrame->connectedToLobby(lobbyName,
+                                              lobbyId,
+                                              blackPlayerName,
+                                              redPlayerName,
+                                              blackPlayerReady,
+                                              redPlayerReady);
+}
+
+void CheckersPlayerWindow::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)
+{
+    m_checkersMainMenuFrame->playerJoinedLobby(playerName, playerColor);
+}
+
+void CheckersPlayerWindow::playerLeftLobby(const std::string &playerName)
+{
+    m_checkersMainMenuFrame->playerLeftLobby(playerName);
+}
+
+void CheckersPlayerWindow::setPlayerReady(const std::string &playerName, bool ready)
+{
+    m_checkersMainMenuFrame->setPlayerReady(playerName, ready);
 }
 
 void CheckersPlayerWindow::requestedPieceMoveAccepted(bool moveAccepted)
@@ -120,20 +143,22 @@ void CheckersPlayerWindow::declaredWinner(Winner winner)
 void CheckersPlayerWindow::gameStarted(GameState gameState,
                                        const std::string &playerName,
                                        const std::string &lobbyName,
+                                       const std::string &lobbyId,
                                        TurtlePieceColor playerColor,
                                        const std::vector<size_t> &movableTileIndices)
 {
     m_checkersGameFrame = std::make_unique<CheckersGameFrame>(this, playerName);
     setCentralWidget(m_checkersGameFrame.get());
 
-    m_checkersGameFrame->connectedToGame(lobbyName, playerColor);
+    m_checkersGameFrame->connectedToGame(lobbyName, lobbyId, playerColor);
     m_checkersGameFrame->gameStarted(gameState, movableTileIndices);
 
     update();
 }
 
-void CheckersPlayerWindow::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
-                                        int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices)
+void CheckersPlayerWindow::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex,
+                                        GameState gameState, int slainPieceTileIndex, bool kingPiece,
+                                        const std::vector<size_t> &movableTileIndices)
 {
     m_checkersGameFrame->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
                                       slainPieceTileIndex, kingPiece, movableTileIndices);

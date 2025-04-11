@@ -15,6 +15,8 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
@@ -35,6 +37,8 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
     m_playerNode = rclcpp::Node::make_shared("checkers_player_node");
 
     m_playerName = "";
+    m_lobbyName = "";
+    m_lobbyId = "";
 
     m_updateTimer = new QTimer(this);
     m_updateTimer->setInterval(16);
@@ -129,13 +133,16 @@ void CheckersPlayerNode::createLobby(
 void CheckersPlayerNode::joinLobby(
     const std::string &playerName,
     const std::string &lobbyName,
+    const std::string &lobbyId,
     TurtlePieceColor playerDesiredColor)
 {
     m_playerName = playerName;
     m_lobbyName = lobbyName;
+    m_lobbyId = lobbyId;
     auto request = std::make_shared<turtle_checkers_interfaces::srv::JoinLobby::Request>();
     request->player_name = m_playerName;
     request->lobby_name = m_lobbyName;
+    request->lobby_id = m_lobbyId;
     request->desired_player_color = static_cast<size_t>(playerDesiredColor);
     m_joinLobbyClient->async_send_request(request,
                                           std::bind(&CheckersPlayerNode::joinLobbyResponse,
@@ -156,6 +163,7 @@ void CheckersPlayerNode::leaveLobby()
     auto message = turtle_checkers_interfaces::msg::LeaveLobby();
     message.player_name = m_playerName;
     message.lobby_name = m_lobbyName;
+    message.lobby_id = m_lobbyId;
     m_leaveLobbyPublisher->publish(message);
 }
 
@@ -165,6 +173,7 @@ void CheckersPlayerNode::setReady(bool ready)
     auto message = turtle_checkers_interfaces::msg::PlayerReady();
     message.player_name = m_playerName;
     message.lobby_name = m_lobbyName;
+    message.lobby_id = m_lobbyId;
     message.ready = ready;
     m_playerReadyPublisher->publish(message);
 }
@@ -184,8 +193,9 @@ void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_inte
 
     if (result->created)
     {
-        createLobbyInterfaces(result->lobby_name);
+        createLobbyInterfaces(result->lobby_name, result->lobby_id);
         m_checkersApp->connectedToLobby(result->lobby_name,
+                                        result->lobby_id,
                                         result->black_player_name,
                                         result->red_player_name,
                                         result->black_player_ready,
@@ -201,7 +211,10 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
 {
     auto result = future.get();
 
-    m_checkersApp->updateLobbyList(result->lobby_names, result->joined_black_player_names, result->joined_red_player_names);
+    m_checkersApp->updateLobbyList(result->lobby_names,
+                                   result->lobby_ids,
+                                   result->joined_black_player_names,
+                                   result->joined_red_player_names);
 }
 
 void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future)
@@ -210,8 +223,9 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
 
     if (result->joined)
     {
-        createLobbyInterfaces(result->lobby_name);
+        createLobbyInterfaces(result->lobby_name, result->lobby_id);
         m_checkersApp->connectedToLobby(result->lobby_name,
+                                        result->lobby_id,
                                         result->black_player_name,
                                         result->red_player_name,
                                         result->black_player_ready,
@@ -223,25 +237,32 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
     }
 }
 
-void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName)
+void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, const std::string &lobbyId)
 {
     m_lobbyName = lobbyName;
+    m_lobbyId = lobbyId;
 
     // Create the services, subscriptions, and publishers now that we have the full topic names
     m_requestPieceMoveClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>(
-        m_lobbyName + "/RequestPieceMove");
+        m_lobbyName + "/id" + m_lobbyId + "/RequestPieceMove");
     m_requestReachableTilesClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>(
-        m_lobbyName + "/RequestReachableTiles");
+        m_lobbyName + "/id" + m_lobbyId + "/RequestReachableTiles");
 
     m_declareWinnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>(
-        m_lobbyName + "/DeclareWinner", 10, std::bind(&CheckersPlayerNode::declareWinnerCallback, this, _1));
+        m_lobbyName + "/id" + m_lobbyId + "/DeclareWinner", 10, std::bind(&CheckersPlayerNode::declareWinnerCallback, this, _1));
     m_gameStartSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::GameStart>(
-        m_lobbyName + "/GameStart", 10, std::bind(&CheckersPlayerNode::gameStartCallback, this, _1));
+        m_lobbyName + "/id" + m_lobbyId + "/GameStart", 10, std::bind(&CheckersPlayerNode::gameStartCallback, this, _1));
     m_updateBoardSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>(
-        m_lobbyName + "/UpdateBoard", 10, std::bind(&CheckersPlayerNode::updateBoardCallback, this, _1));
+        m_lobbyName + "/id" + m_lobbyId + "/UpdateBoard", 10, std::bind(&CheckersPlayerNode::updateBoardCallback, this, _1));
+    m_playerJoinedLobbySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>(
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerJoinedLobby", 10, std::bind(&CheckersPlayerNode::playerJoinedLobbyCallback, this, _1));
+    m_playerLeftLobbySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>(
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerLeftLobby", 10, std::bind(&CheckersPlayerNode::playerLeftLobbyCallback, this, _1));
+    m_playerReadySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersPlayerNode::playerReadyCallback, this, _1));
 
     m_playerReadyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>(
-        m_lobbyName + "/PlayerReady", 10);
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10);
 }
 
 void CheckersPlayerNode::requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future)
@@ -263,7 +284,7 @@ void CheckersPlayerNode::requestReachableTilesResponse(rclcpp::Client<turtle_che
 
 void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message)
 {
-    if (m_lobbyName != message->lobby_name)
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
     {
         return;
     }
@@ -276,11 +297,11 @@ void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces:
 
 void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message)
 {
-    if (m_lobbyName != message->lobby_name)
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
     {
         return;
     }
-    
+
     TurtlePieceColor playerColor;
     if (message->black_player_name == m_playerName) // Black
     {
@@ -301,14 +322,44 @@ void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg
 
     GameState gameState = static_cast<GameState>(message->game_state);
     const auto &movableTileIndices = message->movable_tile_indices;
-    m_checkersApp->gameStarted(gameState, m_lobbyName, m_playerName, playerColor, movableTileIndices);
+    m_checkersApp->gameStarted(gameState, m_lobbyName, m_lobbyId, m_playerName, playerColor, movableTileIndices);
 
     m_checkersApp->update();
 }
 
+void CheckersPlayerNode::playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message)
+{
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
+    {
+        return;
+    }
+
+    m_checkersApp->playerJoinedLobby(message->player_name, static_cast<TurtlePieceColor>(message->player_color));
+}
+
+void CheckersPlayerNode::playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message)
+{
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
+    {
+        return;
+    }
+
+    m_checkersApp->playerLeftLobby(message->player_name);
+}
+
+void CheckersPlayerNode::playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message)
+{
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
+    {
+        return;
+    }
+
+    m_checkersApp->setPlayerReady(message->player_name, message->ready);
+}
+
 void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
 {
-    if (m_lobbyName != message->lobby_name)
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
     {
         return;
     }
@@ -330,6 +381,7 @@ void CheckersPlayerNode::requestPieceMove(size_t sourceTileIndex, size_t destina
 {
     auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestPieceMove::Request>();
     request->lobby_name = m_lobbyName;
+    request->lobby_id = m_lobbyId;
     request->source_tile_index = sourceTileIndex;
     request->destination_tile_index = destinationTileIndex;
     m_requestPieceMoveClient->async_send_request(request,
@@ -342,6 +394,7 @@ void CheckersPlayerNode::requestReachableTiles(size_t selectedPieceTileIndex)
 {
     auto request = std::make_shared<turtle_checkers_interfaces::srv::RequestReachableTiles::Request>();
     request->lobby_name = m_lobbyName;
+    request->lobby_id = m_lobbyId;
     request->tile_index = selectedPieceTileIndex;
     m_requestReachableTilesClient->async_send_request(request,
                                                       std::bind(&CheckersPlayerNode::requestReachableTilesResponse, this, std::placeholders::_1));

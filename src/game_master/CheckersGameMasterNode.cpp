@@ -9,6 +9,8 @@
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 
 #include <memory>
+#include <sstream>
+#include <iomanip>
 
 #include "shared/CheckersConsts.hpp"
 #include "game_master/CheckersGameLobby.hpp"
@@ -30,7 +32,7 @@ CheckersGameMasterNode::CheckersGameMasterNode()
                                  this, std::placeholders::_1, std::placeholders::_2));
     m_getLobbyListService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::GetLobbyList>(
         "GetLobbyList", std::bind(&CheckersGameMasterNode::getLobbyListRequest,
-                              this, std::placeholders::_1, std::placeholders::_2));
+                                  this, std::placeholders::_1, std::placeholders::_2));
     m_joinLobbyService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::JoinLobby>(
         "JoinLobby", std::bind(&CheckersGameMasterNode::joinLobbyRequest,
                                this, std::placeholders::_1, std::placeholders::_2));
@@ -50,22 +52,34 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
                                                 std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Response> response)
 {
     response->created = false;
+    uint16_t attempts = 0u;
 
-    std::string lobbyName = request->lobby_name;
-    if (m_checkersGameLobbies.find(lobbyName) == m_checkersGameLobbies.end())
+    do
     {
-        auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode, lobbyName);
-        m_checkersGameLobbies[lobbyName] = checkersGameLobby;
-        checkersGameLobby->addPlayer(request->player_name, static_cast<TurtlePieceColor>(request->desired_player_color));
-        response->created = true;
-        response->error_msg = "";
-        response->lobby_name = lobbyName;
-        response->black_player_name = checkersGameLobby->getBlackPlayerName();
-        response->red_player_name = checkersGameLobby->getRedPlayerName();
-        response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
-        response->red_player_ready = checkersGameLobby->getRedPlayerReady();
-    }
-    else
+        std::string lobbyName = request->lobby_name;
+        std::stringstream ss;
+        ss << std::setfill('0') << std::setw(4) << std::to_string(m_lobbyId);
+        std::string lobbyId = ss.str();
+        m_lobbyId = (m_lobbyId + 1u) % MAX_LOBBY_LIMIT; // Increment the ID
+        attempts++;
+        std::string fullName = lobbyName + "#" + lobbyId;
+        if (m_checkersGameLobbies.find(fullName) == m_checkersGameLobbies.end())
+        {
+            auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode, lobbyName, lobbyId);
+            m_checkersGameLobbies[fullName] = checkersGameLobby;
+            checkersGameLobby->addPlayer(request->player_name, static_cast<TurtlePieceColor>(request->desired_player_color));
+            response->created = true;
+            response->error_msg = "";
+            response->lobby_name = lobbyName;
+            response->lobby_id = lobbyId;
+            response->black_player_name = checkersGameLobby->getBlackPlayerName();
+            response->red_player_name = checkersGameLobby->getRedPlayerName();
+            response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
+            response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+        }
+    } while (!response->created && attempts <= MAX_LOBBY_LIMIT);
+
+    if (!response->created)
     {
         std::string lobbyAlreadyExistsError = "Lobby already exists.";
         response->error_msg = lobbyAlreadyExistsError;
@@ -78,7 +92,8 @@ void CheckersGameMasterNode::getLobbyListRequest(const std::shared_ptr<turtle_ch
 {
     for (const auto &pair : m_checkersGameLobbies)
     {
-        response->lobby_names.push_back(pair.first);
+        response->lobby_names.push_back(pair.second->getLobbyName());
+        response->lobby_ids.push_back(pair.second->getLobbyId());
         response->joined_black_player_names.push_back(pair.second->getBlackPlayerName());
         response->joined_red_player_names.push_back(pair.second->getRedPlayerName());
     }
@@ -89,7 +104,7 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
 {
     response->joined = false;
 
-    auto lobbyName = request->lobby_name;
+    auto lobbyName = request->lobby_name + "#" + request->lobby_id;
     if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
     {
         auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
@@ -100,7 +115,8 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
                 checkersGameLobby->addPlayer(request->player_name, static_cast<TurtlePieceColor>(request->desired_player_color));
                 response->joined = true;
                 response->error_msg = "";
-                response->lobby_name = lobbyName;
+                response->lobby_name = request->lobby_name;
+                response->lobby_id = request->lobby_id;
                 response->black_player_name = checkersGameLobby->getBlackPlayerName();
                 response->red_player_name = checkersGameLobby->getRedPlayerName();
                 response->black_player_ready = checkersGameLobby->getBlackPlayerReady();

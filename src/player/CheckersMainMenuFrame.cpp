@@ -38,6 +38,7 @@ CheckersMainMenuFrame::CheckersMainMenuFrame(
     m_playerWindow = parentWindow;
     m_playerName = "";
     m_lobbyName = "";
+    m_lobbyId = "";
     m_playerDesiredColor = TurtlePieceColor::None;
     m_playerColor = TurtlePieceColor::None;
     m_blackPlayerName = "";
@@ -198,13 +199,6 @@ QWidget *CheckersMainMenuFrame::createCreateLobbyScreen()
 
     auto createLobbyButtonLayout = new QHBoxLayout();
 
-    std::string cancelCreateLobbyString = "Cancel";
-    auto cancelCreateLobbyButton = new QPushButton(cancelCreateLobbyString.c_str());
-    cancelCreateLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
-    connect(cancelCreateLobbyButton, &QPushButton::released, this,
-            &CheckersMainMenuFrame::handleCancelCreateLobbyButton);
-    createLobbyButtonLayout->addWidget(cancelCreateLobbyButton);
-
     std::string commitCreateLobbyString = "Create Lobby";
     m_commitCreateLobbyButton = new QPushButton(commitCreateLobbyString.c_str());
     m_commitCreateLobbyButton->setEnabled(false);
@@ -212,6 +206,13 @@ QWidget *CheckersMainMenuFrame::createCreateLobbyScreen()
     connect(m_commitCreateLobbyButton, &QPushButton::released, this,
             &CheckersMainMenuFrame::handleCommitCreateLobbyButton);
     createLobbyButtonLayout->addWidget(m_commitCreateLobbyButton);
+
+    std::string cancelCreateLobbyString = "Cancel";
+    auto cancelCreateLobbyButton = new QPushButton(cancelCreateLobbyString.c_str());
+    cancelCreateLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
+    connect(cancelCreateLobbyButton, &QPushButton::released, this,
+            &CheckersMainMenuFrame::handleCancelCreateLobbyButton);
+    createLobbyButtonLayout->addWidget(cancelCreateLobbyButton);
 
     createLobbyLayout->addLayout(createLobbyButtonLayout);
 
@@ -242,13 +243,27 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
     auto lobbyListLayout = new QVBoxLayout(lobbyListFrame);
 
     const auto numLobbies = m_lobbyNames.size();
+    if (m_lobbyIds.size() != numLobbies)
+    {
+        std::cerr << "Lobby name vector does not match size of lobby id vector" << std::endl;
+        return nullptr;
+    }
     for (size_t i = 0u; i < numLobbies; i++)
     {
         auto lobbyLayout = new QHBoxLayout();
 
+        auto lobbyNameLayout = new QHBoxLayout();
+
         auto lobbyNameLabel = new QLabel(m_lobbyNames[i].c_str());
         lobbyNameLabel->setStyleSheet(m_labelStyleSheet);
-        lobbyLayout->addWidget(lobbyNameLabel);
+        lobbyNameLayout->addWidget(lobbyNameLabel);
+
+        std::string lobbyIdWithHash = "#" + m_lobbyIds[i];
+        auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
+        lobbyIdLabel->setStyleSheet(m_openNameLabelStyleSheet);
+        lobbyNameLayout->addWidget(lobbyIdLabel);
+
+        lobbyLayout->addLayout(lobbyNameLayout);
 
         auto blackTurtleIconLabel = new QLabel();
         blackTurtleIconLabel->setPixmap(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black)));
@@ -371,9 +386,18 @@ QWidget *CheckersMainMenuFrame::createInLobbyScreen()
     inLobbyTitleLabel->setStyleSheet(m_labelStyleSheet);
     inLobbyLayout->addWidget(inLobbyTitleLabel);
 
+    auto lobbyNameLayout = new QHBoxLayout();
+
     auto lobbyNameLabel = new QLabel(m_lobbyName.c_str());
-    inLobbyTitleLabel->setStyleSheet(m_labelStyleSheet);
-    inLobbyLayout->addWidget(lobbyNameLabel);
+    lobbyNameLabel->setStyleSheet(m_labelStyleSheet);
+    lobbyNameLayout->addWidget(lobbyNameLabel);
+
+    std::string lobbyIdWithHash = "#" + m_lobbyId;
+    auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
+    lobbyIdLabel->setStyleSheet(m_openNameLabelStyleSheet);
+    lobbyNameLayout->addWidget(lobbyIdLabel);
+
+    inLobbyLayout->addLayout(lobbyNameLayout);
 
     std::string readyInLobbyString = "Ready";
 
@@ -500,6 +524,75 @@ const std::string &CheckersMainMenuFrame::getLobbyName() const
     return m_lobbyName;
 }
 
+void CheckersMainMenuFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)
+{
+    if (playerName == m_playerName)
+    {
+        // Do nothing
+    }
+
+    switch (playerColor)
+    {
+        case TurtlePieceColor::Black:
+        {
+            m_blackPlayerName = playerName;
+            m_blackPlayerNameLabel->setText(m_blackPlayerName.c_str());
+        }
+        break;
+        case TurtlePieceColor::Red:
+        {
+            m_redPlayerName = playerName;
+            m_redPlayerNameLabel->setText(m_redPlayerName.c_str());
+        }
+        break;
+        case TurtlePieceColor::None:
+        {
+            // Do nothing
+        }
+        break;
+    }
+}
+
+void CheckersMainMenuFrame::playerLeftLobby(const std::string &playerName)
+{
+    if (playerName == m_playerName)
+    {
+        // Do nothing
+    }
+
+    if (playerName == m_blackPlayerName)
+    {
+        m_blackPlayerNameLabel->clear();
+        m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+        m_blackPlayerName.clear();
+    }
+    else if (playerName == m_redPlayerName)
+    {
+        m_redPlayerNameLabel->clear();
+        m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+        m_redPlayerName.clear();
+    }
+}
+
+void CheckersMainMenuFrame::setPlayerReady(const std::string &playerName, bool ready)
+{
+    if (playerName == m_playerName)
+    {
+        // Do nothing
+    }
+    else
+    {
+        if (playerName == m_blackPlayerName)
+        {
+            m_blackReadyInLobbyCheckBox->setCheckState(ready ? Qt::Checked : Qt::Unchecked);
+        }
+        else if (playerName == m_redPlayerName)
+        {
+            m_redReadyInLobbyCheckBox->setCheckState(ready ? Qt::Checked : Qt::Unchecked);
+        }
+    }
+}
+
 void CheckersMainMenuFrame::validatePlayerNameText(const QString &playerName)
 {
     QString playerNameCopy = playerName; // Remove the const
@@ -555,10 +648,12 @@ void CheckersMainMenuFrame::validatelobbyNameText(const QString &lobbyName)
 }
 
 void CheckersMainMenuFrame::displayLobbyList(const std::vector<std::string> &lobbyNames,
+                                             const std::vector<std::string> &lobbyIds,
                                              const std::vector<std::string> &blackPlayerNames,
                                              const std::vector<std::string> &redPlayerNames)
 {
     m_lobbyNames = lobbyNames;
+    m_lobbyIds = lobbyIds;
     m_blackPlayerNames = blackPlayerNames;
     m_redPlayerNames = redPlayerNames;
     m_windowLayout->insertWidget(JOIN_LOBBY_INDEX, createJoinLobbyScreen());
@@ -592,7 +687,7 @@ void CheckersMainMenuFrame::handleCommitCreateLobbyButton()
 
 void CheckersMainMenuFrame::handleCommitJoinLobbyButton(size_t lobbyIndex)
 {
-    m_playerWindow->joinLobby(m_playerName, m_lobbyNames[lobbyIndex], m_playerDesiredColor);
+    m_playerWindow->joinLobby(m_playerName, m_lobbyNames[lobbyIndex], m_lobbyIds[lobbyIndex], m_playerDesiredColor);
 }
 
 void CheckersMainMenuFrame::handleRefreshJoinLobbyButton()
@@ -615,6 +710,8 @@ void CheckersMainMenuFrame::handleJoinLobbyButton()
 
 void CheckersMainMenuFrame::handleLeaveLobbyButton()
 {
+    m_lobbyName = "";
+    m_lobbyId = "";
     m_playerDesiredColor = TurtlePieceColor::None;
     m_playerColor = TurtlePieceColor::None;
     m_blackPlayerName = "";
@@ -635,12 +732,10 @@ void CheckersMainMenuFrame::handleBlackReadyButtonToggled(int state)
     }
     if (m_blackPlayerReady)
     {
-        m_blackReadyInLobbyCheckBox->setCheckState(Qt::Checked);
         m_blackReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
     }
     else
     {
-        m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         if (m_playerColor == TurtlePieceColor::Black)
         {
             m_blackReadyInLobbyCheckBox->setStyleSheet(m_unreadyButtonStyleSheet);
@@ -661,12 +756,10 @@ void CheckersMainMenuFrame::handleRedReadyButtonToggled(int state)
     }
     if (m_redPlayerReady)
     {
-        m_redReadyInLobbyCheckBox->setCheckState(Qt::Checked);
         m_redReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
     }
     else
     {
-        m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         if (m_playerColor == TurtlePieceColor::Red)
         {
             m_redReadyInLobbyCheckBox->setStyleSheet(m_unreadyButtonStyleSheet);
@@ -765,12 +858,14 @@ void CheckersMainMenuFrame::onRedTurtleToggled(bool checked)
 }
 
 void CheckersMainMenuFrame::connectedToLobby(const std::string &lobbyName,
+                                             const std::string &lobbyId,
                                              const std::string &blackPlayerName,
                                              const std::string &redPlayerName,
                                              bool blackPlayerReady,
                                              bool redPlayerReady)
 {
     m_lobbyName = lobbyName;
+    m_lobbyId = lobbyId;
     m_blackPlayerName = blackPlayerName;
     m_redPlayerName = redPlayerName;
     m_blackPlayerReady = blackPlayerReady;
@@ -787,8 +882,6 @@ void CheckersMainMenuFrame::connectedToLobby(const std::string &lobbyName,
     {
         m_playerColor = TurtlePieceColor::None; // Error
     }
-    std::cout << "L: " << m_lobbyName << " B: " << m_blackPlayerName << " R: " << m_redPlayerName << " C: " << std::to_string(static_cast<int>(m_playerColor)) << std::endl;
     m_windowLayout->insertWidget(IN_LOBBY_INDEX, createInLobbyScreen());
     m_windowLayout->setCurrentIndex(IN_LOBBY_INDEX);
-    std::cout << "Current: " << std::to_string(m_windowLayout->currentIndex()) << std::endl;
 }

@@ -8,6 +8,8 @@
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
@@ -20,8 +22,11 @@
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const std::string &lobbyName)
-    : m_lobbyName(lobbyName)
+CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
+                                     const std::string &lobbyName,
+                                     const std::string &lobbyId)
+    : m_lobbyName(lobbyName),
+      m_lobbyId(lobbyId)
 {
     m_nodeHandle = nodeHandle;
 
@@ -39,22 +44,36 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle, const 
 
     m_requestReachableTilesService =
         m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestReachableTiles>(
-            m_lobbyName + "/RequestReachableTiles", std::bind(&CheckersGameLobby::requestReachableTilesRequest, this, std::placeholders::_1, std::placeholders::_2));
+            m_lobbyName + "/id" + m_lobbyId + "/RequestReachableTiles", std::bind(&CheckersGameLobby::requestReachableTilesRequest, this, std::placeholders::_1, std::placeholders::_2));
     m_requestPieceMoveService =
         m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestPieceMove>(
-            m_lobbyName + "/RequestPieceMove", std::bind(&CheckersGameLobby::requestPieceMoveRequest, this, std::placeholders::_1, std::placeholders::_2));
+            m_lobbyName + "/id" + m_lobbyId + "/RequestPieceMove", std::bind(&CheckersGameLobby::requestPieceMoveRequest, this, std::placeholders::_1, std::placeholders::_2));
 
     m_declareWinnerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::DeclareWinner>(
-        m_lobbyName + "/DeclareWinner", 10);
+        m_lobbyName + "/id" + m_lobbyId + "/DeclareWinner", 10);
     m_gameStartPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::GameStart>(
-        m_lobbyName + "/GameStart", 10);
+        m_lobbyName + "/id" + m_lobbyId + "/GameStart", 10);
     m_updateBoardPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateBoard>(
-        m_lobbyName + "/UpdateBoard", 10);
+        m_lobbyName + "/id" + m_lobbyId + "/UpdateBoard", 10);
+    m_playerJoinedLobbyPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>(
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerJoinedLobby", 10);
+    m_playerLeftLobbyPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>(
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerLeftLobby", 10);
 
     m_playerReadySubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
-        m_lobbyName + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
 
     RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting Turtles Checkers game node; now accepting players!");
+}
+
+const std::string &CheckersGameLobby::getLobbyName() const
+{
+    return m_lobbyName;
+}
+
+const std::string &CheckersGameLobby::getLobbyId() const
+{
+    return m_lobbyId;
 }
 
 bool CheckersGameLobby::isLobbyEmpty() const
@@ -74,44 +93,47 @@ bool CheckersGameLobby::containsPlayer(const std::string &playerName) const
 
 TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, TurtlePieceColor desiredColor)
 {
+    TurtlePieceColor acceptedColor = TurtlePieceColor::None;
     if (desiredColor == TurtlePieceColor::Black && m_blackPlayerName.empty())
     {
         m_blackPlayerName = playerName;
-        return TurtlePieceColor::Black;
     }
     else if (desiredColor == TurtlePieceColor::Red && m_redPlayerName.empty())
     {
         m_redPlayerName = playerName;
-        return TurtlePieceColor::Red;
     }
     else if (m_blackPlayerName.empty() && m_redPlayerName.empty())
     {
         if (std::rand() % 2 == 0)
         {
             m_blackPlayerName = playerName;
-            return TurtlePieceColor::Black;
         }
         else
         {
             m_redPlayerName = playerName;
-            return TurtlePieceColor::Red;
         }
     }
     else if (m_blackPlayerName.empty())
     {
         m_blackPlayerName = playerName;
-        return TurtlePieceColor::Black;
     }
     else if (m_redPlayerName.empty())
     {
         m_redPlayerName = playerName;
-        return TurtlePieceColor::Red;
     }
     else
     {
         // Do nothing
-        return TurtlePieceColor::None;
     }
+
+    auto message = turtle_checkers_interfaces::msg::PlayerJoinedLobby();
+    message.lobby_name = m_lobbyName;
+    message.lobby_id = m_lobbyId;
+    message.player_name = playerName;
+    message.player_color = static_cast<size_t>(TurtlePieceColor::Black);
+    m_playerJoinedLobbyPublisher->publish(message);
+
+    return acceptedColor;
 }
 
 void CheckersGameLobby::removePlayer(const std::string &playerName)
@@ -126,6 +148,12 @@ void CheckersGameLobby::removePlayer(const std::string &playerName)
         m_redPlayerName.clear();
         m_redPlayerReady = false;
     }
+
+    auto message = turtle_checkers_interfaces::msg::PlayerLeftLobby();
+    message.lobby_name = m_lobbyName;
+    message.lobby_id = m_lobbyId;
+    message.player_name = playerName;
+    m_playerLeftLobbyPublisher->publish(message);
 }
 
 const std::string &CheckersGameLobby::getBlackPlayerName() const
@@ -206,6 +234,7 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
     {
         auto message = turtle_checkers_interfaces::msg::UpdateBoard();
         message.lobby_name = request->lobby_name;
+        message.lobby_id = request->lobby_id;
         bool mustContinueJump = false;
         auto jumpedPieceTileIndex = m_board->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
         if (jumpedPieceTileIndex > -1)
@@ -253,6 +282,7 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
             message.game_state = 4; // Game over
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
             winnerMessage.lobby_name = m_lobbyName;
+            winnerMessage.lobby_id = m_lobbyId;
             winnerMessage.winner = static_cast<size_t>(winner);
             m_declareWinnerPublisher->publish(winnerMessage);
         }
@@ -277,6 +307,7 @@ void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::ms
     {
         auto startMessage = turtle_checkers_interfaces::msg::GameStart();
         startMessage.lobby_name = message->lobby_name;
+        startMessage.lobby_id = message->lobby_id;
         startMessage.game_state = 2; // Black to move
         startMessage.black_player_name = m_blackPlayerName;
         startMessage.red_player_name = m_redPlayerName;

@@ -41,19 +41,12 @@ CheckersGameFrame::~CheckersGameFrame()
 {
 }
 
-const std::string &CheckersGameFrame::getLobbyName() const
-{
-	return m_lobbyName;
-}
-
-void CheckersGameFrame::setLobbyName(const std::string &lobbyName)
+void CheckersGameFrame::connectedToGame(const std::string &lobbyName,
+										const std::string &lobbyId,
+										TurtlePieceColor playerColor)
 {
 	m_lobbyName = lobbyName;
-}
-
-void CheckersGameFrame::connectedToGame(const std::string &lobbyName, TurtlePieceColor playerColor)
-{
-	m_lobbyName = lobbyName;
+	m_lobbyId = lobbyId;
 	m_playerColor = playerColor;
 
 	if (m_gameState == GameState::Connecting)

@@ -32,10 +32,7 @@ public:
 		const std::string &playerName);
 	~CheckersGameFrame();
 
-	const std::string &getLobbyName() const;
-	void setLobbyName(const std::string &lobbyName);
-
-	void connectedToGame(const std::string &lobbyName, TurtlePieceColor playerColor);
+	void connectedToGame(const std::string &lobbyName, const std::string &lobbyId, TurtlePieceColor playerColor);
 	void requestedPieceMoveAccepted(bool moveAccepted);
 	void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
 	void declaredWinner(Winner winner);
@@ -56,8 +53,9 @@ private:
 
 	CheckersPlayerWindow* m_playerWindow;
 
-	std::string m_lobbyName;
 	std::string m_playerName;
+	std::string m_lobbyName;
+	std::string m_lobbyId;
 	TurtlePieceColor m_playerColor;
 
 	GameState m_gameState;
