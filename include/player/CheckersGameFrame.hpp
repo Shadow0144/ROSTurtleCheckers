@@ -9,6 +9,10 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QVector>
+#include <QStackedLayout>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPushButton>
 
 #include <memory>
 #include <string>
@@ -51,7 +55,15 @@ private:
 
 	void clearSelections();
 
+	void handleOfferRematchButton();
+	void handleEndGameButton();
+	void handleOfferDrawButton();
+	void handleForfitButton();
+
 	CheckersPlayerWindow* m_playerWindow;
+
+	QPushButton *m_offerDrawButton;
+	QPushButton *m_forfitButton;
 
 	std::string m_playerName;
 	std::string m_lobbyName;

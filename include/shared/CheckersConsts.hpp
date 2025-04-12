@@ -27,6 +27,13 @@ enum class TurtlePieceColor
     Red
 };
 
+enum class RematchType
+{
+    SameColors,
+    SwapColors,
+    RandomColors
+};
+
 // Constants
 constexpr size_t NUM_PIECES_PER_PLAYER = 1u;
 constexpr size_t NUM_PIECES = 2u * NUM_PIECES_PER_PLAYER;
@@ -63,8 +70,10 @@ constexpr int BOARD_TOP = HUD_HEIGHT;
 constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
 constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
 
+constexpr int BUTTON_DOCK_HEIGHT = 50;
+
 constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH);
-constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT;
+constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
 
 constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);
 constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);

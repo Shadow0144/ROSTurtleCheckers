@@ -4,6 +4,10 @@
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPointF>
+#include <QStackedLayout>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPushButton>
 
 #include <cstdlib>
 #include <ctime>
@@ -14,6 +18,7 @@
 #include <vector>
 #include <iostream>
 
+#include "shared/CheckersConsts.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 
 CheckersGameFrame::CheckersGameFrame(
@@ -35,6 +40,34 @@ CheckersGameFrame::CheckersGameFrame(
 	m_hud = std::make_shared<HUD>();
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 	m_hud->setGameState(GameState::Connecting);
+
+	std::string backgroundColorStyleString = "background-color: rgb(" +
+											 std::to_string(BG_RGB[0]) + ", " +
+											 std::to_string(BG_RGB[1]) + ", " +
+											 std::to_string(BG_RGB[2]) + ");";
+	std::string buttonDefaultStyleSheet = "color: rgb(" +
+									   std::to_string(TEXT_RGB[0]) + ", " +
+									   std::to_string(TEXT_RGB[1]) + ", " +
+									   std::to_string(TEXT_RGB[2]) + ");";
+
+	setStyleSheet(QString(backgroundColorStyleString.c_str()));
+
+	auto buttonLayout = new QHBoxLayout(this);
+	buttonLayout->setAlignment(Qt::AlignCenter);
+	buttonLayout->setContentsMargins(GRAVEYARD_WIDTH,
+		HUD_HEIGHT + BOARD_HEIGHT, GRAVEYARD_WIDTH, 0);
+
+	m_offerDrawButton = new QPushButton(this);
+	m_offerDrawButton->setText("Offer Draw");
+    m_offerDrawButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
+    connect(m_offerDrawButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawButton);
+    buttonLayout->addWidget(m_offerDrawButton);
+
+	m_forfitButton = new QPushButton(this);
+	m_forfitButton->setText("Forfit");
+    m_forfitButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
+    connect(m_forfitButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitButton);
+    buttonLayout->addWidget(m_forfitButton);
 }
 
 CheckersGameFrame::~CheckersGameFrame()
@@ -274,6 +307,22 @@ void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 	update();
 
 	QFrame::mousePressEvent(event); // Ensure base class event handling
+}
+
+void CheckersGameFrame::handleOfferRematchButton()
+{
+}
+
+void CheckersGameFrame::handleEndGameButton()
+{
+}
+
+void CheckersGameFrame::handleOfferDrawButton()
+{
+}
+
+void CheckersGameFrame::handleForfitButton()
+{
 }
 
 void CheckersGameFrame::paintEvent(QPaintEvent *event)

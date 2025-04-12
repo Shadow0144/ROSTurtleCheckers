@@ -29,7 +29,7 @@ std::vector<TileRenderPtr> TileRenderFactory::createTileRenders(
             }
             else // Red - The red player faces the board from the other direction, so mirror it
             {
-                tileCenterY = WINDOW_HEIGHT - (r * TILE_HEIGHT) - TILE_HALF_HEIGHT;
+                tileCenterY = WINDOW_HEIGHT - (r * TILE_HEIGHT) - TILE_HALF_HEIGHT - BUTTON_DOCK_HEIGHT;
             }
             // Rows and columns start at 1
             tileRenders.push_back(std::make_shared<TileRender>(
