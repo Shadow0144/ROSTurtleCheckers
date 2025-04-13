@@ -4,6 +4,7 @@
 //  NO LINT
 // #endif
 
+#include <QWidget>
 #include <QFrame>
 #include <QImage>
 #include <QPainter>
@@ -59,11 +60,24 @@ private:
 	void handleEndGameButton();
 	void handleOfferDrawButton();
 	void handleForfitButton();
+	void handleOfferDrawConfirmButton();
+	void handleOfferDrawCancelButton();
+	void handleForfitConfirmButton();
+	void handleForfitCancelButton();
 
 	CheckersPlayerWindow* m_playerWindow;
 
 	QPushButton *m_offerDrawButton;
 	QPushButton *m_forfitButton;
+
+	QWidget *m_offerDrawConfirmLayoutWidget;
+	QWidget *m_forfitConfirmLayoutWidget;
+	
+	QPushButton *m_offerDrawConfirmButton;
+	QPushButton *m_offerDrawCancelButton;
+	
+	QPushButton *m_forfitConfirmButton;
+	QPushButton *m_forfitCancelButton;
 
 	std::string m_playerName;
 	std::string m_lobbyName;

@@ -97,29 +97,35 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, Tur
     if (desiredColor == TurtlePieceColor::Black && m_blackPlayerName.empty())
     {
         m_blackPlayerName = playerName;
+        acceptedColor = TurtlePieceColor::Black;
     }
     else if (desiredColor == TurtlePieceColor::Red && m_redPlayerName.empty())
     {
         m_redPlayerName = playerName;
+        acceptedColor = TurtlePieceColor::Red;
     }
     else if (m_blackPlayerName.empty() && m_redPlayerName.empty())
     {
         if (std::rand() % 2 == 0)
         {
             m_blackPlayerName = playerName;
+            acceptedColor = TurtlePieceColor::Black;
         }
         else
         {
             m_redPlayerName = playerName;
+            acceptedColor = TurtlePieceColor::Red;
         }
     }
     else if (m_blackPlayerName.empty())
     {
         m_blackPlayerName = playerName;
+        acceptedColor = TurtlePieceColor::Black;
     }
     else if (m_redPlayerName.empty())
     {
         m_redPlayerName = playerName;
+        acceptedColor = TurtlePieceColor::Red;
     }
     else
     {
@@ -130,7 +136,7 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, Tur
     message.lobby_name = m_lobbyName;
     message.lobby_id = m_lobbyId;
     message.player_name = playerName;
-    message.player_color = static_cast<size_t>(TurtlePieceColor::Black);
+    message.player_color = static_cast<size_t>(acceptedColor);
     m_playerJoinedLobbyPublisher->publish(message);
 
     return acceptedColor;

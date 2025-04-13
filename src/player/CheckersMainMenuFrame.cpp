@@ -67,20 +67,20 @@ CheckersMainMenuFrame::CheckersMainMenuFrame(
     std::string textInvalidColorStyleString = textColorStyleString + "border: 1px solid red;";
     std::string selectedRadioButtonStyleString = textColorStyleString + "border: 1px solid aqua;";
     std::string unselectedRadioButtonStyleString = textColorStyleString + "border: 1px solid black;";
-    std::string unreadyButtonStyleString = textColorStyleString + "border: 1px solid white;";
-    std::string disabledReadyButtonStyleString = textDisabledColorStyleString + "border: 1px solid dimGray;";
+    std::string defaultButtonStyleString = textColorStyleString + "border: 1px solid white;";
+    std::string disabledButtonStyleString = textDisabledColorStyleString + "border: 1px solid dimGray;";
     std::string readyButtonStyleString = textColorStyleString + "border: 1px solid green;";
     setStyleSheet(QString(backgroundColorStyleString.c_str()));
     m_labelStyleSheet = textColorStyleString.c_str();
     m_openNameLabelStyleSheet = textDisabledColorStyleString.c_str();
     m_lineEditValidStyleSheet = textValidColorStyleString.c_str();
     m_lineEditInvalidStyleSheet = textInvalidColorStyleString.c_str();
-    m_buttonDefaultStyleSheet = textColorStyleString.c_str();
-    m_buttonDisabledStyleSheet = textDisabledColorStyleString.c_str();
+    m_buttonDefaultStyleSheet = defaultButtonStyleString.c_str();
+    m_buttonDisabledStyleSheet = disabledButtonStyleString.c_str();
     m_selectedRadioButtonStyleSheet = selectedRadioButtonStyleString.c_str();
     m_unselectedRadioButtonStyleSheet = unselectedRadioButtonStyleString.c_str();
-    m_unreadyButtonStyleSheet = unreadyButtonStyleString.c_str();
-    m_disabledReadyButtonStyleSheet = disabledReadyButtonStyleString.c_str();
+    m_unreadyButtonStyleSheet = defaultButtonStyleString.c_str();
+    m_disabledReadyButtonStyleSheet = disabledButtonStyleString.c_str();
     m_readyButtonStyleSheet = readyButtonStyleString.c_str();
 
     // Create and add the screens to the layout
@@ -238,7 +238,7 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
 
     auto lobbyListFrame = new QFrame();
     lobbyListFrame->setFrameStyle(QFrame::Box | QFrame::Plain);
-    lobbyListFrame->setStyleSheet("QFrame { border: 1px solid aqua; }");
+    lobbyListFrame->setStyleSheet("QFrame { border: 1px solid aqua; } QLabel { border: 0px; }");
 
     auto lobbyListLayout = new QVBoxLayout(lobbyListFrame);
 
@@ -533,23 +533,23 @@ void CheckersMainMenuFrame::playerJoinedLobby(const std::string &playerName, Tur
 
     switch (playerColor)
     {
-        case TurtlePieceColor::Black:
-        {
-            m_blackPlayerName = playerName;
-            m_blackPlayerNameLabel->setText(m_blackPlayerName.c_str());
-        }
-        break;
-        case TurtlePieceColor::Red:
-        {
-            m_redPlayerName = playerName;
-            m_redPlayerNameLabel->setText(m_redPlayerName.c_str());
-        }
-        break;
-        case TurtlePieceColor::None:
-        {
-            // Do nothing
-        }
-        break;
+    case TurtlePieceColor::Black:
+    {
+        m_blackPlayerName = playerName;
+        m_blackPlayerNameLabel->setText(m_blackPlayerName.c_str());
+    }
+    break;
+    case TurtlePieceColor::Red:
+    {
+        m_redPlayerName = playerName;
+        m_redPlayerNameLabel->setText(m_redPlayerName.c_str());
+    }
+    break;
+    case TurtlePieceColor::None:
+    {
+        // Do nothing
+    }
+    break;
     }
 }
 

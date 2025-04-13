@@ -1,5 +1,6 @@
 #include "player/CheckersGameFrame.hpp"
 
+#include <QWidget>
 #include <QFrame>
 #include <QMouseEvent>
 #include <QPaintEvent>
@@ -68,6 +69,44 @@ CheckersGameFrame::CheckersGameFrame(
     m_forfitButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
     connect(m_forfitButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitButton);
     buttonLayout->addWidget(m_forfitButton);
+
+	// Offer draw confirm dialog
+
+	m_offerDrawConfirmLayoutWidget = new QWidget(this);
+	auto offerDrawConfirmLayout = new QHBoxLayout(m_offerDrawConfirmLayoutWidget);
+
+	m_offerDrawConfirmButton = new QPushButton(this);
+	m_offerDrawConfirmButton->setText("Offer Draw");
+    m_offerDrawConfirmButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
+    connect(m_offerDrawConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawConfirmButton);
+    offerDrawConfirmLayout->addWidget(m_offerDrawConfirmButton);
+
+	m_offerDrawCancelButton = new QPushButton(this);
+	m_offerDrawCancelButton->setText("Cancel");
+    m_offerDrawCancelButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
+    connect(m_offerDrawCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawCancelButton);
+    offerDrawConfirmLayout->addWidget(m_offerDrawCancelButton);
+
+	m_offerDrawConfirmLayoutWidget->hide();
+
+	// Forfit confirm dialog
+
+	m_forfitConfirmLayoutWidget = new QWidget(this);
+	auto forfitConfirmLayout = new QHBoxLayout(m_forfitConfirmLayoutWidget);
+
+	m_forfitConfirmButton = new QPushButton(this);
+	m_forfitConfirmButton->setText("Forfit");
+    m_forfitConfirmButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
+    connect(m_forfitConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitConfirmButton);
+    forfitConfirmLayout->addWidget(m_forfitConfirmButton);
+
+	m_forfitCancelButton = new QPushButton(this);
+	m_forfitCancelButton->setText("Cancel");
+    m_forfitCancelButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
+    connect(m_forfitCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitCancelButton);
+    forfitConfirmLayout->addWidget(m_forfitCancelButton);
+
+	m_forfitConfirmLayoutWidget->hide();
 }
 
 CheckersGameFrame::~CheckersGameFrame()
@@ -323,6 +362,26 @@ void CheckersGameFrame::handleOfferDrawButton()
 
 void CheckersGameFrame::handleForfitButton()
 {
+}
+
+void CheckersGameFrame::handleOfferDrawConfirmButton()
+{
+
+}
+
+void CheckersGameFrame::handleOfferDrawCancelButton()
+{
+
+}
+
+void CheckersGameFrame::handleForfitConfirmButton()
+{
+
+}
+
+void CheckersGameFrame::handleForfitCancelButton()
+{
+
 }
 
 void CheckersGameFrame::paintEvent(QPaintEvent *event)
