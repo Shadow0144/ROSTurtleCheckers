@@ -146,7 +146,7 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
 
 void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message)
 {
-    auto lobbyName = message->lobby_name;
+    auto lobbyName = message->lobby_name + "#" + message->lobby_id;
     if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
     {
         auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];

@@ -87,6 +87,10 @@ endif()
 install(DIRECTORY img
   DESTINATION share/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.png")
+
+  install(DIRECTORY styles
+    DESTINATION share/${PROJECT_NAME}
+    FILES_MATCHING PATTERN "*.qss")
   
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})

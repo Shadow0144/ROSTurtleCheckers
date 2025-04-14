@@ -5,6 +5,7 @@
 // #endif
 
 #include <rclcpp/rclcpp.hpp>
+#include "ament_index_cpp/get_package_share_directory.hpp" // For getting the styles directory
 
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
@@ -21,6 +22,8 @@
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
 #include <QApplication>
+#include <QFile>
+#include <QString>
 #include <QTimer>
 
 #include <algorithm>
@@ -39,6 +42,14 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
     m_playerName = "";
     m_lobbyName = "";
     m_lobbyId = "";
+
+    QString stylesPath = (ament_index_cpp::get_package_share_directory("turtle_checkers") +
+                          "/styles/checkers_style.qss")
+                             .c_str();
+    QFile styleFile(stylesPath);
+    styleFile.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(styleFile.readAll());
+    setStyleSheet(styleSheet);
 
     m_updateTimer = new QTimer(this);
     m_updateTimer->setInterval(16);

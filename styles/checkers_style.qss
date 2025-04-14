@@ -1,0 +1,23 @@
+QWidget { background-color: black; }
+
+QLabel { color: white; }
+QLabel:disabled { color: dimGray; }
+
+QPushButton { color: white; border: 1px solid white; }
+QPushButton:disabled { color: dimGray; border: 1px solid dimGray; }
+
+QLineEdit[valid="false"] { color: white; border: 1px solid red; }
+QLineEdit[valid="true"] { color: white; border: 1px solid aqua; }
+
+QCheckBox { color: white; border: 1px solid white; }
+QCheckBox:disabled { color: gray; border: 1px solid black; } 
+QCheckBox:checked { color: lime; border: 1px solid lime; }
+QCheckBox:disabled:checked { color: green; border: 1px solid green; }
+
+QRadioButton { color: white; }
+QRadioButton::indicator { border-radius: 6px; color: white; border: 2px solid white; }
+QRadioButton::indicator:checked { background-color: aqua; }
+QRadioButton:disabled { color: gray; } 
+QRadioButton::indicator:disabled { color: gray; }
+
+QFrame#LobbyListFrame { border: 1px solid aqua; }

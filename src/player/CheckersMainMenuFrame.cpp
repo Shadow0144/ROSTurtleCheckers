@@ -17,6 +17,7 @@
 #include <QCheckBox>
 #include <QIcon>
 #include <QPixmap>
+#include <QStyle>
 
 #include <cstdlib>
 #include <ctime>
@@ -50,39 +51,6 @@ CheckersMainMenuFrame::CheckersMainMenuFrame(
 
     m_windowLayout = new QStackedLayout(this);
 
-    // Create the style sheets
-    std::string backgroundColorStyleString = "background-color: rgb(" +
-                                             std::to_string(BG_RGB[0]) + ", " +
-                                             std::to_string(BG_RGB[1]) + ", " +
-                                             std::to_string(BG_RGB[2]) + ");";
-    std::string textColorStyleString = "color: rgb(" +
-                                       std::to_string(TEXT_RGB[0]) + ", " +
-                                       std::to_string(TEXT_RGB[1]) + ", " +
-                                       std::to_string(TEXT_RGB[2]) + ");";
-    std::string textDisabledColorStyleString = "color: rgb(" +
-                                               std::to_string(TEXT_DISABLED_RGB[0]) + ", " +
-                                               std::to_string(TEXT_DISABLED_RGB[1]) + ", " +
-                                               std::to_string(TEXT_DISABLED_RGB[2]) + ");";
-    std::string textValidColorStyleString = textColorStyleString + "border: 1px solid aqua;";
-    std::string textInvalidColorStyleString = textColorStyleString + "border: 1px solid red;";
-    std::string selectedRadioButtonStyleString = textColorStyleString + "border: 1px solid aqua;";
-    std::string unselectedRadioButtonStyleString = textColorStyleString + "border: 1px solid black;";
-    std::string defaultButtonStyleString = textColorStyleString + "border: 1px solid white;";
-    std::string disabledButtonStyleString = textDisabledColorStyleString + "border: 1px solid dimGray;";
-    std::string readyButtonStyleString = textColorStyleString + "border: 1px solid green;";
-    setStyleSheet(QString(backgroundColorStyleString.c_str()));
-    m_labelStyleSheet = textColorStyleString.c_str();
-    m_openNameLabelStyleSheet = textDisabledColorStyleString.c_str();
-    m_lineEditValidStyleSheet = textValidColorStyleString.c_str();
-    m_lineEditInvalidStyleSheet = textInvalidColorStyleString.c_str();
-    m_buttonDefaultStyleSheet = defaultButtonStyleString.c_str();
-    m_buttonDisabledStyleSheet = disabledButtonStyleString.c_str();
-    m_selectedRadioButtonStyleSheet = selectedRadioButtonStyleString.c_str();
-    m_unselectedRadioButtonStyleSheet = unselectedRadioButtonStyleString.c_str();
-    m_unreadyButtonStyleSheet = defaultButtonStyleString.c_str();
-    m_disabledReadyButtonStyleSheet = disabledButtonStyleString.c_str();
-    m_readyButtonStyleSheet = readyButtonStyleString.c_str();
-
     // Create and add the screens to the layout
     m_windowLayout->insertWidget(MAIN_MENU_INDEX, createMainMenuScreen());
     m_windowLayout->insertWidget(CREATE_LOBBY_INDEX, createCreateLobbyScreen());
@@ -105,18 +73,16 @@ QWidget *CheckersMainMenuFrame::createMainMenuScreen()
     auto titleFont = titleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
     titleLabel->setFont(titleFont);
-    titleLabel->setStyleSheet(m_labelStyleSheet);
     mainLayout->addWidget(titleLabel);
 
     auto playerNameLabel = new QLabel("Player name");
-    playerNameLabel->setStyleSheet(m_labelStyleSheet);
     mainLayout->addWidget(playerNameLabel);
 
     m_playerNameLineEdit = new QLineEdit();
     auto playerNameValidator = new QRegularExpressionValidator(
-        QRegularExpression("[a-zA-Z0-9_]+"));
+        QRegularExpression("^[a-zA-Z0-9_]+"));
     m_playerNameLineEdit->setValidator(playerNameValidator);
-    m_playerNameLineEdit->setStyleSheet(m_lineEditInvalidStyleSheet);
+    m_playerNameLineEdit->setProperty("valid", false);
     connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &CheckersMainMenuFrame::validatePlayerNameText);
     mainLayout->addWidget(m_playerNameLineEdit);
 
@@ -125,20 +91,17 @@ QWidget *CheckersMainMenuFrame::createMainMenuScreen()
     std::string createLobbyString = "Create Lobby";
     m_createLobbyButton = new QPushButton(createLobbyString.c_str());
     m_createLobbyButton->setEnabled(false);
-    m_createLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
     connect(m_createLobbyButton, &QPushButton::released, this, &CheckersMainMenuFrame::handleCreateLobbyButton);
     buttonLayout->addWidget(m_createLobbyButton);
 
     std::string joinLobbyString = "Join Lobby";
     m_joinLobbyButton = new QPushButton(joinLobbyString.c_str());
     m_joinLobbyButton->setEnabled(false);
-    m_joinLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
     connect(m_joinLobbyButton, &QPushButton::released, this, &CheckersMainMenuFrame::handleJoinLobbyButton);
     buttonLayout->addWidget(m_joinLobbyButton);
 
     std::string quitString = "Quit";
     auto quitButton = new QPushButton(quitString.c_str());
-    quitButton->setStyleSheet(m_buttonDefaultStyleSheet);
     connect(quitButton, &QPushButton::released, this, &CheckersMainMenuFrame::handleQuitButton);
     buttonLayout->addWidget(quitButton);
 
@@ -157,18 +120,16 @@ QWidget *CheckersMainMenuFrame::createCreateLobbyScreen()
     auto titleFont = createLobbyTitleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
     createLobbyTitleLabel->setFont(titleFont);
-    createLobbyTitleLabel->setStyleSheet(m_labelStyleSheet);
     createLobbyLayout->addWidget(createLobbyTitleLabel);
 
     auto lobbyNameLabel = new QLabel("Lobby name");
-    lobbyNameLabel->setStyleSheet(m_labelStyleSheet);
     createLobbyLayout->addWidget(lobbyNameLabel);
 
     m_lobbyNameLineEdit = new QLineEdit();
     auto lobbyNameValidator = new QRegularExpressionValidator(
-        QRegularExpression("[a-zA-Z0-9_]+"));
+        QRegularExpression("^[a-zA-Z][a-zA-Z0-9_]*"));
     m_lobbyNameLineEdit->setValidator(lobbyNameValidator);
-    m_lobbyNameLineEdit->setStyleSheet(m_lineEditInvalidStyleSheet);
+    m_lobbyNameLineEdit->setProperty("valid", false);
     connect(m_lobbyNameLineEdit, &QLineEdit::textChanged, this, &CheckersMainMenuFrame::validatelobbyNameText);
     createLobbyLayout->addWidget(m_lobbyNameLineEdit);
 
@@ -182,10 +143,6 @@ QWidget *CheckersMainMenuFrame::createCreateLobbyScreen()
     m_createLobbyBlackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
     m_createLobbyRandomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
     m_createLobbyRedRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
-
-    m_createLobbyBlackRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-    m_createLobbyRandomRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-    m_createLobbyRedRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
 
     connect(m_createLobbyBlackRadioButton, &QRadioButton::toggled, this, &CheckersMainMenuFrame::onBlackTurtleToggled);
     connect(m_createLobbyRandomRadioButton, &QRadioButton::toggled, this, &CheckersMainMenuFrame::onRandomTurtleToggled);
@@ -202,14 +159,12 @@ QWidget *CheckersMainMenuFrame::createCreateLobbyScreen()
     std::string commitCreateLobbyString = "Create Lobby";
     m_commitCreateLobbyButton = new QPushButton(commitCreateLobbyString.c_str());
     m_commitCreateLobbyButton->setEnabled(false);
-    m_commitCreateLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
     connect(m_commitCreateLobbyButton, &QPushButton::released, this,
             &CheckersMainMenuFrame::handleCommitCreateLobbyButton);
     createLobbyButtonLayout->addWidget(m_commitCreateLobbyButton);
 
     std::string cancelCreateLobbyString = "Cancel";
     auto cancelCreateLobbyButton = new QPushButton(cancelCreateLobbyString.c_str());
-    cancelCreateLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
     connect(cancelCreateLobbyButton, &QPushButton::released, this,
             &CheckersMainMenuFrame::handleCancelCreateLobbyButton);
     createLobbyButtonLayout->addWidget(cancelCreateLobbyButton);
@@ -229,16 +184,14 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
     auto titleFont = joinLobbyTitleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
     joinLobbyTitleLabel->setFont(titleFont);
-    joinLobbyTitleLabel->setStyleSheet(m_labelStyleSheet);
     joinLobbyLayout->addWidget(joinLobbyTitleLabel);
 
     auto lobbiesLabel = new QLabel("Lobbies:");
-    joinLobbyTitleLabel->setStyleSheet(m_labelStyleSheet);
     joinLobbyLayout->addWidget(lobbiesLabel);
 
     auto lobbyListFrame = new QFrame();
     lobbyListFrame->setFrameStyle(QFrame::Box | QFrame::Plain);
-    lobbyListFrame->setStyleSheet("QFrame { border: 1px solid aqua; } QLabel { border: 0px; }");
+    lobbyListFrame->setObjectName("LobbyListFrame");
 
     auto lobbyListLayout = new QVBoxLayout(lobbyListFrame);
 
@@ -255,18 +208,19 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
         auto lobbyNameLayout = new QHBoxLayout();
 
         auto lobbyNameLabel = new QLabel(m_lobbyNames[i].c_str());
-        lobbyNameLabel->setStyleSheet(m_labelStyleSheet);
         lobbyNameLayout->addWidget(lobbyNameLabel);
 
         std::string lobbyIdWithHash = "#" + m_lobbyIds[i];
         auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
-        lobbyIdLabel->setStyleSheet(m_openNameLabelStyleSheet);
         lobbyNameLayout->addWidget(lobbyIdLabel);
 
         lobbyLayout->addLayout(lobbyNameLayout);
 
         auto blackTurtleIconLabel = new QLabel();
-        blackTurtleIconLabel->setPixmap(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black)));
+        auto blackTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black));
+        auto scaledBlackTurtleIcon = blackTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
         lobbyLayout->addWidget(blackTurtleIconLabel);
 
         std::string openString = "Open";
@@ -274,15 +228,18 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
         bool redPlayerJoined = !m_redPlayerNames[i].empty();
 
         auto blackPlayerNameLabel = new QLabel(blackPlayerJoined ? m_blackPlayerNames[i].c_str() : openString.c_str());
-        blackPlayerNameLabel->setStyleSheet(blackPlayerJoined ? m_labelStyleSheet : m_openNameLabelStyleSheet);
+        blackPlayerNameLabel->setEnabled(blackPlayerJoined);
         lobbyLayout->addWidget(blackPlayerNameLabel);
 
         auto redTurtleIconLabel = new QLabel();
-        redTurtleIconLabel->setPixmap(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red)));
+        auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
+        auto scaledRedTurtleIcon = redTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                        Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
         lobbyLayout->addWidget(redTurtleIconLabel);
 
         auto redPlayerNameLabel = new QLabel(redPlayerJoined ? m_redPlayerNames[i].c_str() : openString.c_str());
-        redPlayerNameLabel->setStyleSheet(redPlayerJoined ? m_labelStyleSheet : m_openNameLabelStyleSheet);
+        redPlayerNameLabel->setEnabled(redPlayerJoined);
         lobbyLayout->addWidget(redPlayerNameLabel);
 
         std::string joinLobbyString = "Join";
@@ -290,13 +247,11 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
         if (!blackPlayerJoined || !redPlayerJoined)
         {
             joinLobbyButton->setEnabled(true);
-            joinLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
         }
         else
         {
             // Lobby is full
             joinLobbyButton->setEnabled(false);
-            joinLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
         }
         connect(joinLobbyButton, &QPushButton::released, this,
                 [i, this]()
@@ -318,10 +273,6 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
     m_joinLobbyBlackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
     m_joinLobbyRandomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
     m_joinLobbyRedRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
-
-    m_joinLobbyBlackRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-    m_joinLobbyRandomRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-    m_joinLobbyRedRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
 
     switch (m_playerDesiredColor)
     {
@@ -356,14 +307,12 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
 
     std::string refreshjoinLobbyString = "Refresh";
     auto refreshJoinLobbyButton = new QPushButton(refreshjoinLobbyString.c_str());
-    refreshJoinLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
     connect(refreshJoinLobbyButton, &QPushButton::released, this,
             &CheckersMainMenuFrame::handleRefreshJoinLobbyButton);
     joinLobbyButtonLayout->addWidget(refreshJoinLobbyButton);
 
     std::string canceljoinLobbyString = "Cancel";
     auto cancelJoinLobbyButton = new QPushButton(canceljoinLobbyString.c_str());
-    cancelJoinLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
     connect(cancelJoinLobbyButton, &QPushButton::released, this,
             &CheckersMainMenuFrame::handleCancelJoinLobbyButton);
     joinLobbyButtonLayout->addWidget(cancelJoinLobbyButton);
@@ -383,18 +332,15 @@ QWidget *CheckersMainMenuFrame::createInLobbyScreen()
     auto titleFont = inLobbyTitleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
     inLobbyTitleLabel->setFont(titleFont);
-    inLobbyTitleLabel->setStyleSheet(m_labelStyleSheet);
     inLobbyLayout->addWidget(inLobbyTitleLabel);
 
     auto lobbyNameLayout = new QHBoxLayout();
 
     auto lobbyNameLabel = new QLabel(m_lobbyName.c_str());
-    lobbyNameLabel->setStyleSheet(m_labelStyleSheet);
     lobbyNameLayout->addWidget(lobbyNameLabel);
 
     std::string lobbyIdWithHash = "#" + m_lobbyId;
     auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
-    lobbyIdLabel->setStyleSheet(m_openNameLabelStyleSheet);
     lobbyNameLayout->addWidget(lobbyIdLabel);
 
     inLobbyLayout->addLayout(lobbyNameLayout);
@@ -407,40 +353,42 @@ QWidget *CheckersMainMenuFrame::createInLobbyScreen()
     blackPlayerLayout->addWidget(m_blackReadyInLobbyCheckBox);
 
     auto blackTurtleIconLabel = new QLabel();
-    blackTurtleIconLabel->setPixmap(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black)));
+    auto blackTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black));
+    auto scaledBlackTurtleIcon = blackTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                        Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
     blackPlayerLayout->addWidget(blackTurtleIconLabel);
 
-    m_blackPlayerNameLabel = new QLabel(m_blackPlayerName.c_str());
+    std::string openString = "Open";
+    bool blackPlayerJoined = !m_blackPlayerName.empty();
+    bool redPlayerJoined = !m_redPlayerName.empty();
+
+    m_blackPlayerNameLabel = new QLabel(blackPlayerJoined ? m_blackPlayerName.c_str() : openString.c_str());
+    m_blackPlayerNameLabel->setEnabled(blackPlayerJoined);
     blackPlayerLayout->addWidget(m_blackPlayerNameLabel);
 
     if (m_playerColor == TurtlePieceColor::Black)
     {
-        m_blackPlayerNameLabel->setStyleSheet(m_labelStyleSheet);
         m_blackReadyInLobbyCheckBox->setEnabled(true);
         if (m_blackPlayerReady)
         {
             m_blackReadyInLobbyCheckBox->setCheckState(Qt::Checked);
-            m_blackReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
         }
         else
         {
             m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
-            m_blackReadyInLobbyCheckBox->setStyleSheet(m_unreadyButtonStyleSheet);
         }
     }
     else
     {
-        m_blackPlayerNameLabel->setStyleSheet(m_openNameLabelStyleSheet);
         m_blackReadyInLobbyCheckBox->setEnabled(false);
         if (m_blackPlayerReady)
         {
             m_blackReadyInLobbyCheckBox->setCheckState(Qt::Checked);
-            m_blackReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
         }
         else
         {
             m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
-            m_blackReadyInLobbyCheckBox->setStyleSheet(m_disabledReadyButtonStyleSheet);
         }
     }
     connect(m_blackReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
@@ -454,40 +402,38 @@ QWidget *CheckersMainMenuFrame::createInLobbyScreen()
     redPlayerLayout->addWidget(m_redReadyInLobbyCheckBox);
 
     auto redTurtleIconLabel = new QLabel();
-    redTurtleIconLabel->setPixmap(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red)));
+    auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
+    auto scaledRedTurtleIcon = redTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                    Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
     redPlayerLayout->addWidget(redTurtleIconLabel);
 
-    m_redPlayerNameLabel = new QLabel(m_redPlayerName.c_str());
+    m_redPlayerNameLabel = new QLabel(redPlayerJoined ? m_redPlayerName.c_str() : openString.c_str());
+    m_redPlayerNameLabel->setEnabled(redPlayerJoined);
     redPlayerLayout->addWidget(m_redPlayerNameLabel);
 
     if (m_playerColor == TurtlePieceColor::Red)
     {
-        m_redPlayerNameLabel->setStyleSheet(m_labelStyleSheet);
         m_redReadyInLobbyCheckBox->setEnabled(true);
         if (m_redPlayerReady)
         {
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Checked);
-            m_redReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
         }
         else
         {
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
-            m_redReadyInLobbyCheckBox->setStyleSheet(m_unreadyButtonStyleSheet);
         }
     }
     else
     {
-        m_redPlayerNameLabel->setStyleSheet(m_openNameLabelStyleSheet);
         m_redReadyInLobbyCheckBox->setEnabled(false);
         if (m_redPlayerReady)
         {
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Checked);
-            m_redReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
         }
         else
         {
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
-            m_redReadyInLobbyCheckBox->setStyleSheet(m_disabledReadyButtonStyleSheet);
         }
     }
     connect(m_redReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
@@ -499,7 +445,6 @@ QWidget *CheckersMainMenuFrame::createInLobbyScreen()
 
     std::string leaveLobbyInLobbyString = "Leave Lobby";
     auto leaveLobbyInLobbyButton = new QPushButton(leaveLobbyInLobbyString.c_str());
-    leaveLobbyInLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
     connect(leaveLobbyInLobbyButton, &QPushButton::released, this,
             &CheckersMainMenuFrame::handleLeaveLobbyButton);
     inLobbyButtonLayout->addWidget(leaveLobbyInLobbyButton);
@@ -537,12 +482,14 @@ void CheckersMainMenuFrame::playerJoinedLobby(const std::string &playerName, Tur
     {
         m_blackPlayerName = playerName;
         m_blackPlayerNameLabel->setText(m_blackPlayerName.c_str());
+        m_blackPlayerNameLabel->setEnabled(true);
     }
     break;
     case TurtlePieceColor::Red:
     {
         m_redPlayerName = playerName;
         m_redPlayerNameLabel->setText(m_redPlayerName.c_str());
+        m_redPlayerNameLabel->setEnabled(true);
     }
     break;
     case TurtlePieceColor::None:
@@ -562,13 +509,15 @@ void CheckersMainMenuFrame::playerLeftLobby(const std::string &playerName)
 
     if (playerName == m_blackPlayerName)
     {
-        m_blackPlayerNameLabel->clear();
+        m_blackPlayerNameLabel->setText("Open");
+        m_blackPlayerNameLabel->setEnabled(false);
         m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         m_blackPlayerName.clear();
     }
     else if (playerName == m_redPlayerName)
     {
-        m_redPlayerNameLabel->clear();
+        m_redPlayerNameLabel->setText("Open");
+        m_redPlayerNameLabel->setEnabled(false);
         m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         m_redPlayerName.clear();
     }
@@ -600,26 +549,26 @@ void CheckersMainMenuFrame::validatePlayerNameText(const QString &playerName)
     QValidator::State state = m_playerNameLineEdit->validator()->validate(playerNameCopy, pos);
     if (!playerName.isEmpty() && state == QValidator::Acceptable)
     {
-        m_playerNameLineEdit->setStyleSheet(m_lineEditValidStyleSheet);
+        m_playerNameLineEdit->setProperty("valid", true);
         m_createLobbyButton->setEnabled(true);
-        m_createLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
         m_joinLobbyButton->setEnabled(true);
-        m_joinLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
         m_playerName = playerName.toStdString();
     }
     else if (playerName.isEmpty() || state == QValidator::Invalid)
     {
-        m_playerNameLineEdit->setStyleSheet(m_lineEditInvalidStyleSheet);
+        m_playerNameLineEdit->setProperty("valid", false);
         m_createLobbyButton->setEnabled(false);
-        m_createLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
         m_joinLobbyButton->setEnabled(false);
-        m_joinLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
         m_playerName = "";
     }
     else // Intermediate
     {
         // Do nothing
     }
+    // Update the style
+    m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
+    m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
+    m_playerNameLineEdit->update();
 }
 
 void CheckersMainMenuFrame::validatelobbyNameText(const QString &lobbyName)
@@ -629,22 +578,24 @@ void CheckersMainMenuFrame::validatelobbyNameText(const QString &lobbyName)
     QValidator::State state = m_lobbyNameLineEdit->validator()->validate(lobbyNameCopy, pos);
     if (!lobbyName.isEmpty() && state == QValidator::Acceptable)
     {
-        m_lobbyNameLineEdit->setStyleSheet(m_lineEditValidStyleSheet);
+        m_lobbyNameLineEdit->setProperty("valid", true);
         m_commitCreateLobbyButton->setEnabled(true);
-        m_commitCreateLobbyButton->setStyleSheet(m_buttonDefaultStyleSheet);
         m_lobbyName = lobbyName.toStdString();
     }
     else if (lobbyName.isEmpty() || state == QValidator::Invalid)
     {
-        m_lobbyNameLineEdit->setStyleSheet(m_lineEditInvalidStyleSheet);
+        m_lobbyNameLineEdit->setProperty("valid", false);
         m_commitCreateLobbyButton->setEnabled(false);
-        m_commitCreateLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
         m_lobbyName = "";
     }
     else // Intermediate
     {
         // Do nothing
     }
+    // Update the style
+    m_lobbyNameLineEdit->style()->unpolish(m_lobbyNameLineEdit);
+    m_lobbyNameLineEdit->style()->polish(m_lobbyNameLineEdit);
+    m_lobbyNameLineEdit->update();
 }
 
 void CheckersMainMenuFrame::displayLobbyList(const std::vector<std::string> &lobbyNames,
@@ -673,9 +624,11 @@ void CheckersMainMenuFrame::handleCancelCreateLobbyButton()
 {
     m_playerDesiredColor = TurtlePieceColor::None;
     m_lobbyNameLineEdit->clear();
-    m_lobbyNameLineEdit->setStyleSheet(m_lineEditInvalidStyleSheet);
+    m_lobbyNameLineEdit->setProperty("valid", false);
+    m_lobbyNameLineEdit->style()->unpolish(m_lobbyNameLineEdit);
+    m_lobbyNameLineEdit->style()->polish(m_lobbyNameLineEdit);
+    m_lobbyNameLineEdit->update();
     m_commitCreateLobbyButton->setEnabled(false);
-    m_commitCreateLobbyButton->setStyleSheet(m_buttonDisabledStyleSheet);
     m_playerNameLineEdit->setText(m_playerName.c_str());
     m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
 }
@@ -730,21 +683,6 @@ void CheckersMainMenuFrame::handleBlackReadyButtonToggled(int state)
     {
         m_playerWindow->setReady((state == static_cast<int>(Qt::CheckState::Checked)));
     }
-    if (m_blackPlayerReady)
-    {
-        m_blackReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
-    }
-    else
-    {
-        if (m_playerColor == TurtlePieceColor::Black)
-        {
-            m_blackReadyInLobbyCheckBox->setStyleSheet(m_unreadyButtonStyleSheet);
-        }
-        else
-        {
-            m_blackReadyInLobbyCheckBox->setStyleSheet(m_disabledReadyButtonStyleSheet);
-        }
-    }
 }
 
 void CheckersMainMenuFrame::handleRedReadyButtonToggled(int state)
@@ -753,21 +691,6 @@ void CheckersMainMenuFrame::handleRedReadyButtonToggled(int state)
     if (m_playerColor == TurtlePieceColor::Red)
     {
         m_playerWindow->setReady((state == static_cast<int>(Qt::CheckState::Checked)));
-    }
-    if (m_redPlayerReady)
-    {
-        m_redReadyInLobbyCheckBox->setStyleSheet(m_readyButtonStyleSheet);
-    }
-    else
-    {
-        if (m_playerColor == TurtlePieceColor::Red)
-        {
-            m_redReadyInLobbyCheckBox->setStyleSheet(m_unreadyButtonStyleSheet);
-        }
-        else
-        {
-            m_redReadyInLobbyCheckBox->setStyleSheet(m_disabledReadyButtonStyleSheet);
-        }
     }
 }
 
@@ -781,25 +704,6 @@ void CheckersMainMenuFrame::onBlackTurtleToggled(bool checked)
     if (checked)
     {
         m_playerDesiredColor = TurtlePieceColor::Black;
-        if (m_createLobbyBlackRadioButton)
-        {
-            m_createLobbyBlackRadioButton->setStyleSheet(m_selectedRadioButtonStyleSheet);
-        }
-        if (m_joinLobbyBlackRadioButton)
-        {
-            m_joinLobbyBlackRadioButton->setStyleSheet(m_selectedRadioButtonStyleSheet);
-        }
-    }
-    else
-    {
-        if (m_createLobbyBlackRadioButton)
-        {
-            m_createLobbyBlackRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-        }
-        if (m_joinLobbyBlackRadioButton)
-        {
-            m_joinLobbyBlackRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-        }
     }
 }
 
@@ -808,25 +712,6 @@ void CheckersMainMenuFrame::onRandomTurtleToggled(bool checked)
     if (checked)
     {
         m_playerDesiredColor = TurtlePieceColor::None;
-        if (m_createLobbyRandomRadioButton)
-        {
-            m_createLobbyRandomRadioButton->setStyleSheet(m_selectedRadioButtonStyleSheet);
-        }
-        if (m_joinLobbyRandomRadioButton)
-        {
-            m_joinLobbyRandomRadioButton->setStyleSheet(m_selectedRadioButtonStyleSheet);
-        }
-    }
-    else
-    {
-        if (m_createLobbyRandomRadioButton)
-        {
-            m_createLobbyRandomRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-        }
-        if (m_joinLobbyRandomRadioButton)
-        {
-            m_joinLobbyRandomRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-        }
     }
 }
 
@@ -835,25 +720,6 @@ void CheckersMainMenuFrame::onRedTurtleToggled(bool checked)
     if (checked)
     {
         m_playerDesiredColor = TurtlePieceColor::Red;
-        if (m_createLobbyRedRadioButton)
-        {
-            m_createLobbyRedRadioButton->setStyleSheet(m_selectedRadioButtonStyleSheet);
-        }
-        if (m_joinLobbyRedRadioButton)
-        {
-            m_joinLobbyRedRadioButton->setStyleSheet(m_selectedRadioButtonStyleSheet);
-        }
-    }
-    else
-    {
-        if (m_createLobbyRedRadioButton)
-        {
-            m_createLobbyRedRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-        }
-        if (m_joinLobbyRedRadioButton)
-        {
-            m_joinLobbyRedRadioButton->setStyleSheet(m_unselectedRadioButtonStyleSheet);
-        }
     }
 }
 

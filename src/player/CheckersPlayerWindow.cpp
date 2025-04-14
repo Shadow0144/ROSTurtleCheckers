@@ -2,6 +2,8 @@
 
 #include <QMainWindow>
 
+#include <iostream>
+
 #include "shared/CheckersConsts.hpp"
 #include "player/CheckersPlayerNode.hpp"
 #include "player/CheckersMainMenuFrame.hpp"

@@ -80,6 +80,8 @@ constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);
 
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
+constexpr int ICON_HEIGHT_WIDTH = 20;
+
 constexpr int BG_RGB[3] = {0u, 0u, 0u};
 constexpr int TEXT_RGB[3] = {255u, 255u, 255u};
 constexpr int TEXT_DISABLED_RGB[3] = {100u, 100u, 100u};

@@ -112,22 +112,6 @@ private:
 	QLabel *m_blackPlayerNameLabel;
 	QLabel *m_redPlayerNameLabel;
 
-	QString m_labelStyleSheet;
-	QString m_openNameLabelStyleSheet;
-
-	QString m_lineEditValidStyleSheet;
-	QString m_lineEditInvalidStyleSheet;
-
-	QString m_buttonDefaultStyleSheet;
-	QString m_buttonDisabledStyleSheet;
-
-	QString m_selectedRadioButtonStyleSheet;
-	QString m_unselectedRadioButtonStyleSheet;
-
-	QString m_unreadyButtonStyleSheet;
-	QString m_disabledReadyButtonStyleSheet;
-	QString m_readyButtonStyleSheet;
-
 	std::string m_playerName;
 	std::string m_lobbyName;
 	std::string m_lobbyId;
