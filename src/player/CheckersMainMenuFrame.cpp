@@ -7,6 +7,7 @@
 #include <QStackedLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QScrollArea>
 #include <QLabel>
 #include <QString>
 #include <QRegularExpression>
@@ -17,6 +18,7 @@
 #include <QCheckBox>
 #include <QIcon>
 #include <QPixmap>
+#include <QSpacerItem>
 #include <QStyle>
 
 #include <cstdlib>
@@ -79,8 +81,8 @@ QWidget *CheckersMainMenuFrame::createMainMenuScreen()
     mainLayout->addWidget(playerNameLabel);
 
     m_playerNameLineEdit = new QLineEdit();
-    auto playerNameValidator = new QRegularExpressionValidator(
-        QRegularExpression("^[a-zA-Z0-9_]+"));
+    std::string playerNameRegex = "^[a-zA-Z0-9_]{1," + std::to_string(MAX_CHARS_NAME) + "}$";
+    auto playerNameValidator = new QRegularExpressionValidator(QRegularExpression(playerNameRegex.c_str()));
     m_playerNameLineEdit->setValidator(playerNameValidator);
     m_playerNameLineEdit->setProperty("valid", false);
     connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &CheckersMainMenuFrame::validatePlayerNameText);
@@ -126,8 +128,8 @@ QWidget *CheckersMainMenuFrame::createCreateLobbyScreen()
     createLobbyLayout->addWidget(lobbyNameLabel);
 
     m_lobbyNameLineEdit = new QLineEdit();
-    auto lobbyNameValidator = new QRegularExpressionValidator(
-        QRegularExpression("^[a-zA-Z][a-zA-Z0-9_]*"));
+    std::string lobbyNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_NAME - 1) + "}$";
+    auto lobbyNameValidator = new QRegularExpressionValidator(QRegularExpression(lobbyNameRegex.c_str()));
     m_lobbyNameLineEdit->setValidator(lobbyNameValidator);
     m_lobbyNameLineEdit->setProperty("valid", false);
     connect(m_lobbyNameLineEdit, &QLineEdit::textChanged, this, &CheckersMainMenuFrame::validatelobbyNameText);
@@ -189,11 +191,13 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
     auto lobbiesLabel = new QLabel("Lobbies:");
     joinLobbyLayout->addWidget(lobbiesLabel);
 
-    auto lobbyListFrame = new QFrame();
-    lobbyListFrame->setFrameStyle(QFrame::Box | QFrame::Plain);
-    lobbyListFrame->setObjectName("LobbyListFrame");
+    auto lobbyListScrollArea = new QScrollArea();
+    lobbyListScrollArea->setFixedSize(LOBBY_SCROLL_W, LOBBY_SCROLL_H);
+    lobbyListScrollArea->setObjectName("LobbyListScrollArea");
 
-    auto lobbyListLayout = new QVBoxLayout(lobbyListFrame);
+    auto lobbyListLayoutWidget = new QWidget();
+    lobbyListLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    auto lobbyListLayout = new QVBoxLayout(lobbyListLayoutWidget);
 
     const auto numLobbies = m_lobbyNames.size();
     if (m_lobbyIds.size() != numLobbies)
@@ -203,7 +207,15 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
     }
     for (size_t i = 0u; i < numLobbies; i++)
     {
-        auto lobbyLayout = new QHBoxLayout();
+        auto lobbyLayoutWidget = new QWidget();
+        lobbyLayoutWidget->setProperty("lobby", true);
+        lobbyLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        // Update the style
+        lobbyLayoutWidget->style()->unpolish(lobbyLayoutWidget);
+        lobbyLayoutWidget->style()->polish(lobbyLayoutWidget);
+        lobbyLayoutWidget->update();
+
+        auto lobbyLayout = new QHBoxLayout(lobbyLayoutWidget);
 
         auto lobbyNameLayout = new QHBoxLayout();
 
@@ -258,10 +270,15 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
                 { this->handleCommitJoinLobbyButton(i); });
         lobbyLayout->addWidget(joinLobbyButton);
 
-        lobbyListLayout->addLayout(lobbyLayout);
+        lobbyListLayout->addWidget(lobbyLayoutWidget);
     }
 
-    joinLobbyLayout->addWidget(lobbyListFrame);
+    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lobbyListLayout->addItem(spacer);
+
+    lobbyListScrollArea->setWidget(lobbyListLayoutWidget);
+
+    joinLobbyLayout->addWidget(lobbyListScrollArea);
 
     auto joinLobbyDesiredColorLayout = new QHBoxLayout();
     joinLobbyDesiredColorLayout->setAlignment(Qt::AlignCenter);
@@ -467,6 +484,11 @@ const std::string &CheckersMainMenuFrame::getPlayerName() const
 const std::string &CheckersMainMenuFrame::getLobbyName() const
 {
     return m_lobbyName;
+}
+
+void CheckersMainMenuFrame::setPlayerName(const std::string &playerName)
+{
+    m_playerNameLineEdit->setText(playerName.c_str());
 }
 
 void CheckersMainMenuFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)

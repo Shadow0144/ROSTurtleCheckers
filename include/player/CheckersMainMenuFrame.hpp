@@ -50,6 +50,8 @@ public:
 	const std::string &getLobbyName() const;
 	const std::string &getLobbyId() const;
 
+	void setPlayerName(const std::string &playerName);
+
 	void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
 	void playerLeftLobby(const std::string &playerName);
 	void setPlayerReady(const std::string &playerName, bool ready);

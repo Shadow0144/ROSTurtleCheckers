@@ -20,4 +20,5 @@ QRadioButton::indicator:checked { background-color: aqua; }
 QRadioButton:disabled { color: gray; } 
 QRadioButton::indicator:disabled { color: gray; }
 
-QFrame#LobbyListFrame { border: 1px solid aqua; }
+QScrollArea#LobbyListScrollArea { border: 1px solid white; }
+QWidget[lobby="true"] { border: 1px solid white; }

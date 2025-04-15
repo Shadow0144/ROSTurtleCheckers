@@ -63,7 +63,7 @@ public:
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
 
-    void update();
+    void returnToMainMenu(const std::string &playerName);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -80,8 +80,8 @@ private:
 
     bool m_connectedToServer;
 
-    std::unique_ptr<CheckersMainMenuFrame> m_checkersMainMenuFrame;
-    std::unique_ptr<CheckersGameFrame> m_checkersGameFrame;
+    CheckersMainMenuFrame *m_checkersMainMenuFrame;
+    CheckersGameFrame *m_checkersGameFrame;
 };
 
 typedef std::unique_ptr<CheckersPlayerWindow> CheckersPlayerWindowUniPtr;

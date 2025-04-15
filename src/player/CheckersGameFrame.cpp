@@ -42,17 +42,6 @@ CheckersGameFrame::CheckersGameFrame(
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 	m_hud->setGameState(GameState::Connecting);
 
-	std::string backgroundColorStyleString = "background-color: rgb(" +
-											 std::to_string(BG_RGB[0]) + ", " +
-											 std::to_string(BG_RGB[1]) + ", " +
-											 std::to_string(BG_RGB[2]) + ");";
-	std::string buttonDefaultStyleSheet = "color: rgb(" +
-									   std::to_string(TEXT_RGB[0]) + ", " +
-									   std::to_string(TEXT_RGB[1]) + ", " +
-									   std::to_string(TEXT_RGB[2]) + ");";
-
-	setStyleSheet(QString(backgroundColorStyleString.c_str()));
-
 	auto buttonLayout = new QHBoxLayout(this);
 	buttonLayout->setAlignment(Qt::AlignCenter);
 	buttonLayout->setContentsMargins(GRAVEYARD_WIDTH,
@@ -60,13 +49,11 @@ CheckersGameFrame::CheckersGameFrame(
 
 	m_offerDrawButton = new QPushButton(this);
 	m_offerDrawButton->setText("Offer Draw");
-    m_offerDrawButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
     connect(m_offerDrawButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawButton);
     buttonLayout->addWidget(m_offerDrawButton);
 
 	m_forfitButton = new QPushButton(this);
 	m_forfitButton->setText("Forfit");
-    m_forfitButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
     connect(m_forfitButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitButton);
     buttonLayout->addWidget(m_forfitButton);
 
@@ -77,13 +64,11 @@ CheckersGameFrame::CheckersGameFrame(
 
 	m_offerDrawConfirmButton = new QPushButton(this);
 	m_offerDrawConfirmButton->setText("Offer Draw");
-    m_offerDrawConfirmButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
     connect(m_offerDrawConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawConfirmButton);
     offerDrawConfirmLayout->addWidget(m_offerDrawConfirmButton);
 
 	m_offerDrawCancelButton = new QPushButton(this);
 	m_offerDrawCancelButton->setText("Cancel");
-    m_offerDrawCancelButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
     connect(m_offerDrawCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawCancelButton);
     offerDrawConfirmLayout->addWidget(m_offerDrawCancelButton);
 
@@ -96,17 +81,28 @@ CheckersGameFrame::CheckersGameFrame(
 
 	m_forfitConfirmButton = new QPushButton(this);
 	m_forfitConfirmButton->setText("Forfit");
-    m_forfitConfirmButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
     connect(m_forfitConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitConfirmButton);
     forfitConfirmLayout->addWidget(m_forfitConfirmButton);
 
 	m_forfitCancelButton = new QPushButton(this);
 	m_forfitCancelButton->setText("Cancel");
-    m_forfitCancelButton->setStyleSheet(buttonDefaultStyleSheet.c_str());
     connect(m_forfitCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitCancelButton);
     forfitConfirmLayout->addWidget(m_forfitCancelButton);
 
 	m_forfitConfirmLayoutWidget->hide();
+
+	// Leave game dialog
+
+	m_leaveGameLayoutWidget = new QWidget(this);
+	auto leaveGameLayout = new QHBoxLayout(m_leaveGameLayoutWidget);
+
+	m_leaveGameButton = new QPushButton(this);
+	m_leaveGameButton->setText("Leave Game");
+    connect(m_leaveGameButton, &QPushButton::released, this, &CheckersGameFrame::handleLeaveGameButton);
+    leaveGameLayout->addWidget(m_leaveGameButton);
+
+	m_leaveGameLayoutWidget->move(BOARD_CENTER_X - (m_leaveGameLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
+	m_leaveGameLayoutWidget->hide();
 }
 
 CheckersGameFrame::~CheckersGameFrame()
@@ -206,6 +202,11 @@ void CheckersGameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationT
 
 	m_hud->setGameState(m_gameState);
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
+
+	if (m_gameState == GameState::GameFinished)
+	{
+		m_leaveGameLayoutWidget->show();
+	}
 
 	update();
 }
@@ -382,6 +383,12 @@ void CheckersGameFrame::handleForfitConfirmButton()
 void CheckersGameFrame::handleForfitCancelButton()
 {
 
+}
+
+void CheckersGameFrame::handleLeaveGameButton()
+{
+	m_playerWindow->leaveLobby();
+	m_playerWindow->returnToMainMenu(m_playerName);
 }
 
 void CheckersGameFrame::paintEvent(QPaintEvent *event)

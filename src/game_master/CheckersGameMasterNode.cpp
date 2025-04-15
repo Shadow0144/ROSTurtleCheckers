@@ -54,6 +54,8 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
     response->created = false;
     uint16_t attempts = 0u;
 
+    // TODO: Check player name and lobby name
+
     do
     {
         std::string lobbyName = request->lobby_name;
@@ -103,6 +105,8 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
                                               std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Response> response)
 {
     response->joined = false;
+    
+    // TODO: Check player name
 
     auto lobbyName = request->lobby_name + "#" + request->lobby_id;
     if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())

@@ -78,9 +78,14 @@ constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
 constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);
 constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);
 
+constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 85;
+
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
 constexpr int ICON_HEIGHT_WIDTH = 20;
+
+constexpr int LOBBY_SCROLL_W = 350;
+constexpr int LOBBY_SCROLL_H = 250;
 
 constexpr int BG_RGB[3] = {0u, 0u, 0u};
 constexpr int TEXT_RGB[3] = {255u, 255u, 255u};
@@ -98,3 +103,5 @@ constexpr int HUD_BG_RGB[3] = {100u, 100u, 100u};
 constexpr int GRAVEYARD_BG_RGB[3] = {50u, 50u, 50u};
 
 constexpr int NUM_BITS_RSA = 20;
+
+constexpr int MAX_CHARS_NAME = 24;

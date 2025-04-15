@@ -64,6 +64,7 @@ private:
 	void handleOfferDrawCancelButton();
 	void handleForfitConfirmButton();
 	void handleForfitCancelButton();
+	void handleLeaveGameButton();
 
 	CheckersPlayerWindow* m_playerWindow;
 
@@ -78,6 +79,9 @@ private:
 	
 	QPushButton *m_forfitConfirmButton;
 	QPushButton *m_forfitCancelButton;
+
+	QWidget *m_leaveGameLayoutWidget;
+	QPushButton *m_leaveGameButton;
 
 	std::string m_playerName;
 	std::string m_lobbyName;
