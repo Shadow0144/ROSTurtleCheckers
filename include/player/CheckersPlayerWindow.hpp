@@ -52,9 +52,9 @@ public:
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
     void declaredWinner(Winner winner);
     void gameStarted(GameState gameState,
-                     const std::string &playerName,
                      const std::string &lobbyName,
                      const std::string &lobbyId,
+                     const std::string &playerName,
                      TurtlePieceColor playerColor,
                      const std::vector<size_t> &movableTileIndices);
     void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
@@ -62,6 +62,9 @@ public:
 
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
+
+    void offerDraw();
+    void forfit();
 
     void returnToMainMenu(const std::string &playerName);
 

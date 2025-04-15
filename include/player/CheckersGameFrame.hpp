@@ -57,7 +57,6 @@ private:
 	void clearSelections();
 
 	void handleOfferRematchButton();
-	void handleEndGameButton();
 	void handleOfferDrawButton();
 	void handleForfitButton();
 	void handleOfferDrawConfirmButton();
@@ -96,6 +95,9 @@ private:
 	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
 	TurtleGraveyardPtr m_redPlayerGraveyard;   // Red player's graveyard containing the slain black pieces
 	HUDPtr m_hud;
+
+	bool m_showingOfferDrawConfirmDialog;
+	bool m_showingForfitConfirmDialog;
 };
 
 typedef std::unique_ptr<CheckersGameFrame> CheckersGameFrameUniPtr;

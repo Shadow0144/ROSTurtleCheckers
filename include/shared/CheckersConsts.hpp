@@ -20,6 +20,16 @@ enum class Winner
     Draw
 };
 
+enum class VictoryCondition
+{
+    TimeExpired,
+    EliminatedPieces,
+    PlayerHasNoMoves,
+    PlayersHaveNoMoves,
+    DrawAccepted,
+    PlayerForfitted
+};
+
 enum class TurtlePieceColor
 {
     None,

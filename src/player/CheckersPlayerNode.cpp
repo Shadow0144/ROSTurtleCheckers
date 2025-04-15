@@ -14,8 +14,10 @@
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
@@ -172,9 +174,9 @@ void CheckersPlayerNode::leaveLobby()
 {
     // Tell the game master we've left the lobby
     auto message = turtle_checkers_interfaces::msg::LeaveLobby();
-    message.player_name = m_playerName;
     message.lobby_name = m_lobbyName;
     message.lobby_id = m_lobbyId;
+    message.player_name = m_playerName;
     m_leaveLobbyPublisher->publish(message);
 }
 
@@ -182,9 +184,9 @@ void CheckersPlayerNode::setReady(bool ready)
 {
     // Tell the game master if this player is ready or not
     auto message = turtle_checkers_interfaces::msg::PlayerReady();
-    message.player_name = m_playerName;
     message.lobby_name = m_lobbyName;
     message.lobby_id = m_lobbyId;
+    message.player_name = m_playerName;
     message.ready = ready;
     m_playerReadyPublisher->publish(message);
 }
@@ -272,6 +274,10 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
     m_playerReadySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersPlayerNode::playerReadyCallback, this, _1));
 
+    m_forfitPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Forfit>(
+        m_lobbyName + "/id" + m_lobbyId + "/Forfit", 10);
+    m_offerDrawPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::OfferDraw>(
+        m_lobbyName + "/id" + m_lobbyId + "/OfferDraw", 10);
     m_playerReadyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10);
 }
@@ -411,6 +417,24 @@ void CheckersPlayerNode::requestReachableTiles(size_t selectedPieceTileIndex)
                                                       std::bind(&CheckersPlayerNode::requestReachableTilesResponse, this, std::placeholders::_1));
 
     m_checkersApp->update();
+}
+
+void CheckersPlayerNode::offerDraw()
+{
+    auto message = turtle_checkers_interfaces::msg::OfferDraw();
+    message.lobby_name = m_lobbyName;
+    message.lobby_id = m_lobbyId;
+    message.player_name = m_playerName;
+    m_offerDrawPublisher->publish(message);
+}
+
+void CheckersPlayerNode::forfit()
+{
+    auto message = turtle_checkers_interfaces::msg::Forfit();
+    message.lobby_name = m_lobbyName;
+    message.lobby_id = m_lobbyId;
+    message.player_name = m_playerName;
+    m_forfitPublisher->publish(message);
 }
 
 void CheckersPlayerNode::onUpdate()

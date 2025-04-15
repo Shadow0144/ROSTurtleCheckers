@@ -193,6 +193,7 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
 
     auto lobbyListScrollArea = new QScrollArea();
     lobbyListScrollArea->setFixedSize(LOBBY_SCROLL_W, LOBBY_SCROLL_H);
+    lobbyListScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     lobbyListScrollArea->setObjectName("LobbyListScrollArea");
 
     auto lobbyListLayoutWidget = new QWidget();
@@ -273,7 +274,7 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
         lobbyListLayout->addWidget(lobbyLayoutWidget);
     }
 
-    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
+    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);
     lobbyListLayout->addItem(spacer);
 
     lobbyListScrollArea->setWidget(lobbyListLayoutWidget);

@@ -34,6 +34,9 @@ CheckersGameFrame::CheckersGameFrame(
 	m_playerColor = TurtlePieceColor::None;
 	m_winner = Winner::None;
 
+	m_showingOfferDrawConfirmDialog = false;
+	m_showingForfitConfirmDialog = false;
+
 	setMouseTracking(true);
 
 	m_board = std::make_shared<CheckersBoardRender>();
@@ -45,17 +48,17 @@ CheckersGameFrame::CheckersGameFrame(
 	auto buttonLayout = new QHBoxLayout(this);
 	buttonLayout->setAlignment(Qt::AlignCenter);
 	buttonLayout->setContentsMargins(GRAVEYARD_WIDTH,
-		HUD_HEIGHT + BOARD_HEIGHT, GRAVEYARD_WIDTH, 0);
+									 HUD_HEIGHT + BOARD_HEIGHT, GRAVEYARD_WIDTH, 0);
 
 	m_offerDrawButton = new QPushButton(this);
 	m_offerDrawButton->setText("Offer Draw");
-    connect(m_offerDrawButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawButton);
-    buttonLayout->addWidget(m_offerDrawButton);
+	connect(m_offerDrawButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawButton);
+	buttonLayout->addWidget(m_offerDrawButton);
 
 	m_forfitButton = new QPushButton(this);
 	m_forfitButton->setText("Forfit");
-    connect(m_forfitButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitButton);
-    buttonLayout->addWidget(m_forfitButton);
+	connect(m_forfitButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitButton);
+	buttonLayout->addWidget(m_forfitButton);
 
 	// Offer draw confirm dialog
 
@@ -64,14 +67,15 @@ CheckersGameFrame::CheckersGameFrame(
 
 	m_offerDrawConfirmButton = new QPushButton(this);
 	m_offerDrawConfirmButton->setText("Offer Draw");
-    connect(m_offerDrawConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawConfirmButton);
-    offerDrawConfirmLayout->addWidget(m_offerDrawConfirmButton);
+	connect(m_offerDrawConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawConfirmButton);
+	offerDrawConfirmLayout->addWidget(m_offerDrawConfirmButton);
 
 	m_offerDrawCancelButton = new QPushButton(this);
 	m_offerDrawCancelButton->setText("Cancel");
-    connect(m_offerDrawCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawCancelButton);
-    offerDrawConfirmLayout->addWidget(m_offerDrawCancelButton);
+	connect(m_offerDrawCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawCancelButton);
+	offerDrawConfirmLayout->addWidget(m_offerDrawCancelButton);
 
+	m_offerDrawConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
 	m_offerDrawConfirmLayoutWidget->hide();
 
 	// Forfit confirm dialog
@@ -81,14 +85,15 @@ CheckersGameFrame::CheckersGameFrame(
 
 	m_forfitConfirmButton = new QPushButton(this);
 	m_forfitConfirmButton->setText("Forfit");
-    connect(m_forfitConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitConfirmButton);
-    forfitConfirmLayout->addWidget(m_forfitConfirmButton);
+	connect(m_forfitConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitConfirmButton);
+	forfitConfirmLayout->addWidget(m_forfitConfirmButton);
 
 	m_forfitCancelButton = new QPushButton(this);
 	m_forfitCancelButton->setText("Cancel");
-    connect(m_forfitCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitCancelButton);
-    forfitConfirmLayout->addWidget(m_forfitCancelButton);
+	connect(m_forfitCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitCancelButton);
+	forfitConfirmLayout->addWidget(m_forfitCancelButton);
 
+	m_forfitConfirmLayoutWidget->move(BOARD_CENTER_X - (m_forfitConfirmLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
 	m_forfitConfirmLayoutWidget->hide();
 
 	// Leave game dialog
@@ -98,8 +103,8 @@ CheckersGameFrame::CheckersGameFrame(
 
 	m_leaveGameButton = new QPushButton(this);
 	m_leaveGameButton->setText("Leave Game");
-    connect(m_leaveGameButton, &QPushButton::released, this, &CheckersGameFrame::handleLeaveGameButton);
-    leaveGameLayout->addWidget(m_leaveGameButton);
+	connect(m_leaveGameButton, &QPushButton::released, this, &CheckersGameFrame::handleLeaveGameButton);
+	leaveGameLayout->addWidget(m_leaveGameButton);
 
 	m_leaveGameLayoutWidget->move(BOARD_CENTER_X - (m_leaveGameLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
 	m_leaveGameLayoutWidget->hide();
@@ -155,6 +160,19 @@ void CheckersGameFrame::declaredWinner(Winner winner)
 	m_winner = winner;
 	m_hud->setWinner(m_winner);
 
+	m_gameState = GameState::GameFinished;
+	m_hud->setGameState(m_gameState);
+	
+	m_showingOfferDrawConfirmDialog = false;
+	m_offerDrawConfirmLayoutWidget->hide();
+	m_offerDrawButton->setEnabled(false);
+
+	m_showingForfitConfirmDialog = false;
+	m_forfitConfirmLayoutWidget->hide();
+	m_forfitButton->setEnabled(false);
+
+	m_leaveGameLayoutWidget->show();
+
 	update();
 }
 
@@ -203,11 +221,6 @@ void CheckersGameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationT
 	m_hud->setGameState(m_gameState);
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 
-	if (m_gameState == GameState::GameFinished)
-	{
-		m_leaveGameLayoutWidget->show();
-	}
-
 	update();
 }
 
@@ -219,63 +232,7 @@ bool CheckersGameFrame::isOwnTurn()
 
 void CheckersGameFrame::mouseMoveEvent(QMouseEvent *event)
 {
-	switch (m_gameState)
-	{
-	case GameState::Connecting:
-	{
-		// Do nothing
-	}
-	break;
-	case GameState::Connected:
-	{
-		// Do nothing
-	}
-	break;
-	case GameState::BlackMove:
-	{
-		if (m_playerColor == TurtlePieceColor::Black)
-		{
-			if (m_board)
-			{
-				m_board->handleMouseMove(event);
-			}
-		}
-		else
-		{
-			// Do nothing
-		}
-	}
-	break;
-	case GameState::RedMove:
-	{
-		if (m_playerColor == TurtlePieceColor::Red)
-		{
-			if (m_board)
-			{
-				m_board->handleMouseMove(event);
-			}
-		}
-		else
-		{
-			// Do nothing
-		}
-	}
-	case GameState::GameFinished:
-	{
-		// Do nothing
-	}
-	break;
-	}
-
-	update();
-
-	QFrame::mouseMoveEvent(event); // Ensure base class event handling
-}
-
-void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
-{
-	bool clicked = false;
-	if (event->button() == Qt::LeftButton)
+	if (!m_showingOfferDrawConfirmDialog && !m_showingForfitConfirmDialog)
 	{
 		switch (m_gameState)
 		{
@@ -295,8 +252,7 @@ void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 			{
 				if (m_board)
 				{
-					m_board->handleMouseClick(event);
-					clicked = true;
+					m_board->handleMouseMove(event);
 				}
 			}
 			else
@@ -311,8 +267,7 @@ void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 			{
 				if (m_board)
 				{
-					m_board->handleMouseClick(event);
-					clicked = true;
+					m_board->handleMouseMove(event);
 				}
 			}
 			else
@@ -328,18 +283,82 @@ void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 		}
 	}
 
-	if (m_board && clicked)
+	update();
+
+	QFrame::mouseMoveEvent(event); // Ensure base class event handling
+}
+
+void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
+{
+	if (!m_showingOfferDrawConfirmDialog && !m_showingForfitConfirmDialog)
 	{
-		if (m_board->getIsMoveSelected())
+		bool clicked = false;
+		if (event->button() == Qt::LeftButton)
 		{
-			m_playerWindow->requestPieceMove(m_board->getSourceTileIndex(), m_board->getDestinationTileIndex());
-		}
-		else
-		{
-			int selectedPieceTileIndex = m_board->getSelectedPieceTileIndex();
-			if (selectedPieceTileIndex > -1)
+			switch (m_gameState)
 			{
-				m_playerWindow->requestReachableTiles(selectedPieceTileIndex);
+			case GameState::Connecting:
+			{
+				// Do nothing
+			}
+			break;
+			case GameState::Connected:
+			{
+				// Do nothing
+			}
+			break;
+			case GameState::BlackMove:
+			{
+				if (m_playerColor == TurtlePieceColor::Black)
+				{
+					if (m_board)
+					{
+						m_board->handleMouseClick(event);
+						clicked = true;
+					}
+				}
+				else
+				{
+					// Do nothing
+				}
+			}
+			break;
+			case GameState::RedMove:
+			{
+				if (m_playerColor == TurtlePieceColor::Red)
+				{
+					if (m_board)
+					{
+						m_board->handleMouseClick(event);
+						clicked = true;
+					}
+				}
+				else
+				{
+					// Do nothing
+				}
+			}
+			case GameState::GameFinished:
+			{
+				// Do nothing
+			}
+			break;
+			}
+		}
+
+		if (m_board && clicked)
+		{
+			if (m_board->getIsMoveSelected())
+			{
+				m_playerWindow->requestPieceMove(m_board->getSourceTileIndex(), m_board->getDestinationTileIndex());
+			}
+			else
+			{
+				int selectedPieceTileIndex = m_board->getSelectedPieceTileIndex();
+				if (selectedPieceTileIndex > -1)
+				{
+					m_playerWindow->requestReachableTiles(selectedPieceTileIndex);
+				}
 			}
 		}
 	}
@@ -353,36 +372,38 @@ void CheckersGameFrame::handleOfferRematchButton()
 {
 }
 
-void CheckersGameFrame::handleEndGameButton()
-{
-}
-
 void CheckersGameFrame::handleOfferDrawButton()
 {
+	m_showingOfferDrawConfirmDialog = true;
+	m_offerDrawConfirmLayoutWidget->show();
 }
 
 void CheckersGameFrame::handleForfitButton()
 {
+	m_showingForfitConfirmDialog = true;
+	m_forfitConfirmLayoutWidget->show();
 }
 
 void CheckersGameFrame::handleOfferDrawConfirmButton()
 {
-
+	m_playerWindow->offerDraw();
 }
 
 void CheckersGameFrame::handleOfferDrawCancelButton()
 {
-
+	m_showingOfferDrawConfirmDialog = false;
+	m_offerDrawConfirmLayoutWidget->hide();
 }
 
 void CheckersGameFrame::handleForfitConfirmButton()
 {
-
+	m_playerWindow->forfit();
 }
 
 void CheckersGameFrame::handleForfitCancelButton()
 {
-
+	m_showingForfitConfirmDialog = false;
+	m_forfitConfirmLayoutWidget->hide();
 }
 
 void CheckersGameFrame::handleLeaveGameButton()

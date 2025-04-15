@@ -7,7 +7,9 @@
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
@@ -60,6 +62,10 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
     m_playerLeftLobbyPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerLeftLobby", 10);
 
+    m_forfitSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::Forfit>(
+        m_lobbyName + "/id" + m_lobbyId + "/Forfit", 10, std::bind(&CheckersGameLobby::forfitCallback, this, std::placeholders::_1));
+    m_offerDrawSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::OfferDraw>(
+        m_lobbyName + "/id" + m_lobbyId + "/OfferDraw", 10, std::bind(&CheckersGameLobby::offerDrawCallback, this, std::placeholders::_1));
     m_playerReadySubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
 
@@ -303,6 +309,33 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
 
         m_updateBoardPublisher->publish(message);
     }
+}
+
+void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message)
+{
+    Winner winner = Winner::None;
+    if (message->player_name == m_blackPlayerName)
+    {
+        winner = Winner::Red;
+    }
+    else if (message->player_name == m_redPlayerName)
+    {
+        winner = Winner::Black;
+    }
+    else
+    {
+        return;
+    }
+
+    auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+    winnerMessage.lobby_name = m_lobbyName;
+    winnerMessage.lobby_id = m_lobbyId;
+    winnerMessage.winner = static_cast<size_t>(winner);
+    m_declareWinnerPublisher->publish(winnerMessage);
+}
+
+void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message)
+{
 }
 
 void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message)

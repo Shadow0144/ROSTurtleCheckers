@@ -10,7 +10,9 @@
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
@@ -54,6 +56,8 @@ private:
     void requestBoardStateRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Request> request,
                                   std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Response> response);
 
+    void forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message);
+    void offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message);
     void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
 
     bool isPieceValidForTurn(int requestedPieceTileIndex) const;
@@ -70,6 +74,8 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbyPublisher;
 
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
 
     std::string m_lobbyName;

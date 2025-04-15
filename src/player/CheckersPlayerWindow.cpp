@@ -170,9 +170,9 @@ void CheckersPlayerWindow::declaredWinner(Winner winner)
 }
 
 void CheckersPlayerWindow::gameStarted(GameState gameState,
-                                       const std::string &playerName,
                                        const std::string &lobbyName,
                                        const std::string &lobbyId,
+                                       const std::string &playerName,
                                        TurtlePieceColor playerColor,
                                        const std::vector<size_t> &movableTileIndices)
 {
@@ -210,6 +210,22 @@ void CheckersPlayerWindow::requestReachableTiles(size_t selectedPieceTileIndex)
     if (auto playerNode = m_playerNode.lock())
     {
         playerNode->requestReachableTiles(selectedPieceTileIndex);
+    }
+}
+
+void CheckersPlayerWindow::offerDraw()
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->offerDraw();
+    }
+}
+
+void CheckersPlayerWindow::forfit()
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->forfit();
     }
 }
 
