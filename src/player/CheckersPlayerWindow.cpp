@@ -221,11 +221,27 @@ void CheckersPlayerWindow::offerDraw()
     }
 }
 
+void CheckersPlayerWindow::declineDraw()
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->declineDraw();
+    }
+}
+
 void CheckersPlayerWindow::forfit()
 {
     if (auto playerNode = m_playerNode.lock())
     {
         playerNode->forfit();
+    }
+}
+
+void CheckersPlayerWindow::drawOffered()
+{
+    if (m_checkersGameFrame)
+    {
+        m_checkersGameFrame->drawOffered();
     }
 }
 

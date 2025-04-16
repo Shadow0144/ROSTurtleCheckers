@@ -64,7 +64,10 @@ public:
     void requestReachableTiles(size_t selectedPieceTileIndex);
 
     void offerDraw();
+    void declineDraw();
     void forfit();
+
+    void drawOffered();
 
     void returnToMainMenu(const std::string &playerName);
 

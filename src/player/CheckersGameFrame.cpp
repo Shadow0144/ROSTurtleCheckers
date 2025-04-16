@@ -65,15 +65,15 @@ CheckersGameFrame::CheckersGameFrame(
 	m_offerDrawConfirmLayoutWidget = new QWidget(this);
 	auto offerDrawConfirmLayout = new QHBoxLayout(m_offerDrawConfirmLayoutWidget);
 
-	m_offerDrawConfirmButton = new QPushButton(this);
-	m_offerDrawConfirmButton->setText("Offer Draw");
-	connect(m_offerDrawConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawConfirmButton);
-	offerDrawConfirmLayout->addWidget(m_offerDrawConfirmButton);
+	auto offerDrawConfirmButton = new QPushButton(this);
+	offerDrawConfirmButton->setText("Offer Draw");
+	connect(offerDrawConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawConfirmButton);
+	offerDrawConfirmLayout->addWidget(offerDrawConfirmButton);
 
-	m_offerDrawCancelButton = new QPushButton(this);
-	m_offerDrawCancelButton->setText("Cancel");
-	connect(m_offerDrawCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawCancelButton);
-	offerDrawConfirmLayout->addWidget(m_offerDrawCancelButton);
+	auto offerDrawCancelButton = new QPushButton(this);
+	offerDrawCancelButton->setText("Cancel");
+	connect(offerDrawCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawCancelButton);
+	offerDrawConfirmLayout->addWidget(offerDrawCancelButton);
 
 	m_offerDrawConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
 	m_offerDrawConfirmLayoutWidget->hide();
@@ -83,15 +83,15 @@ CheckersGameFrame::CheckersGameFrame(
 	m_forfitConfirmLayoutWidget = new QWidget(this);
 	auto forfitConfirmLayout = new QHBoxLayout(m_forfitConfirmLayoutWidget);
 
-	m_forfitConfirmButton = new QPushButton(this);
-	m_forfitConfirmButton->setText("Forfit");
-	connect(m_forfitConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitConfirmButton);
-	forfitConfirmLayout->addWidget(m_forfitConfirmButton);
+	auto forfitConfirmButton = new QPushButton(this);
+	forfitConfirmButton->setText("Forfit");
+	connect(forfitConfirmButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitConfirmButton);
+	forfitConfirmLayout->addWidget(forfitConfirmButton);
 
-	m_forfitCancelButton = new QPushButton(this);
-	m_forfitCancelButton->setText("Cancel");
-	connect(m_forfitCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitCancelButton);
-	forfitConfirmLayout->addWidget(m_forfitCancelButton);
+	auto forfitCancelButton = new QPushButton(this);
+	forfitCancelButton->setText("Cancel");
+	connect(forfitCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitCancelButton);
+	forfitConfirmLayout->addWidget(forfitCancelButton);
 
 	m_forfitConfirmLayoutWidget->move(BOARD_CENTER_X - (m_forfitConfirmLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
 	m_forfitConfirmLayoutWidget->hide();
@@ -222,6 +222,11 @@ void CheckersGameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationT
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 
 	update();
+}
+
+void CheckersGameFrame::drawOffered()
+{
+	// TODO
 }
 
 bool CheckersGameFrame::isOwnTurn()

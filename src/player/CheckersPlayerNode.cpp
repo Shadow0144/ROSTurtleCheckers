@@ -14,6 +14,7 @@
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
@@ -263,6 +264,8 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
 
     m_declareWinnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>(
         m_lobbyName + "/id" + m_lobbyId + "/DeclareWinner", 10, std::bind(&CheckersPlayerNode::declareWinnerCallback, this, _1));
+    m_drawOfferedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DrawOffered>(
+        m_lobbyName + "/id" + m_lobbyId + "/DrawOffered", 10, std::bind(&CheckersPlayerNode::drawOfferedWinnerCallback, this, _1));
     m_gameStartSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::GameStart>(
         m_lobbyName + "/id" + m_lobbyId + "/GameStart", 10, std::bind(&CheckersPlayerNode::gameStartCallback, this, _1));
     m_updateBoardSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>(
@@ -310,6 +313,22 @@ void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces:
     m_checkersApp->declaredWinner(winner);
 
     m_checkersApp->update();
+}
+
+void CheckersPlayerNode::drawOffered(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message)
+{
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
+    {
+        return;
+    }
+    
+    if (m_playerName == message->player_name)
+    {
+        // Do not respond to own offer for a draw
+        return;
+    }
+
+    m_checkersPlayerWindow->drawOffered();
 }
 
 void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message)
@@ -425,6 +444,17 @@ void CheckersPlayerNode::offerDraw()
     message.lobby_name = m_lobbyName;
     message.lobby_id = m_lobbyId;
     message.player_name = m_playerName;
+    message.accept_draw = true;
+    m_offerDrawPublisher->publish(message);
+}
+
+void CheckersPlayerNode::declineDraw()
+{
+    auto message = turtle_checkers_interfaces::msg::OfferDraw();
+    message.lobby_name = m_lobbyName;
+    message.lobby_id = m_lobbyId;
+    message.player_name = m_playerName;
+    message.accept_draw = false;
     m_offerDrawPublisher->publish(message);
 }
 
