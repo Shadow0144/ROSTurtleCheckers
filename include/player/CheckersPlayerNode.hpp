@@ -87,7 +87,7 @@ private:
 
     std::shared_ptr<rclcpp::Node> m_playerNode;
 
-    std::unique_ptr<CheckersPlayerWindow> m_checkersApp;
+    std::unique_ptr<CheckersPlayerWindow> m_checkersPlayerWindow;
 
     std::string m_playerName;
     std::string m_lobbyName;

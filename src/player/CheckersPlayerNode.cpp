@@ -67,8 +67,8 @@ CheckersPlayerNode::~CheckersPlayerNode()
 
 int CheckersPlayerNode::exec()
 {
-    m_checkersApp = std::make_unique<CheckersPlayerWindow>(weak_from_this());
-    m_checkersApp->show();
+    m_checkersPlayerWindow = std::make_unique<CheckersPlayerWindow>(weak_from_this());
+    m_checkersPlayerWindow->show();
 
     // Try to subscribe to a game and connect to a lobby
     RCLCPP_INFO(m_playerNode->get_logger(), "Player " + m_playerName + " searching for lobby...");
@@ -121,9 +121,9 @@ void CheckersPlayerNode::parameterEventCallback(
     if (event->node == m_playerNode->get_fully_qualified_name())
     {
         // Since parameter events for this event aren't expected frequently just always call update()
-        if (m_checkersApp)
+        if (m_checkersPlayerWindow)
         {
-            m_checkersApp->update();
+            m_checkersPlayerWindow->update();
         }
     }
 }
@@ -198,7 +198,7 @@ void CheckersPlayerNode::connectToGameMasterResponse(rclcpp::Client<turtle_check
 
     m_lobbyPublicKey = result->game_master_public_key;
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future)
@@ -208,7 +208,7 @@ void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_inte
     if (result->created)
     {
         createLobbyInterfaces(result->lobby_name, result->lobby_id);
-        m_checkersApp->connectedToLobby(result->lobby_name,
+        m_checkersPlayerWindow->connectedToLobby(result->lobby_name,
                                         result->lobby_id,
                                         result->black_player_name,
                                         result->red_player_name,
@@ -225,7 +225,7 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
 {
     auto result = future.get();
 
-    m_checkersApp->updateLobbyList(result->lobby_names,
+    m_checkersPlayerWindow->updateLobbyList(result->lobby_names,
                                    result->lobby_ids,
                                    result->joined_black_player_names,
                                    result->joined_red_player_names);
@@ -238,7 +238,7 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
     if (result->joined)
     {
         createLobbyInterfaces(result->lobby_name, result->lobby_id);
-        m_checkersApp->connectedToLobby(result->lobby_name,
+        m_checkersPlayerWindow->connectedToLobby(result->lobby_name,
                                         result->lobby_id,
                                         result->black_player_name,
                                         result->red_player_name,
@@ -288,18 +288,18 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
 void CheckersPlayerNode::requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future)
 {
     auto result = future.get();
-    m_checkersApp->requestedPieceMoveAccepted(result->move_accepted);
+    m_checkersPlayerWindow->requestedPieceMoveAccepted(result->move_accepted);
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future)
 {
     auto result = future.get();
     const auto &reachableTileIndices = result->reachable_tile_indices;
-    m_checkersApp->requestedReachableTiles(reachableTileIndices);
+    m_checkersPlayerWindow->requestedReachableTiles(reachableTileIndices);
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message)
@@ -310,9 +310,9 @@ void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces:
     }
 
     Winner winner = static_cast<Winner>(message->winner);
-    m_checkersApp->declaredWinner(winner);
+    m_checkersPlayerWindow->declaredWinner(winner);
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::drawOffered(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message)
@@ -358,9 +358,9 @@ void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg
 
     GameState gameState = static_cast<GameState>(message->game_state);
     const auto &movableTileIndices = message->movable_tile_indices;
-    m_checkersApp->gameStarted(gameState, m_lobbyName, m_lobbyId, m_playerName, playerColor, movableTileIndices);
+    m_checkersPlayerWindow->gameStarted(gameState, m_lobbyName, m_lobbyId, m_playerName, playerColor, movableTileIndices);
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message)
@@ -370,7 +370,7 @@ void CheckersPlayerNode::playerJoinedLobbyCallback(const turtle_checkers_interfa
         return;
     }
 
-    m_checkersApp->playerJoinedLobby(message->player_name, static_cast<TurtlePieceColor>(message->player_color));
+    m_checkersPlayerWindow->playerJoinedLobby(message->player_name, static_cast<TurtlePieceColor>(message->player_color));
 }
 
 void CheckersPlayerNode::playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message)
@@ -380,7 +380,7 @@ void CheckersPlayerNode::playerLeftLobbyCallback(const turtle_checkers_interface
         return;
     }
 
-    m_checkersApp->playerLeftLobby(message->player_name);
+    m_checkersPlayerWindow->playerLeftLobby(message->player_name);
 }
 
 void CheckersPlayerNode::playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message)
@@ -390,7 +390,7 @@ void CheckersPlayerNode::playerReadyCallback(const turtle_checkers_interfaces::m
         return;
     }
 
-    m_checkersApp->setPlayerReady(message->player_name, message->ready);
+    m_checkersPlayerWindow->setPlayerReady(message->player_name, message->ready);
 }
 
 void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
@@ -407,10 +407,10 @@ void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::m
     auto kingPiece = message->king_piece;
     const auto &movableTileIndices = message->movable_tile_indices;
 
-    m_checkersApp->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
+    m_checkersPlayerWindow->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
                                 slainPieceTileIndex, kingPiece, movableTileIndices);
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex)
@@ -423,7 +423,7 @@ void CheckersPlayerNode::requestPieceMove(size_t sourceTileIndex, size_t destina
     m_requestPieceMoveClient->async_send_request(request,
                                                  std::bind(&CheckersPlayerNode::requestPieceMoveResponse, this, std::placeholders::_1));
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::requestReachableTiles(size_t selectedPieceTileIndex)
@@ -435,7 +435,7 @@ void CheckersPlayerNode::requestReachableTiles(size_t selectedPieceTileIndex)
     m_requestReachableTilesClient->async_send_request(request,
                                                       std::bind(&CheckersPlayerNode::requestReachableTilesResponse, this, std::placeholders::_1));
 
-    m_checkersApp->update();
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::offerDraw()
