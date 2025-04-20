@@ -7,6 +7,8 @@
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/draw_declined.hpp"
+#include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
@@ -44,6 +46,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
     m_blackPlayerReady = false;
     m_redPlayerReady = false;
 
+    m_playerOfferingDraw = "";
+
     m_requestReachableTilesService =
         m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestReachableTiles>(
             m_lobbyName + "/id" + m_lobbyId + "/RequestReachableTiles", std::bind(&CheckersGameLobby::requestReachableTilesRequest, this, std::placeholders::_1, std::placeholders::_2));
@@ -53,6 +57,10 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
 
     m_declareWinnerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::DeclareWinner>(
         m_lobbyName + "/id" + m_lobbyId + "/DeclareWinner", 10);
+    m_drawDeclinedPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::DrawDeclined>(
+        m_lobbyName + "/id" + m_lobbyId + "/DrawDeclined", 10);
+    m_drawOfferedPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::DrawOffered>(
+        m_lobbyName + "/id" + m_lobbyId + "/DrawOffered", 10);
     m_gameStartPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::GameStart>(
         m_lobbyName + "/id" + m_lobbyId + "/GameStart", 10);
     m_updateBoardPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateBoard>(
@@ -69,7 +77,7 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
     m_playerReadySubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
 
-    RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting Turtles Checkers game node; now accepting players!");
+    RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting turtles checkers game!");
 }
 
 const std::string &CheckersGameLobby::getLobbyName() const
@@ -336,6 +344,37 @@ void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Fo
 
 void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message)
 {
+    if (message->accept_draw)
+    {
+        // Either requesting or accepting a draw
+        auto drawOfferedMessage = turtle_checkers_interfaces::msg::DrawOffered();
+        drawOfferedMessage.lobby_name = message->lobby_name;
+        drawOfferedMessage.lobby_id = message->lobby_id;
+        drawOfferedMessage.player_name = message->player_name;
+        m_drawOfferedPublisher->publish(drawOfferedMessage);
+
+        if (!m_playerOfferingDraw.empty() && m_playerOfferingDraw != message->player_name)
+        {
+            // Both have accepted, create a draw
+            auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+            winnerMessage.lobby_name = m_lobbyName;
+            winnerMessage.lobby_id = m_lobbyId;
+            winnerMessage.winner = static_cast<size_t>(Winner::Draw);
+            m_declareWinnerPublisher->publish(winnerMessage);
+        }
+
+        m_playerOfferingDraw = message->player_name;
+    }
+    else
+    {
+        auto drawDeclinedMessage = turtle_checkers_interfaces::msg::DrawDeclined();
+        drawDeclinedMessage.lobby_name = message->lobby_name;
+        drawDeclinedMessage.lobby_id = message->lobby_id;
+        drawDeclinedMessage.player_name = message->player_name;
+        m_drawDeclinedPublisher->publish(drawDeclinedMessage);
+        
+        m_playerOfferingDraw.clear();
+    }
 }
 
 void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message)

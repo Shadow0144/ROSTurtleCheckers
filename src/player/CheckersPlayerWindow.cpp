@@ -237,6 +237,14 @@ void CheckersPlayerWindow::forfit()
     }
 }
 
+void CheckersPlayerWindow::drawDeclined()
+{
+    if (m_checkersGameFrame)
+    {
+        m_checkersGameFrame->drawDeclined();
+    }
+}
+
 void CheckersPlayerWindow::drawOffered()
 {
     if (m_checkersGameFrame)

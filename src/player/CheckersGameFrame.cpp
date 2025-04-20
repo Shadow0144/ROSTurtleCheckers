@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QLabel>
 
 #include <cstdlib>
 #include <ctime>
@@ -34,8 +35,7 @@ CheckersGameFrame::CheckersGameFrame(
 	m_playerColor = TurtlePieceColor::None;
 	m_winner = Winner::None;
 
-	m_showingOfferDrawConfirmDialog = false;
-	m_showingForfitConfirmDialog = false;
+	m_showingDialog = false;
 
 	setMouseTracking(true);
 
@@ -75,8 +75,47 @@ CheckersGameFrame::CheckersGameFrame(
 	connect(offerDrawCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawCancelButton);
 	offerDrawConfirmLayout->addWidget(offerDrawCancelButton);
 
-	m_offerDrawConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
+	offerDrawConfirmLayout->invalidate();
+	offerDrawConfirmLayout->activate();
+	m_offerDrawConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
+										 BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
 	m_offerDrawConfirmLayoutWidget->hide();
+
+	// Offering draw waiting dialog
+
+	m_offeringDrawLayoutWidget = new QWidget(this);
+	auto offeringDrawLayout = new QHBoxLayout(m_offeringDrawLayoutWidget);
+
+	auto offeringDrawLabel = new QLabel(this);
+	offeringDrawLabel->setText("Offering draw...");
+	offeringDrawLayout->addWidget(offeringDrawLabel);
+
+	offeringDrawLayout->invalidate();
+	offeringDrawLayout->activate();
+	m_offeringDrawLayoutWidget->move(BOARD_CENTER_X - (m_offeringDrawLayoutWidget->width() / 2),
+									 BOARD_CENTER_Y - (m_offeringDrawLayoutWidget->height() / 2));
+	m_offeringDrawLayoutWidget->hide();
+
+	// Draw offered accept or decline dialog
+
+	m_drawOfferedLayoutWidget = new QWidget(this);
+	auto drawOfferedLayout = new QHBoxLayout(m_drawOfferedLayoutWidget);
+
+	auto drawOfferedAcceptButton = new QPushButton(this);
+	drawOfferedAcceptButton->setText("Accept Draw");
+	connect(drawOfferedAcceptButton, &QPushButton::released, this, &CheckersGameFrame::handleOfferDrawConfirmButton);
+	drawOfferedLayout->addWidget(drawOfferedAcceptButton);
+
+	auto drawOfferedDeclineButton = new QPushButton(this);
+	drawOfferedDeclineButton->setText("Decline Draw");
+	connect(drawOfferedDeclineButton, &QPushButton::released, this, &CheckersGameFrame::handleDeclineDrawButton);
+	drawOfferedLayout->addWidget(drawOfferedDeclineButton);
+
+	drawOfferedLayout->invalidate();
+	drawOfferedLayout->activate();
+	m_drawOfferedLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
+									BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
+	m_drawOfferedLayoutWidget->hide();
 
 	// Forfit confirm dialog
 
@@ -93,7 +132,10 @@ CheckersGameFrame::CheckersGameFrame(
 	connect(forfitCancelButton, &QPushButton::released, this, &CheckersGameFrame::handleForfitCancelButton);
 	forfitConfirmLayout->addWidget(forfitCancelButton);
 
-	m_forfitConfirmLayoutWidget->move(BOARD_CENTER_X - (m_forfitConfirmLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
+	forfitConfirmLayout->invalidate();
+	forfitConfirmLayout->activate();
+	m_forfitConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
+									  BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
 	m_forfitConfirmLayoutWidget->hide();
 
 	// Leave game dialog
@@ -106,6 +148,8 @@ CheckersGameFrame::CheckersGameFrame(
 	connect(m_leaveGameButton, &QPushButton::released, this, &CheckersGameFrame::handleLeaveGameButton);
 	leaveGameLayout->addWidget(m_leaveGameButton);
 
+	leaveGameLayout->invalidate();
+	leaveGameLayout->activate();
 	m_leaveGameLayoutWidget->move(BOARD_CENTER_X - (m_leaveGameLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
 	m_leaveGameLayoutWidget->hide();
 }
@@ -162,12 +206,14 @@ void CheckersGameFrame::declaredWinner(Winner winner)
 
 	m_gameState = GameState::GameFinished;
 	m_hud->setGameState(m_gameState);
-	
-	m_showingOfferDrawConfirmDialog = false;
+
+	m_showingDialog = false;
+
+	m_offeringDrawLayoutWidget->hide();
+	m_drawOfferedLayoutWidget->hide();
 	m_offerDrawConfirmLayoutWidget->hide();
 	m_offerDrawButton->setEnabled(false);
 
-	m_showingForfitConfirmDialog = false;
 	m_forfitConfirmLayoutWidget->hide();
 	m_forfitButton->setEnabled(false);
 
@@ -224,9 +270,29 @@ void CheckersGameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationT
 	update();
 }
 
+void CheckersGameFrame::drawDeclined()
+{
+	m_showingDialog = false;
+	m_offeringDrawLayoutWidget->hide();
+	m_drawOfferedLayoutWidget->hide();
+	m_offerDrawButton->setEnabled(true);
+	m_forfitButton->setEnabled(true);
+
+	update();
+}
+
 void CheckersGameFrame::drawOffered()
 {
-	// TODO
+	if (m_gameState != GameState::GameFinished)
+	{
+		m_showingDialog = true;
+		m_offerDrawConfirmLayoutWidget->hide();
+		m_drawOfferedLayoutWidget->show();
+		m_offerDrawButton->setEnabled(false);
+		m_forfitButton->setEnabled(false);
+
+		update();
+	}
 }
 
 bool CheckersGameFrame::isOwnTurn()
@@ -237,7 +303,7 @@ bool CheckersGameFrame::isOwnTurn()
 
 void CheckersGameFrame::mouseMoveEvent(QMouseEvent *event)
 {
-	if (!m_showingOfferDrawConfirmDialog && !m_showingForfitConfirmDialog)
+	if (!m_showingDialog)
 	{
 		switch (m_gameState)
 		{
@@ -295,7 +361,7 @@ void CheckersGameFrame::mouseMoveEvent(QMouseEvent *event)
 
 void CheckersGameFrame::mousePressEvent(QMouseEvent *event)
 {
-	if (!m_showingOfferDrawConfirmDialog && !m_showingForfitConfirmDialog)
+	if (!m_showingDialog)
 	{
 		bool clicked = false;
 		if (event->button() == Qt::LeftButton)
@@ -379,25 +445,52 @@ void CheckersGameFrame::handleOfferRematchButton()
 
 void CheckersGameFrame::handleOfferDrawButton()
 {
-	m_showingOfferDrawConfirmDialog = true;
+	m_showingDialog = true;
 	m_offerDrawConfirmLayoutWidget->show();
+	m_offerDrawButton->setEnabled(false);
+	m_forfitButton->setEnabled(false);
+
+	update();
+}
+
+void CheckersGameFrame::handleDeclineDrawButton()
+{
+	m_showingDialog = false;
+	m_offerDrawConfirmLayoutWidget->hide();
+	m_offerDrawButton->setEnabled(true);
+	m_forfitButton->setEnabled(true);
+	m_playerWindow->declineDraw();
+
+	update();
 }
 
 void CheckersGameFrame::handleForfitButton()
 {
-	m_showingForfitConfirmDialog = true;
+	m_showingDialog = true;
 	m_forfitConfirmLayoutWidget->show();
+	m_offerDrawButton->setEnabled(false);
+	m_forfitButton->setEnabled(false);
+
+	update();
 }
 
 void CheckersGameFrame::handleOfferDrawConfirmButton()
 {
 	m_playerWindow->offerDraw();
+	m_offerDrawConfirmLayoutWidget->hide();
+	m_offeringDrawLayoutWidget->show();
+
+	update();
 }
 
 void CheckersGameFrame::handleOfferDrawCancelButton()
 {
-	m_showingOfferDrawConfirmDialog = false;
+	m_showingDialog = false;
 	m_offerDrawConfirmLayoutWidget->hide();
+	m_offerDrawButton->setEnabled(true);
+	m_forfitButton->setEnabled(true);
+
+	update();
 }
 
 void CheckersGameFrame::handleForfitConfirmButton()
@@ -407,8 +500,12 @@ void CheckersGameFrame::handleForfitConfirmButton()
 
 void CheckersGameFrame::handleForfitCancelButton()
 {
-	m_showingForfitConfirmDialog = false;
+	m_showingDialog = false;
 	m_forfitConfirmLayoutWidget->hide();
+	m_offerDrawButton->setEnabled(true);
+	m_forfitButton->setEnabled(true);
+
+	update();
 }
 
 void CheckersGameFrame::handleLeaveGameButton()

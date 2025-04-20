@@ -14,6 +14,7 @@
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
@@ -209,11 +210,11 @@ void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_inte
     {
         createLobbyInterfaces(result->lobby_name, result->lobby_id);
         m_checkersPlayerWindow->connectedToLobby(result->lobby_name,
-                                        result->lobby_id,
-                                        result->black_player_name,
-                                        result->red_player_name,
-                                        result->black_player_ready,
-                                        result->red_player_ready);
+                                                 result->lobby_id,
+                                                 result->black_player_name,
+                                                 result->red_player_name,
+                                                 result->black_player_ready,
+                                                 result->red_player_ready);
     }
     else
     {
@@ -226,9 +227,9 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
     auto result = future.get();
 
     m_checkersPlayerWindow->updateLobbyList(result->lobby_names,
-                                   result->lobby_ids,
-                                   result->joined_black_player_names,
-                                   result->joined_red_player_names);
+                                            result->lobby_ids,
+                                            result->joined_black_player_names,
+                                            result->joined_red_player_names);
 }
 
 void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future)
@@ -239,11 +240,11 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
     {
         createLobbyInterfaces(result->lobby_name, result->lobby_id);
         m_checkersPlayerWindow->connectedToLobby(result->lobby_name,
-                                        result->lobby_id,
-                                        result->black_player_name,
-                                        result->red_player_name,
-                                        result->black_player_ready,
-                                        result->red_player_ready);
+                                                 result->lobby_id,
+                                                 result->black_player_name,
+                                                 result->red_player_name,
+                                                 result->black_player_ready,
+                                                 result->red_player_ready);
     }
     else
     {
@@ -264,8 +265,10 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
 
     m_declareWinnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>(
         m_lobbyName + "/id" + m_lobbyId + "/DeclareWinner", 10, std::bind(&CheckersPlayerNode::declareWinnerCallback, this, _1));
+    m_drawDeclinedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DrawDeclined>(
+        m_lobbyName + "/id" + m_lobbyId + "/DrawDeclined", 10, std::bind(&CheckersPlayerNode::drawDeclinedCallback, this, _1));
     m_drawOfferedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DrawOffered>(
-        m_lobbyName + "/id" + m_lobbyId + "/DrawOffered", 10, std::bind(&CheckersPlayerNode::drawOfferedWinnerCallback, this, _1));
+        m_lobbyName + "/id" + m_lobbyId + "/DrawOffered", 10, std::bind(&CheckersPlayerNode::drawOfferedCallback, this, _1));
     m_gameStartSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::GameStart>(
         m_lobbyName + "/id" + m_lobbyId + "/GameStart", 10, std::bind(&CheckersPlayerNode::gameStartCallback, this, _1));
     m_updateBoardSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>(
@@ -315,13 +318,23 @@ void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces:
     m_checkersPlayerWindow->update();
 }
 
-void CheckersPlayerNode::drawOffered(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message)
+void CheckersPlayerNode::drawDeclinedCallback(const turtle_checkers_interfaces::msg::DrawDeclined::SharedPtr message)
 {
     if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
     {
         return;
     }
-    
+
+    m_checkersPlayerWindow->drawDeclined();
+}
+
+void CheckersPlayerNode::drawOfferedCallback(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message)
+{
+    if (m_lobbyName != message->lobby_name || m_lobbyId != message->lobby_id)
+    {
+        return;
+    }
+
     if (m_playerName == message->player_name)
     {
         // Do not respond to own offer for a draw
@@ -408,7 +421,7 @@ void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::m
     const auto &movableTileIndices = message->movable_tile_indices;
 
     m_checkersPlayerWindow->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
-                                slainPieceTileIndex, kingPiece, movableTileIndices);
+                                         slainPieceTileIndex, kingPiece, movableTileIndices);
 
     m_checkersPlayerWindow->update();
 }

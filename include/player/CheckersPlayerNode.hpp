@@ -9,6 +9,7 @@
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
@@ -74,7 +75,8 @@ private:
     void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
 
     void declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message);
-    void declareWinnerCallback(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message);
+    void drawDeclinedCallback(const turtle_checkers_interfaces::msg::DrawDeclined::SharedPtr message);
+    void drawOfferedCallback(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message);
     void gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message);
     void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
     void playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message);
@@ -101,6 +103,7 @@ private:
     rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesClient;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawDeclined>::SharedPtr m_drawDeclinedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawOffered>::SharedPtr m_drawOfferedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;

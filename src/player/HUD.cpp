@@ -102,6 +102,10 @@ void HUD::paint(QPainter &painter)
         if (m_winner == Winner::Draw)
         {
             painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Draw!");
+            painter.setFont(m_victoryFont);
+            painter.setPen(m_victoryPen);
+            painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Draw!");
+            painter.drawImage(m_victoryImagePosition, ImageLibrary::getDrawImage());
         }
         else if (m_winner == Winner::Black)
         {
@@ -143,11 +147,7 @@ void HUD::paint(QPainter &painter)
         }
         else // if (m_winner == Winner::None)
         {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Draw!");
-            painter.setFont(m_victoryFont);
-            painter.setPen(m_victoryPen);
-            painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Draw!");
-            painter.drawImage(m_victoryImagePosition, ImageLibrary::getDrawImage());
+            // Do nothing, this shouldn't happen
         }
     }
     break;

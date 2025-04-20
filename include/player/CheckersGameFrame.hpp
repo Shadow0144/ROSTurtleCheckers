@@ -44,6 +44,7 @@ public:
 	void gameStarted(GameState gameState, const std::vector<size_t> &movableTileIndices);
 	void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
 					  int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices);
+	void drawDeclined();
 	void drawOffered();
 
 protected:
@@ -59,6 +60,7 @@ private:
 
 	void handleOfferRematchButton();
 	void handleOfferDrawButton();
+	void handleDeclineDrawButton();
 	void handleForfitButton();
 	void handleOfferDrawConfirmButton();
 	void handleOfferDrawCancelButton();
@@ -74,6 +76,7 @@ private:
 	QWidget *m_offerDrawConfirmLayoutWidget;
 	QWidget *m_forfitConfirmLayoutWidget;
 	QWidget *m_drawOfferedLayoutWidget;
+	QWidget *m_offeringDrawLayoutWidget;
 
 	QWidget *m_leaveGameLayoutWidget;
 	QPushButton *m_leaveGameButton;
@@ -92,8 +95,7 @@ private:
 	TurtleGraveyardPtr m_redPlayerGraveyard;   // Red player's graveyard containing the slain black pieces
 	HUDPtr m_hud;
 
-	bool m_showingOfferDrawConfirmDialog;
-	bool m_showingForfitConfirmDialog;
+	bool m_showingDialog;
 };
 
 typedef std::unique_ptr<CheckersGameFrame> CheckersGameFrameUniPtr;

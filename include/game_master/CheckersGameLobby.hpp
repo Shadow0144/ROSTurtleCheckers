@@ -10,6 +10,8 @@
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
+#include "turtle_checkers_interfaces/msg/draw_declined.hpp"
+#include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
@@ -69,6 +71,8 @@ private:
     rclcpp::Service<turtle_checkers_interfaces::srv::RequestBoardState>::SharedPtr m_requestBoardStateService;
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::DrawDeclined>::SharedPtr m_drawDeclinedPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::DrawOffered>::SharedPtr m_drawOfferedPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbyPublisher;
@@ -85,6 +89,8 @@ private:
     std::string m_redPlayerName;
     bool m_redPlayerReady;
     bool m_isBlackTurn;
+
+    std::string m_playerOfferingDraw;
 
     MasterBoardPtr m_board;
 };

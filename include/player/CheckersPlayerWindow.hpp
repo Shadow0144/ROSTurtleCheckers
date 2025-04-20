@@ -67,6 +67,7 @@ public:
     void declineDraw();
     void forfit();
 
+    void drawDeclined();
     void drawOffered();
 
     void returnToMainMenu(const std::string &playerName);
