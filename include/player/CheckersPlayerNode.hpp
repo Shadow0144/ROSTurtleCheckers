@@ -17,6 +17,7 @@
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
@@ -81,7 +82,7 @@ private:
     void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
     void playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message);
     void playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message);
-    void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
+    void playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message);
 
     void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event);
 
@@ -109,16 +110,16 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedSubscription;
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadyPublisher;
 
-    long long m_privateKey;
-    long long m_publicKey;
-    long long m_lobbyPublicKey;
+    uint64_t m_privateKey;
+    uint64_t m_publicKey;
+    uint64_t m_gameMasterPublicKey;
 
     QTimer *m_updateTimer;
 };

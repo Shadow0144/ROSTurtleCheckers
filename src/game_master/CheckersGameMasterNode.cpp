@@ -9,10 +9,12 @@
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 
 #include <memory>
+#include <string>
 #include <sstream>
 #include <iomanip>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/RSAKeyGenerator.hpp"
 #include "game_master/CheckersGameLobby.hpp"
 
 using std::placeholders::_1;
@@ -20,6 +22,9 @@ using std::placeholders::_2;
 
 CheckersGameMasterNode::CheckersGameMasterNode()
 {
+    // Create the RSA key pair
+    RSAKeyGenerator::generateRSAKeyPair(m_publicKey, m_privateKey);
+
     // A game node creates a 2-player game for player nodes to publish their moves to
     // The game node publishes when it is ready for which player's next move, what the last move was, and when a winner is decided
     m_gameMasterNode = rclcpp::Node::make_shared("checkers_game_master_node");
@@ -46,6 +51,9 @@ CheckersGameMasterNode::CheckersGameMasterNode()
 void CheckersGameMasterNode::connectToGameMasterRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request> request,
                                                         std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Response> response)
 {
+    (void)request; // NO LINT
+
+    response->game_master_public_key = m_publicKey;
 }
 
 void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Request> request,
@@ -60,16 +68,20 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
     {
         std::string lobbyName = request->lobby_name;
         std::stringstream ss;
-        ss << std::setfill('0') << std::setw(4) << std::to_string(m_lobbyId);
+        ss << std::setfill('0') << std::setw(4) << std::to_string(m_nextLobbyId); // Add leading 0s
         std::string lobbyId = ss.str();
-        m_lobbyId = (m_lobbyId + 1u) % MAX_LOBBY_LIMIT; // Increment the ID
+        m_nextLobbyId = (m_nextLobbyId + 1u) % MAX_LOBBY_LIMIT; // Increment the ID
         attempts++;
         std::string fullName = lobbyName + "#" + lobbyId;
         if (m_checkersGameLobbies.find(fullName) == m_checkersGameLobbies.end())
         {
-            auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode, lobbyName, lobbyId);
+            auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode,
+                                                                         m_publicKey, m_privateKey,
+                                                                         lobbyName, lobbyId);
             m_checkersGameLobbies[fullName] = checkersGameLobby;
-            checkersGameLobby->addPlayer(request->player_name, static_cast<TurtlePieceColor>(request->desired_player_color));
+            checkersGameLobby->addPlayer(request->player_name,
+                                         request->player_public_key,
+                                         static_cast<TurtlePieceColor>(request->desired_player_color));
             response->created = true;
             response->error_msg = "";
             response->lobby_name = lobbyName;
@@ -87,17 +99,26 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
         response->error_msg = lobbyAlreadyExistsError;
         RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyAlreadyExistsError);
     }
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::CreateLobby::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
 }
 
 void CheckersGameMasterNode::getLobbyListRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Request> request,
                                                  std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Response> response)
 {
+    (void)request; // NO LINT
+
     for (const auto &pair : m_checkersGameLobbies)
     {
         response->lobby_names.push_back(pair.second->getLobbyName());
         response->lobby_ids.push_back(pair.second->getLobbyId());
         response->joined_black_player_names.push_back(pair.second->getBlackPlayerName());
         response->joined_red_player_names.push_back(pair.second->getRedPlayerName());
+        response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::srv::GetLobbyList::Response::SharedPtr>{}(response),
+            m_publicKey, m_privateKey);
     }
 }
 
@@ -105,7 +126,7 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
                                               std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Response> response)
 {
     response->joined = false;
-    
+
     // TODO: Check player name
 
     auto lobbyName = request->lobby_name + "#" + request->lobby_id;
@@ -116,7 +137,9 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
         {
             if (!checkersGameLobby->containsPlayer(request->player_name))
             {
-                checkersGameLobby->addPlayer(request->player_name, static_cast<TurtlePieceColor>(request->desired_player_color));
+                checkersGameLobby->addPlayer(request->player_name,
+                                             request->player_public_key,
+                                             static_cast<TurtlePieceColor>(request->desired_player_color));
                 response->joined = true;
                 response->error_msg = "";
                 response->lobby_name = request->lobby_name;
@@ -146,10 +169,15 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
         response->error_msg = lobbyDoesNotExistError;
         RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyDoesNotExistError);
     }
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::JoinLobby::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
 }
 
 void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message)
 {
+    // TODO Confirm that the message has the correct key for the player
     auto lobbyName = message->lobby_name + "#" + message->lobby_id;
     if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
     {

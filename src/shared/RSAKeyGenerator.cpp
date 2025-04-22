@@ -1,5 +1,6 @@
 #include "shared/RSAKeyGenerator.hpp"
 
+#include <cstdint>
 #include <iostream>
 #include <random>
 #include <cmath>
@@ -8,15 +9,15 @@
 
 #include "shared/CheckersConsts.hpp"
 
-long long e = 65537;
+int64_t e = 65537;
 
-void RSAKeyGenerator::generateRSAKeyPair(long long &publicKey, long long &privateKey)
+void RSAKeyGenerator::generateRSAKeyPair(uint64_t &publicKey, uint64_t &privateKey)
 {
-    long long p;
-    long long q;
-    long long n;
-    long long phi;
-    long long d;
+    int64_t p;
+    int64_t q;
+    int64_t n;
+    int64_t phi;
+    int64_t d;
 
     do
     {
@@ -40,18 +41,18 @@ void RSAKeyGenerator::generateRSAKeyPair(long long &publicKey, long long &privat
         d += phi;
     }
 
-    publicKey = n;
-    privateKey = d;
+    publicKey = static_cast<uint64_t>(n);
+    privateKey = static_cast<uint64_t>(d);
 }
 
 // Function to generate a large random prime number
-long long RSAKeyGenerator::generateLargePrime(int numBits)
+int64_t RSAKeyGenerator::generateLargePrime(uint64_t numBits)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<long long> distrib(std::pow(2, numBits - 1), std::pow(2, numBits) - 1);
+    std::uniform_int_distribution<int64_t> distrib(std::pow(2, numBits - 1), std::pow(2, numBits) - 1);
 
-    long long largePrime;
+    int64_t largePrime;
     do
     {
         largePrime = distrib(gen);
@@ -62,7 +63,7 @@ long long RSAKeyGenerator::generateLargePrime(int numBits)
 }
 
 // Miller-Rabin primality test
-bool RSAKeyGenerator::isPrime(long long n, int k)
+bool RSAKeyGenerator::isPrime(int64_t n, int64_t k)
 {
     if (n <= 1)
     {
@@ -78,8 +79,8 @@ bool RSAKeyGenerator::isPrime(long long n, int k)
     }
 
     // Find (s, r) pair for n-1 = 2^s * r such that r is odd
-    long long s = 0;
-    long long r = n - 1;
+    int64_t s = 0;
+    int64_t r = n - 1;
     while (r % 2 == 0)
     {
         s++;
@@ -87,20 +88,20 @@ bool RSAKeyGenerator::isPrime(long long n, int k)
     }
 
     // Do k iterations of Miller-Rabin test
-    for (int i = 0; i < k; i++)
+    for (int64_t i = 0; i < k; i++)
     {
         // Generate a random number a in range [2, n-2]
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<long long> distrib(2, n - 2);
-        long long a = distrib(gen);
+        std::uniform_int_distribution<int64_t> distrib(2, n - 2);
+        int64_t a = distrib(gen);
 
-        long long x = modularExponentiation(a, r, n);
+        int64_t x = modularExponentiation(a, r, n);
         if (x == 1 || x == n - 1)
         {
             continue;
         }
-        for (long long j = 0; j < s - 1; j++)
+        for (int64_t j = 0; j < s - 1; j++)
         {
             x = modularExponentiation(x, 2, n);
             if (x == n - 1)
@@ -117,21 +118,25 @@ bool RSAKeyGenerator::isPrime(long long n, int k)
 }
 
 // Function to calculate modular exponentiation (for Miller-Rabin test)
-long long RSAKeyGenerator::modularExponentiation(long long base, long long exp, long long mod)
+uint64_t RSAKeyGenerator::modularExponentiation(uint64_t base, uint64_t exp, uint64_t mod)
 {
-    long long res = 1;
-    base %= mod;
+    uint64_t res = 1;
+    base %= mod;  // Make sure base is in the correct range [0, mod-1]
+
     while (exp > 0)
     {
-        if (exp % 2 == 1)
-            res = (res * base) % mod;
-        base = (base * base) % mod;
-        exp /= 2;
+        if (exp % 2 == 1)  // If exp is odd
+        {
+            res = (res * base) % mod;  // Multiply the result with the base and apply mod
+        }
+        base = (base * base) % mod;  // Square the base and apply mod
+        exp /= 2;  // Halve the exponent
     }
+
     return res;
 }
 
-long long RSAKeyGenerator::extendedEuclidean(long long a, long long b, long long &x, long long &y)
+int64_t RSAKeyGenerator::extendedEuclidean(int64_t a, int64_t b, int64_t &x, int64_t &y)
 {
     if (b == 0)
     {
@@ -140,9 +145,9 @@ long long RSAKeyGenerator::extendedEuclidean(long long a, long long b, long long
         return a;
     }
 
-    long long x1;
-    long long y1;
-    long long gcd = extendedEuclidean(b, a % b, x1, y1);
+    int64_t x1;
+    int64_t y1;
+    int64_t gcd = extendedEuclidean(b, a % b, x1, y1);
 
     x = y1;
     y = x1 - (a / b) * y1;
@@ -150,11 +155,11 @@ long long RSAKeyGenerator::extendedEuclidean(long long a, long long b, long long
     return gcd;
 }
 
-long long RSAKeyGenerator::modInverse(long long e, long long phi)
+int64_t RSAKeyGenerator::modInverse(int64_t e, int64_t phi)
 {
-    long long x;
-    long long y;
-    long long gcd = extendedEuclidean(e, phi, x, y);
+    int64_t x;
+    int64_t y;
+    int64_t gcd = extendedEuclidean(e, phi, x, y);
 
     if (gcd != 1)
     {
@@ -164,12 +169,15 @@ long long RSAKeyGenerator::modInverse(long long e, long long phi)
     return (x % phi + phi) % phi;
 }
 
-long long RSAKeyGenerator::createChecksumSignature(long long hash, long long privateKey, long long publicKey)
+uint64_t RSAKeyGenerator::createChecksumSignature(uint64_t hash, uint64_t publicKey, uint64_t privateKey)
 {
-    return (modularExponentiation(hash, privateKey, publicKey));
+    uint64_t signature = modularExponentiation(hash, privateKey, publicKey);
+    return signature;
 }
 
-bool RSAKeyGenerator::checksumSignatureMatches(long long hash, long long publicKey, long long signature)
+bool RSAKeyGenerator::checksumSignatureMatches(uint64_t hash, uint64_t publicKey, uint64_t signature)
 {
-    return (modularExponentiation(signature, e, publicKey) == hash);
+    uint64_t boundHash = hash % publicKey;
+    uint64_t recoveredHash = modularExponentiation(signature, e, publicKey);
+    return (boundHash == recoveredHash);
 }

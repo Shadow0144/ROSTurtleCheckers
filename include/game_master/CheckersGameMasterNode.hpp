@@ -46,8 +46,8 @@ private:
     std::unordered_map<std::string, CheckersGameLobbyPtr> m_checkersGameLobbies;
 
     uint16_t MAX_LOBBY_LIMIT = 1000; // Max ID is 1 less, they then loop around
-    uint16_t m_lobbyId; // [0 - MAX_LOBBY_LIMIT)
+    uint16_t m_nextLobbyId; // [0 - MAX_LOBBY_LIMIT)
 
-    long long m_privateKey;
-    long long m_publicKey;
+    uint64_t m_publicKey;
+    uint64_t m_privateKey;
 };

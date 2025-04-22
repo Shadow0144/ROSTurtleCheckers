@@ -17,6 +17,7 @@
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
@@ -26,6 +27,8 @@ class CheckersGameLobby
 {
 public:
     CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
+                      uint64_t publicKey,
+                      uint64_t privateKey,
                       const std::string &lobbyName,
                       const std::string &lobbyId);
 
@@ -35,7 +38,7 @@ public:
     bool isLobbyEmpty() const;
     bool isPlayerSlotAvailable() const;
     bool containsPlayer(const std::string &playerName) const;
-    TurtlePieceColor addPlayer(const std::string &playerName, TurtlePieceColor desiredColor);
+    TurtlePieceColor addPlayer(const std::string &playerName, uint64_t playerPublicKey, TurtlePieceColor desiredColor);
     void removePlayer(const std::string &playerName);
 
     const std::string &getBlackPlayerName() const;
@@ -77,6 +80,7 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbyPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawSubscription;
@@ -93,6 +97,11 @@ private:
     std::string m_playerOfferingDraw;
 
     MasterBoardPtr m_board;
+    
+    uint64_t m_publicKey;
+    uint64_t m_privateKey;
+    uint64_t m_blackPlayerPublicKey;
+    uint64_t m_redPlayerPublicKey;
 };
 
 typedef std::shared_ptr<CheckersGameLobby> CheckersGameLobbyPtr;

@@ -1,17 +1,19 @@
 #pragma once
 
+#include <cstdint>
+
 class RSAKeyGenerator
 {
 public:
-    void generateRSAKeyPair(long long &publicKey, long long &privateKey);
-    
-    long long createChecksumSignature(long long hash, long long privateKey, long long publicKey);
-    bool checksumSignatureMatches(long long hash, long long publicKey, long long signature);
+    static void generateRSAKeyPair(uint64_t &publicKey, uint64_t &privateKey);
+
+    static uint64_t createChecksumSignature(uint64_t hash, uint64_t publicKey, uint64_t privateKey);
+    static bool checksumSignatureMatches(uint64_t hash, uint64_t publicKey, uint64_t signature);
 
 private:
-    long long generateLargePrime(int numBits);
-    bool isPrime(long long n, int k = 5);
-    long long modularExponentiation(long long base, long long exp, long long mod);
-    long long extendedEuclidean(long long a, long long b, long long &x, long long &y);
-    long long modInverse(long long e, long long phi);
+    static int64_t generateLargePrime(uint64_t numBits);
+    static bool isPrime(int64_t n, int64_t k = 5);
+    static uint64_t modularExponentiation(uint64_t base, uint64_t exp, uint64_t mod);
+    static int64_t extendedEuclidean(int64_t a, int64_t b, int64_t &x, int64_t &y);
+    static int64_t modInverse(int64_t e, int64_t phi);
 };
