@@ -32,6 +32,7 @@
 #include <QTimer>
 
 #include <algorithm>
+#include <string>
 
 #include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
@@ -147,6 +148,7 @@ void CheckersPlayerNode::parameterEventCallback(
 void CheckersPlayerNode::createLobby(
     const std::string &playerName,
     const std::string &lobbyName,
+    const std::string &lobbyPassword,
     TurtlePieceColor playerDesiredColor)
 {
     m_playerName = playerName;
@@ -154,6 +156,16 @@ void CheckersPlayerNode::createLobby(
     auto request = std::make_shared<turtle_checkers_interfaces::srv::CreateLobby::Request>();
     request->player_name = m_playerName;
     request->lobby_name = m_lobbyName;
+    if (lobbyPassword.empty())
+    {
+        request->encrypted_hashed_lobby_password = 0u;
+    }
+    else
+    {
+        uint64_t hashedLobbyPassword = std::hash<std::string>{}(lobbyPassword);
+        uint64_t encryptedHashedLobbyPassword = RSAKeyGenerator::encrypt(hashedLobbyPassword, m_gameMasterPublicKey);
+        request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
+    }
     request->desired_player_color = static_cast<size_t>(playerDesiredColor);
     request->player_public_key = m_publicKey;
     m_createLobbyClient->async_send_request(request,
@@ -165,6 +177,7 @@ void CheckersPlayerNode::joinLobby(
     const std::string &playerName,
     const std::string &lobbyName,
     const std::string &lobbyId,
+    const std::string &lobbyPassword,
     TurtlePieceColor playerDesiredColor)
 {
     m_playerName = playerName;
@@ -174,6 +187,16 @@ void CheckersPlayerNode::joinLobby(
     request->player_name = m_playerName;
     request->lobby_name = m_lobbyName;
     request->lobby_id = m_lobbyId;
+    if (lobbyPassword.empty())
+    {
+        request->encrypted_hashed_lobby_password = 0u;
+    }
+    else
+    {
+        uint64_t hashedLobbyPassword = std::hash<std::string>{}(lobbyPassword);
+        uint64_t encryptedHashedLobbyPassword = RSAKeyGenerator::encrypt(hashedLobbyPassword, m_gameMasterPublicKey);
+        request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
+    }
     request->desired_player_color = static_cast<size_t>(playerDesiredColor);
     request->player_public_key = m_publicKey;
     m_joinLobbyClient->async_send_request(request,
@@ -245,6 +268,7 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
 
     m_checkersPlayerWindow->updateLobbyList(result->lobby_names,
                                             result->lobby_ids,
+                                            result->has_passwords,
                                             result->joined_black_player_names,
                                             result->joined_red_player_names);
 }
@@ -265,6 +289,10 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
     }
     else
     {
+        if (result->error_msg == "Incorrect password.") // TODO
+        {
+            m_checkersPlayerWindow->setPasswordIncorrect();
+        }
         RCLCPP_WARN(m_playerNode->get_logger(), result->error_msg);
     }
 }

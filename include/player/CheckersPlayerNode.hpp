@@ -44,10 +44,12 @@ public:
 
     void createLobby(const std::string &playerName,
                      const std::string &lobbyName,
+                     const std::string &lobbyPassword,
                      TurtlePieceColor playerDesiredColor);
     void joinLobby(const std::string &playerName,
                    const std::string &lobbyName,
                    const std::string &lobbyId,
+                   const std::string &lobbyPassword,
                    TurtlePieceColor playerDesiredColor);
     void getLobbyList();
     void leaveLobby();

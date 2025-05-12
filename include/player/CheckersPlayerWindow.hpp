@@ -23,16 +23,20 @@ public:
 
     void createLobby(const std::string &playerName,
                      const std::string &lobbyName,
+                     const std::string &lobbyPassword,
                      TurtlePieceColor playerColor);
     void joinLobby(const std::string &playerName,
                    const std::string &lobbyName,
                    const std::string &lobbyId,
+                   const std::string &lobbyPassword,
                    TurtlePieceColor playerColor);
     void getLobbyList();
     void updateLobbyList(const std::vector<std::string> &lobbyNames,
                          const std::vector<std::string> &lobbyIds,
+                         const std::vector<bool> &hasPasswords,
                          const std::vector<std::string> &blackPlayerNames,
                          const std::vector<std::string> &redPlayerNames);
+    void setPasswordIncorrect();
     void leaveLobby();
 
     void setReady(bool ready);

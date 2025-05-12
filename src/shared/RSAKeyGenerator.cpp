@@ -169,6 +169,16 @@ int64_t RSAKeyGenerator::modInverse(int64_t e, int64_t phi)
     return (x % phi + phi) % phi;
 }
 
+uint64_t RSAKeyGenerator::encrypt(uint64_t message, uint64_t key)
+{
+    return modularExponentiation(message, e, key);
+}
+
+uint64_t RSAKeyGenerator::unencrypt(uint64_t message, uint64_t privateKey, uint64_t publicKey)
+{
+    return modularExponentiation(message, privateKey, publicKey);
+}
+
 uint64_t RSAKeyGenerator::createChecksumSignature(uint64_t hash, uint64_t publicKey, uint64_t privateKey)
 {
     uint64_t signature = modularExponentiation(hash, privateKey, publicKey);

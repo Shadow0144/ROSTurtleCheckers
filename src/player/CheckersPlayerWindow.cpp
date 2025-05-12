@@ -48,22 +48,24 @@ void CheckersPlayerWindow::setConnectedToServer(bool connected)
 
 void CheckersPlayerWindow::createLobby(const std::string &playerName,
                                        const std::string &lobbyName,
+                                       const std::string &lobbyPassword,
                                        TurtlePieceColor playerColor)
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->createLobby(playerName, lobbyName, playerColor);
+        playerNode->createLobby(playerName, lobbyName, lobbyPassword, playerColor);
     }
 }
 
 void CheckersPlayerWindow::joinLobby(const std::string &playerName,
                                      const std::string &lobbyName,
                                      const std::string &lobbyId,
+                                     const std::string &lobbyPassword,
                                      TurtlePieceColor playerColor)
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->joinLobby(playerName, lobbyName, lobbyId, playerColor);
+        playerNode->joinLobby(playerName, lobbyName, lobbyId, lobbyPassword, playerColor);
     }
 }
 
@@ -77,12 +79,25 @@ void CheckersPlayerWindow::getLobbyList()
 
 void CheckersPlayerWindow::updateLobbyList(const std::vector<std::string> &lobbyNames,
                                            const std::vector<std::string> &lobbyIds,
+                                           const std::vector<bool> &hasPasswords,
                                            const std::vector<std::string> &blackPlayerNames,
                                            const std::vector<std::string> &redPlayerNames)
 {
     if (m_checkersMainMenuFrame)
     {
-        m_checkersMainMenuFrame->displayLobbyList(lobbyNames, lobbyIds, blackPlayerNames, redPlayerNames);
+        m_checkersMainMenuFrame->displayLobbyList(lobbyNames,
+                                                  lobbyIds,
+                                                  hasPasswords,
+                                                  blackPlayerNames,
+                                                  redPlayerNames);
+    }
+}
+
+void CheckersPlayerWindow::setPasswordIncorrect()
+{
+    if (m_checkersMainMenuFrame)
+    {
+        m_checkersMainMenuFrame->setPasswordIncorrect();
     }
 }
 

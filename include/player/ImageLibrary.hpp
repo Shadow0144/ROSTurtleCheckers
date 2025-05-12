@@ -10,6 +10,8 @@
 class ImageLibrary
 {
 public:
+    static QImage getLockImage();
+
     static QImage getTurtleImage(TurtlePieceColor turtleColor);
     static QImage getKingImage(TurtlePieceColor turtleColor);
     static QImage getMovableImage(TurtlePieceColor turtleColor);
@@ -26,6 +28,8 @@ public:
 
 private:
     static void createLibraryInstance();
+
+    QImage m_lockImage;
 
     QVector<QImage> m_blackTurtleImages;
     QVector<QImage> m_redTurtleImages;

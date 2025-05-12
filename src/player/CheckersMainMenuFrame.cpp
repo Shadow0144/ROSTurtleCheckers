@@ -20,6 +20,7 @@
 #include <QPixmap>
 #include <QSpacerItem>
 #include <QStyle>
+#include <QSizePolicy>
 
 #include <cstdlib>
 #include <ctime>
@@ -57,6 +58,7 @@ CheckersMainMenuFrame::CheckersMainMenuFrame(
     m_windowLayout->insertWidget(MAIN_MENU_INDEX, createMainMenuScreen());
     m_windowLayout->insertWidget(CREATE_LOBBY_INDEX, createCreateLobbyScreen());
     m_windowLayout->insertWidget(JOIN_LOBBY_INDEX, new QWidget());
+    m_windowLayout->insertWidget(ENTER_LOBBY_PASSWORD_INDEX, new QWidget());
     m_windowLayout->insertWidget(IN_LOBBY_INDEX, new QWidget());
     m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
 }
@@ -134,6 +136,15 @@ QWidget *CheckersMainMenuFrame::createCreateLobbyScreen()
     m_lobbyNameLineEdit->setProperty("valid", false);
     connect(m_lobbyNameLineEdit, &QLineEdit::textChanged, this, &CheckersMainMenuFrame::validatelobbyNameText);
     createLobbyLayout->addWidget(m_lobbyNameLineEdit);
+
+    auto lobbyPasswordLabel = new QLabel("Lobby password");
+    createLobbyLayout->addWidget(lobbyPasswordLabel);
+
+    m_createLobbyPasswordLineEdit = new QLineEdit();
+    m_createLobbyPasswordLineEdit->setEchoMode(QLineEdit::Password);
+    m_createLobbyPasswordLineEdit->setProperty("in_use", false);
+    connect(m_createLobbyPasswordLineEdit, &QLineEdit::textChanged, this, &CheckersMainMenuFrame::onCreateLobbyPasswordTextChanged);
+    createLobbyLayout->addWidget(m_createLobbyPasswordLineEdit);
 
     auto createLobbyDesiredColorLayout = new QHBoxLayout();
     createLobbyDesiredColorLayout->setAlignment(Qt::AlignCenter);
@@ -255,6 +266,17 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
         redPlayerNameLabel->setEnabled(redPlayerJoined);
         lobbyLayout->addWidget(redPlayerNameLabel);
 
+        auto lockIconLabel = new QLabel();
+        auto lockIcon = QPixmap::fromImage(ImageLibrary::getLockImage());
+        auto scaledLockIcon = lockIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                              Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        lockIconLabel->setPixmap(scaledLockIcon);
+        auto lockIconLabelSizePolicy = lockIconLabel->sizePolicy();
+        lockIconLabelSizePolicy.setRetainSizeWhenHidden(true);
+        lockIconLabel->setSizePolicy(lockIconLabelSizePolicy);
+        lockIconLabel->setVisible(m_hasPasswords[i]);
+        lobbyLayout->addWidget(lockIconLabel);
+
         std::string joinLobbyString = "Join";
         auto joinLobbyButton = new QPushButton(joinLobbyString.c_str());
         if (!blackPlayerJoined || !redPlayerJoined)
@@ -338,6 +360,67 @@ QWidget *CheckersMainMenuFrame::createJoinLobbyScreen()
     joinLobbyLayout->addLayout(joinLobbyButtonLayout);
 
     return joinLobbyLayoutWidget;
+}
+
+QWidget *CheckersMainMenuFrame::createEnterLobbyPasswordScreen(size_t lobbyIndex)
+{
+    auto enterLobbyPasswordLayoutWidget = new QWidget();
+    auto enterLobbyPasswordLayout = new QVBoxLayout(enterLobbyPasswordLayoutWidget);
+    enterLobbyPasswordLayout->setAlignment(Qt::AlignCenter);
+
+    auto enterLobbyPasswordTitleLabel = new QLabel("Turtle Checkers");
+    auto titleFont = enterLobbyPasswordTitleLabel->font();
+    titleFont.setPointSize(TITLE_FONT_SIZE);
+    enterLobbyPasswordTitleLabel->setFont(titleFont);
+    enterLobbyPasswordLayout->addWidget(enterLobbyPasswordTitleLabel);
+
+    auto lobbyNameLayout = new QHBoxLayout();
+
+    auto lobbyNameLabel = new QLabel(m_lobbyName.c_str());
+    lobbyNameLayout->addWidget(lobbyNameLabel);
+
+    std::string lobbyIdWithHash = "#" + m_lobbyId;
+    auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
+    lobbyNameLayout->addWidget(lobbyIdLabel);
+
+    enterLobbyPasswordLayout->addLayout(lobbyNameLayout);
+
+    auto lobbyPasswordLabel = new QLabel("Lobby password");
+    enterLobbyPasswordLayout->addWidget(lobbyPasswordLabel);
+
+    m_enterLobbyPasswordLineEdit = new QLineEdit();
+    m_enterLobbyPasswordLineEdit->setEchoMode(QLineEdit::Password);
+    m_enterLobbyPasswordLineEdit->setProperty("in_use", false);
+    connect(m_enterLobbyPasswordLineEdit, &QLineEdit::textChanged, this, &CheckersMainMenuFrame::onEnterLobbyPasswordTextChanged);
+    enterLobbyPasswordLayout->addWidget(m_enterLobbyPasswordLineEdit);
+
+    m_passwordIncorrectLabel = new QLabel("Incorrect password");
+    m_passwordIncorrectLabel->setProperty("error", true);
+    auto passwordIncorrectLabelSizePolicy = m_passwordIncorrectLabel->sizePolicy();
+    passwordIncorrectLabelSizePolicy.setRetainSizeWhenHidden(true);
+    m_passwordIncorrectLabel->setSizePolicy(passwordIncorrectLabelSizePolicy);
+    m_passwordIncorrectLabel->setVisible(false);
+    enterLobbyPasswordLayout->addWidget(m_passwordIncorrectLabel);
+
+    auto enterLobbyPasswordButtonLayout = new QHBoxLayout();
+
+    std::string commitJoinLobbyString = "Join Lobby";
+    m_commitJoinLobbyButton = new QPushButton(commitJoinLobbyString.c_str());
+    m_commitJoinLobbyButton->setEnabled(false);
+    connect(m_commitJoinLobbyButton, &QPushButton::released, this,
+            [lobbyIndex, this]()
+            { this->handleConfirmPassword(lobbyIndex); });
+    enterLobbyPasswordButtonLayout->addWidget(m_commitJoinLobbyButton);
+
+    std::string cancelJoinLobbyString = "Cancel";
+    auto cancelJoinLobbyButton = new QPushButton(cancelJoinLobbyString.c_str());
+    connect(cancelJoinLobbyButton, &QPushButton::released, this,
+            &CheckersMainMenuFrame::handleCancelEnterLobbyPasswordButton);
+    enterLobbyPasswordButtonLayout->addWidget(cancelJoinLobbyButton);
+
+    enterLobbyPasswordLayout->addLayout(enterLobbyPasswordButtonLayout);
+
+    return enterLobbyPasswordLayoutWidget;
 }
 
 QWidget *CheckersMainMenuFrame::createInLobbyScreen()
@@ -565,6 +648,11 @@ void CheckersMainMenuFrame::setPlayerReady(const std::string &playerName, bool r
     }
 }
 
+void CheckersMainMenuFrame::setPasswordIncorrect()
+{
+    m_passwordIncorrectLabel->setVisible(true);
+}
+
 void CheckersMainMenuFrame::validatePlayerNameText(const QString &playerName)
 {
     QString playerNameCopy = playerName; // Remove the const
@@ -621,13 +709,34 @@ void CheckersMainMenuFrame::validatelobbyNameText(const QString &lobbyName)
     m_lobbyNameLineEdit->update();
 }
 
+void CheckersMainMenuFrame::onCreateLobbyPasswordTextChanged(const QString &lobbyPassword)
+{
+    m_createLobbyPasswordLineEdit->setProperty("in_use", !lobbyPassword.isEmpty());
+    // Update the style
+    m_createLobbyPasswordLineEdit->style()->unpolish(m_createLobbyPasswordLineEdit);
+    m_createLobbyPasswordLineEdit->style()->polish(m_createLobbyPasswordLineEdit);
+    m_createLobbyPasswordLineEdit->update();
+}
+
+void CheckersMainMenuFrame::onEnterLobbyPasswordTextChanged(const QString &lobbyPassword)
+{
+    m_commitJoinLobbyButton->setEnabled(!lobbyPassword.isEmpty());
+    m_createLobbyPasswordLineEdit->setProperty("in_use", !lobbyPassword.isEmpty());
+    // Update the style
+    m_createLobbyPasswordLineEdit->style()->unpolish(m_createLobbyPasswordLineEdit);
+    m_createLobbyPasswordLineEdit->style()->polish(m_createLobbyPasswordLineEdit);
+    m_createLobbyPasswordLineEdit->update();
+}
+
 void CheckersMainMenuFrame::displayLobbyList(const std::vector<std::string> &lobbyNames,
                                              const std::vector<std::string> &lobbyIds,
+                                             const std::vector<bool> &hasPasswords,
                                              const std::vector<std::string> &blackPlayerNames,
                                              const std::vector<std::string> &redPlayerNames)
 {
     m_lobbyNames = lobbyNames;
     m_lobbyIds = lobbyIds;
+    m_hasPasswords = hasPasswords;
     m_blackPlayerNames = blackPlayerNames;
     m_redPlayerNames = redPlayerNames;
     m_windowLayout->insertWidget(JOIN_LOBBY_INDEX, createJoinLobbyScreen());
@@ -645,12 +754,19 @@ void CheckersMainMenuFrame::handleCreateLobbyButton()
 
 void CheckersMainMenuFrame::handleCancelCreateLobbyButton()
 {
+    m_lobbyName = "";
+    m_lobbyId = "";
     m_playerDesiredColor = TurtlePieceColor::None;
     m_lobbyNameLineEdit->clear();
     m_lobbyNameLineEdit->setProperty("valid", false);
     m_lobbyNameLineEdit->style()->unpolish(m_lobbyNameLineEdit);
     m_lobbyNameLineEdit->style()->polish(m_lobbyNameLineEdit);
     m_lobbyNameLineEdit->update();
+    m_createLobbyPasswordLineEdit->clear();
+    m_createLobbyPasswordLineEdit->setProperty("in_use", false);
+    m_createLobbyPasswordLineEdit->style()->unpolish(m_createLobbyPasswordLineEdit);
+    m_createLobbyPasswordLineEdit->style()->polish(m_createLobbyPasswordLineEdit);
+    m_createLobbyPasswordLineEdit->update();
     m_commitCreateLobbyButton->setEnabled(false);
     m_playerNameLineEdit->setText(m_playerName.c_str());
     m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
@@ -658,12 +774,44 @@ void CheckersMainMenuFrame::handleCancelCreateLobbyButton()
 
 void CheckersMainMenuFrame::handleCommitCreateLobbyButton()
 {
-    m_playerWindow->createLobby(m_playerName, m_lobbyName, m_playerDesiredColor);
+    auto lobbyPassword = m_createLobbyPasswordLineEdit->text().toStdString();
+    m_playerWindow->createLobby(m_playerName, m_lobbyName, lobbyPassword, m_playerDesiredColor);
 }
 
 void CheckersMainMenuFrame::handleCommitJoinLobbyButton(size_t lobbyIndex)
 {
-    m_playerWindow->joinLobby(m_playerName, m_lobbyNames[lobbyIndex], m_lobbyIds[lobbyIndex], m_playerDesiredColor);
+    m_lobbyName = m_lobbyNames[lobbyIndex];
+    m_lobbyId = m_lobbyIds[lobbyIndex];
+    if (m_hasPasswords[lobbyIndex])
+    {
+        // Go to the screen for handling a password
+        m_windowLayout->insertWidget(ENTER_LOBBY_PASSWORD_INDEX, createEnterLobbyPasswordScreen(lobbyIndex));
+        m_windowLayout->setCurrentIndex(ENTER_LOBBY_PASSWORD_INDEX);
+    }
+    else
+    {
+        handleConfirmPassword(lobbyIndex);
+    }
+}
+
+void CheckersMainMenuFrame::handleCancelEnterLobbyPasswordButton()
+{
+    m_enterLobbyPasswordLineEdit->clear();
+    m_enterLobbyPasswordLineEdit->setProperty("in_use", false);
+    m_enterLobbyPasswordLineEdit->style()->unpolish(m_enterLobbyPasswordLineEdit);
+    m_enterLobbyPasswordLineEdit->style()->polish(m_enterLobbyPasswordLineEdit);
+    m_enterLobbyPasswordLineEdit->update();
+    m_windowLayout->setCurrentIndex(JOIN_LOBBY_INDEX);
+}
+
+void CheckersMainMenuFrame::handleConfirmPassword(size_t lobbyIndex)
+{
+    auto lobbyPassword = "";
+    if (m_enterLobbyPasswordLineEdit)
+    {
+        m_enterLobbyPasswordLineEdit->text().toStdString();
+    }
+    m_playerWindow->joinLobby(m_playerName, m_lobbyNames[lobbyIndex], m_lobbyIds[lobbyIndex], lobbyPassword, m_playerDesiredColor);
 }
 
 void CheckersMainMenuFrame::handleRefreshJoinLobbyButton()
@@ -694,6 +842,18 @@ void CheckersMainMenuFrame::handleLeaveLobbyButton()
     m_redPlayerName = "";
     m_blackPlayerReady = false;
     m_redPlayerReady = false;
+    m_lobbyNameLineEdit->clear();
+    m_lobbyNameLineEdit->setProperty("valid", false);
+    m_lobbyNameLineEdit->style()->unpolish(m_lobbyNameLineEdit);
+    m_lobbyNameLineEdit->style()->polish(m_lobbyNameLineEdit);
+    m_lobbyNameLineEdit->update();
+    m_createLobbyPasswordLineEdit->clear();
+    m_createLobbyPasswordLineEdit->setProperty("in_use", false);
+    m_createLobbyPasswordLineEdit->style()->unpolish(m_lobbyNameLineEdit);
+    m_createLobbyPasswordLineEdit->style()->polish(m_lobbyNameLineEdit);
+    m_createLobbyPasswordLineEdit->update();
+    m_commitCreateLobbyButton->setEnabled(false);
+    m_playerNameLineEdit->setText(m_playerName.c_str());
     m_playerWindow->leaveLobby();
     m_playerNameLineEdit->setText(m_playerName.c_str());
     m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);

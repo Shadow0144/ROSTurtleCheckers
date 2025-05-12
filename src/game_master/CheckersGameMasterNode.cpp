@@ -73,11 +73,15 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
         m_nextLobbyId = (m_nextLobbyId + 1u) % MAX_LOBBY_LIMIT; // Increment the ID
         attempts++;
         std::string fullName = lobbyName + "#" + lobbyId;
+        uint32_t encryptedHashedLobbyPassword = request->encrypted_hashed_lobby_password; // Encrypted with own public key
+        uint32_t unencryptedHashedLobbyPassword = RSAKeyGenerator::unencrypt(encryptedHashedLobbyPassword, m_privateKey, m_publicKey);
         if (m_checkersGameLobbies.find(fullName) == m_checkersGameLobbies.end())
         {
             auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode,
                                                                          m_publicKey, m_privateKey,
-                                                                         lobbyName, lobbyId);
+                                                                         lobbyName,
+                                                                         lobbyId,
+                                                                         unencryptedHashedLobbyPassword);
             m_checkersGameLobbies[fullName] = checkersGameLobby;
             checkersGameLobby->addPlayer(request->player_name,
                                          request->player_public_key,
@@ -114,6 +118,7 @@ void CheckersGameMasterNode::getLobbyListRequest(const std::shared_ptr<turtle_ch
     {
         response->lobby_names.push_back(pair.second->getLobbyName());
         response->lobby_ids.push_back(pair.second->getLobbyId());
+        response->has_passwords.push_back(pair.second->hasPassword());
         response->joined_black_player_names.push_back(pair.second->getBlackPlayerName());
         response->joined_red_player_names.push_back(pair.second->getRedPlayerName());
         response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
@@ -133,34 +138,46 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
     if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
     {
         auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
-        if (checkersGameLobby->isPlayerSlotAvailable())
+
+        uint32_t encryptedHashedLobbyPassword = request->encrypted_hashed_lobby_password; // Encrypted with own public key
+        uint32_t unencryptedHashedLobbyPassword = RSAKeyGenerator::unencrypt(encryptedHashedLobbyPassword, m_privateKey, m_publicKey);
+        if (checkersGameLobby->passwordMatches(unencryptedHashedLobbyPassword))
         {
-            if (!checkersGameLobby->containsPlayer(request->player_name))
+            if (checkersGameLobby->isPlayerSlotAvailable())
             {
-                checkersGameLobby->addPlayer(request->player_name,
-                                             request->player_public_key,
-                                             static_cast<TurtlePieceColor>(request->desired_player_color));
-                response->joined = true;
-                response->error_msg = "";
-                response->lobby_name = request->lobby_name;
-                response->lobby_id = request->lobby_id;
-                response->black_player_name = checkersGameLobby->getBlackPlayerName();
-                response->red_player_name = checkersGameLobby->getRedPlayerName();
-                response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
-                response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+                if (!checkersGameLobby->containsPlayer(request->player_name))
+                {
+                    checkersGameLobby->addPlayer(request->player_name,
+                                                 request->player_public_key,
+                                                 static_cast<TurtlePieceColor>(request->desired_player_color));
+                    response->joined = true;
+                    response->error_msg = "";
+                    response->lobby_name = request->lobby_name;
+                    response->lobby_id = request->lobby_id;
+                    response->black_player_name = checkersGameLobby->getBlackPlayerName();
+                    response->red_player_name = checkersGameLobby->getRedPlayerName();
+                    response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
+                    response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+                }
+                else
+                {
+                    std::string playerAlreadyInLobbyError = "Player " + request->player_name + " already connected to this lobby.";
+                    response->error_msg = playerAlreadyInLobbyError;
+                    RCLCPP_WARN(m_gameMasterNode->get_logger(), playerAlreadyInLobbyError);
+                }
             }
             else
             {
-                std::string playerAlreadyInLobbyError = "Player " + request->player_name + " already connected to this lobby.";
-                response->error_msg = playerAlreadyInLobbyError;
-                RCLCPP_WARN(m_gameMasterNode->get_logger(), playerAlreadyInLobbyError);
+                std::string lobbyFullError = "Lobby is full.";
+                response->error_msg = lobbyFullError;
+                RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyFullError);
             }
         }
         else
         {
-            std::string lobbyFullError = "Lobby is full.";
-            response->error_msg = lobbyFullError;
-            RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyFullError);
+            std::string incorrectPasswordError = "Incorrect password.";
+            response->error_msg = incorrectPasswordError;
+            RCLCPP_INFO(m_gameMasterNode->get_logger(), incorrectPasswordError);
         }
     }
     else

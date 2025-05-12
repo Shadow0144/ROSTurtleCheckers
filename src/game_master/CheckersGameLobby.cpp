@@ -33,13 +33,15 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
                                      uint64_t publicKey,
                                      uint64_t privateKey,
                                      const std::string &lobbyName,
-                                     const std::string &lobbyId)
+                                     const std::string &lobbyId,
+                                     uint64_t lobbyPasswordHash)
     : m_lobbyName(lobbyName),
       m_lobbyId(lobbyId)
 {
     m_nodeHandle = nodeHandle;
     m_publicKey = publicKey;
     m_privateKey = privateKey;
+    m_lobbyPasswordHash = lobbyPasswordHash;
 
     m_board = std::make_shared<MasterBoard>();
 
@@ -151,23 +153,23 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, uin
 
     switch (acceptedColor)
     {
-        case TurtlePieceColor::Black:
-        {
-            m_blackPlayerName = playerName;
-            m_blackPlayerPublicKey = playerPublicKey;
-        }
-        break;
-        case TurtlePieceColor::Red:
-        {
-            m_redPlayerName = playerName;
-            m_redPlayerPublicKey = playerPublicKey;
-        }
-        break;
-        case TurtlePieceColor::None:
-        {
-            // Do nothing
-        }
-        break;
+    case TurtlePieceColor::Black:
+    {
+        m_blackPlayerName = playerName;
+        m_blackPlayerPublicKey = playerPublicKey;
+    }
+    break;
+    case TurtlePieceColor::Red:
+    {
+        m_redPlayerName = playerName;
+        m_redPlayerPublicKey = playerPublicKey;
+    }
+    break;
+    case TurtlePieceColor::None:
+    {
+        // Do nothing
+    }
+    break;
     }
 
     auto message = turtle_checkers_interfaces::msg::PlayerJoinedLobby();
@@ -241,6 +243,16 @@ void CheckersGameLobby::setPlayerReady(const std::string &playerName, bool ready
 bool CheckersGameLobby::getAreAllPlayersReady() const
 {
     return (m_blackPlayerReady && m_redPlayerReady);
+}
+
+bool CheckersGameLobby::passwordMatches(uint32_t lobbyPasswordHash) const
+{
+    return (m_lobbyPasswordHash == 0u || m_lobbyPasswordHash == lobbyPasswordHash);
+}
+
+bool CheckersGameLobby::hasPassword() const
+{
+    return (m_lobbyPasswordHash > 0u);
 }
 
 void CheckersGameLobby::setIsBlackTurn(bool isBlackTurn)

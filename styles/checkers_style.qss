@@ -2,12 +2,15 @@ QWidget { background-color: black; }
 
 QLabel { color: white; }
 QLabel:disabled { color: dimGray; }
+QLabel[error="true"] { color: red; }
 
 QPushButton { color: white; border: 1px solid white; }
 QPushButton:disabled { color: dimGray; border: 1px solid dimGray; }
 
 QLineEdit[valid="false"] { color: white; border: 1px solid red; }
 QLineEdit[valid="true"] { color: white; border: 1px solid aqua; }
+QLineEdit[in_use="false"] { color: white; border: 1px solid gray; }
+QLineEdit[in_use="true"] { color: white; border: 1px solid aqua; }
 
 QCheckBox { color: white; border: 1px solid white; }
 QCheckBox:disabled { color: gray; border: 1px solid black; } 

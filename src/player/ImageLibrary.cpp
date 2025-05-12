@@ -12,6 +12,11 @@ void ImageLibrary::createLibraryInstance()
 {
     s_libraryInstance = std::make_unique<ImageLibrary>();
 
+    QString imagesPath =
+        (ament_index_cpp::get_package_share_directory("turtle_checkers") + "/img/").c_str();
+
+    s_libraryInstance->m_lockImage.load(imagesPath + "lock.png");
+
     QVector<QString> turtlesImageNames;
     /*turtlesImageNames.append("ardent.png");
     turtlesImageNames.append("bouncy.png");
@@ -24,9 +29,6 @@ void ImageLibrary::createLibraryInstance()
     turtlesImageNames.append("iron.png");
     turtlesImageNames.append("jazzy.png");*/
     turtlesImageNames.append("rolling");
-
-    QString imagesPath =
-        (ament_index_cpp::get_package_share_directory("turtle_checkers") + "/img/").c_str();
     for (int i = 0; i < turtlesImageNames.size(); ++i)
     {
         QImage bImg;
@@ -58,6 +60,16 @@ void ImageLibrary::createLibraryInstance()
     s_libraryInstance->m_winnerImage.load(imagesPath + "winner.png");
     s_libraryInstance->m_loserImage.load(imagesPath + "loser.png");
     s_libraryInstance->m_drawImage.load(imagesPath + "draw.png");
+}
+
+QImage ImageLibrary::getLockImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+    
+    return s_libraryInstance->m_lockImage;
 }
 
 QImage ImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)

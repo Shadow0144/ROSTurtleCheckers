@@ -1,0 +1,11 @@
+#pragma once
+
+enum class ErrorCodes
+{
+    NONE,
+    LOBBY_ALREADY_EXISTS,
+    LOBBY_DOES_NOT_EXIST,
+    LOBBY_IS_FULL,
+    PLAYER_ALREADY_CONNECTED,
+    INCORRECT_PASSWORD
+};

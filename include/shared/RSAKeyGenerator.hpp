@@ -6,6 +6,9 @@ class RSAKeyGenerator
 {
 public:
     static void generateRSAKeyPair(uint64_t &publicKey, uint64_t &privateKey);
+    
+    static uint64_t encrypt(uint64_t message, uint64_t key);
+    static uint64_t unencrypt(uint64_t message, uint64_t privateKey, uint64_t publicKey);
 
     static uint64_t createChecksumSignature(uint64_t hash, uint64_t publicKey, uint64_t privateKey);
     static bool checksumSignatureMatches(uint64_t hash, uint64_t publicKey, uint64_t signature);

@@ -30,7 +30,8 @@ public:
                       uint64_t publicKey,
                       uint64_t privateKey,
                       const std::string &lobbyName,
-                      const std::string &lobbyId);
+                      const std::string &lobbyId,
+                      uint64_t lobbyPasswordHash);
 
     const std::string &getLobbyName() const;
     const std::string &getLobbyId() const;
@@ -38,7 +39,9 @@ public:
     bool isLobbyEmpty() const;
     bool isPlayerSlotAvailable() const;
     bool containsPlayer(const std::string &playerName) const;
-    TurtlePieceColor addPlayer(const std::string &playerName, uint64_t playerPublicKey, TurtlePieceColor desiredColor);
+    TurtlePieceColor addPlayer(const std::string &playerName,
+                               uint64_t playerPublicKey,
+                               TurtlePieceColor desiredColor);
     void removePlayer(const std::string &playerName);
 
     const std::string &getBlackPlayerName() const;
@@ -48,6 +51,9 @@ public:
     bool getRedPlayerReady() const;
     void setPlayerReady(const std::string &playerName, bool ready);
     bool getAreAllPlayersReady() const;
+
+    bool passwordMatches(uint32_t lobbyPasswordHash) const;
+    bool hasPassword() const;
 
     void setIsBlackTurn(bool isBlackTurn);
     bool getIsBlackTurn() const;
@@ -97,11 +103,13 @@ private:
     std::string m_playerOfferingDraw;
 
     MasterBoardPtr m_board;
-    
+
     uint64_t m_publicKey;
     uint64_t m_privateKey;
     uint64_t m_blackPlayerPublicKey;
     uint64_t m_redPlayerPublicKey;
+
+    uint64_t m_lobbyPasswordHash;
 };
 
 typedef std::shared_ptr<CheckersGameLobby> CheckersGameLobbyPtr;
