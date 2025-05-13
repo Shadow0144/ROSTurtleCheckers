@@ -1,4 +1,4 @@
-#include "player/CheckersGameFrame.hpp"
+#include "player/frame/CheckersGameFrame.hpp"
 
 #include <QWidget>
 #include <QFrame>

@@ -1,4 +1,4 @@
-#include "player/CheckersMainMenuFrame.hpp"
+#include "player/frame/CheckersMainMenuFrame.hpp"
 
 #include <QFrame>
 #include <QMouseEvent>

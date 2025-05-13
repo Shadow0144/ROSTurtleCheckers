@@ -6,8 +6,8 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/CheckersPlayerNode.hpp"
-#include "player/CheckersMainMenuFrame.hpp"
-#include "player/CheckersGameFrame.hpp"
+#include "player/frame/CheckersMainMenuFrame.hpp"
+#include "player/frame/CheckersGameFrame.hpp"
 
 CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &playerNode)
     : QMainWindow()

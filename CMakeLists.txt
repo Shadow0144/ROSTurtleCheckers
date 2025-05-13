@@ -32,8 +32,8 @@ qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/player/TileRender.hpp
   include/player/TurtlePieceRender.hpp
   include/player/CheckersBoardRender.hpp
-  include/player/CheckersMainMenuFrame.hpp
-  include/player/CheckersGameFrame.hpp
+  include/player/frame/CheckersMainMenuFrame.hpp
+  include/player/frame/CheckersGameFrame.hpp
   include/player/CheckersPlayerWindow.hpp 
   include/player/CheckersPlayerNode.hpp)
 
@@ -49,8 +49,8 @@ add_executable(checkers_player_node
   src/player/TurtleGraveyard.cpp
   src/player/HUD.cpp
   src/player/CheckersBoardRender.cpp
-  src/player/CheckersMainMenuFrame.cpp 
-  src/player/CheckersGameFrame.cpp 
+  src/player/frame/CheckersMainMenuFrame.cpp 
+  src/player/frame/CheckersGameFrame.cpp 
   src/player/CheckersPlayerWindow.cpp 
   src/player/CheckersPlayerNode.cpp
   ${CheckersGameWindow_MOCS})
