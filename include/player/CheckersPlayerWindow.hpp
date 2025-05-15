@@ -7,9 +7,19 @@
 #include <memory>
 #include <string>
 
+#include <QStackedLayout>
+
 #include "shared/CheckersConsts.hpp"
-#include "player/frame/CheckersMainMenuFrame.hpp"
-#include "player/frame/CheckersGameFrame.hpp"
+
+#include "player/frame/CreateAccountFrame.hpp"
+#include "player/frame/CreateLobbyFrame.hpp"
+#include "player/frame/GameFrame.hpp"
+#include "player/frame/InLobbyFrame.hpp"
+#include "player/frame/LobbyListFrame.hpp"
+#include "player/frame/LobbyPasswordFrame.hpp"
+#include "player/frame/LoginAccountFrame.hpp"
+#include "player/frame/MainMenuFrame.hpp"
+#include "player/frame/TitleFrame.hpp"
 
 class CheckersPlayerNode;
 
@@ -21,15 +31,15 @@ public:
 
     void setConnectedToServer(bool connected);
 
-    void createLobby(const std::string &playerName,
-                     const std::string &lobbyName,
-                     const std::string &lobbyPassword,
-                     TurtlePieceColor playerColor);
-    void joinLobby(const std::string &playerName,
-                   const std::string &lobbyName,
-                   const std::string &lobbyId,
-                   const std::string &lobbyPassword,
-                   TurtlePieceColor playerColor);
+    void moveToMainMenuFrame();
+    void moveToCreateLobbyFrame();
+    void moveToLobbyListFrame();
+    void moveToLobbyPasswordFrame();
+    void moveToInLobbyFrame();
+    void moveToGameFrame();
+
+    void createLobby(const std::string &lobbyPassword);
+    void joinLobby(const std::string &lobbyPassword);
     void getLobbyList();
     void updateLobbyList(const std::vector<std::string> &lobbyNames,
                          const std::vector<std::string> &lobbyIds,
@@ -56,10 +66,6 @@ public:
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
     void declaredWinner(Winner winner);
     void gameStarted(GameState gameState,
-                     const std::string &lobbyName,
-                     const std::string &lobbyId,
-                     const std::string &playerName,
-                     TurtlePieceColor playerColor,
                      const std::vector<size_t> &movableTileIndices);
     void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
                       int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices);
@@ -74,25 +80,47 @@ public:
     void drawDeclined();
     void drawOffered();
 
-    void returnToMainMenu(const std::string &playerName);
-
 protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
     enum class WindowState
     {
+        CreateAccount,
+        CreateLobby,
+        Game,
+        LobbyList,
+        LobbyPassword,
+        LoginAccount,
         MainMenu,
-        InGame
+        Title
     };
     WindowState m_windowState;
+
+    QStackedLayout *m_windowLayout;
+    static constexpr int CREATE_ACCOUNT_INDEX = 0;
+    static constexpr int CREATE_LOBBY_INDEX = 1;
+    static constexpr int GAME_INDEX = 2;
+    static constexpr int IN_LOBBY_INDEX = 3;
+    static constexpr int LOBBY_LIST_INDEX = 4;
+    static constexpr int LOBBY_PASSWORD_INDEX = 5;
+    static constexpr int LOGIN_ACCOUNT_INDEX = 6;
+    static constexpr int MAIN_MENU_INDEX = 7;
+    static constexpr int TITLE_INDEX = 8;
 
     std::weak_ptr<CheckersPlayerNode> m_playerNode;
 
     bool m_connectedToServer;
 
-    CheckersMainMenuFrame *m_checkersMainMenuFrame;
-    CheckersGameFrame *m_checkersGameFrame;
+    CreateAccountFrame *m_createAccountFrame;
+    CreateLobbyFrame *m_createLobbyFrame;
+    GameFrame *m_gameFrame;
+    InLobbyFrame *m_inLobbyFrame;
+    LobbyListFrame *m_lobbyListFrame;
+    LobbyPasswordFrame *m_lobbyPasswordFrame;
+    LoginAccountFrame *m_loginAccountFrame;
+    MainMenuFrame *m_mainMenuFrame;
+    TitleFrame *m_titleFrame;
 };
 
 typedef std::unique_ptr<CheckersPlayerWindow> CheckersPlayerWindowUniPtr;

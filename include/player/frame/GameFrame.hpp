@@ -28,16 +28,18 @@
 
 class CheckersPlayerWindow;
 
-class CheckersGameFrame : public QFrame
+class GameFrame : public QFrame
 {
 	Q_OBJECT
 public:
-	CheckersGameFrame(
-		CheckersPlayerWindow *parentWindow,
-		const std::string &playerName);
-	~CheckersGameFrame();
+	GameFrame(
+		CheckersPlayerWindow *parentWindow);
+	~GameFrame();
 
-	void connectedToGame(const std::string &lobbyName, const std::string &lobbyId, TurtlePieceColor playerColor);
+	void showEvent(QShowEvent* event) override;
+
+	void connectedToGame();
+
 	void requestedPieceMoveAccepted(bool moveAccepted);
 	void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
 	void declaredWinner(Winner winner);
@@ -81,11 +83,6 @@ private:
 	QWidget *m_leaveGameLayoutWidget;
 	QPushButton *m_leaveGameButton;
 
-	std::string m_playerName;
-	std::string m_lobbyName;
-	std::string m_lobbyId;
-	TurtlePieceColor m_playerColor;
-
 	GameState m_gameState;
 
 	Winner m_winner;
@@ -98,4 +95,4 @@ private:
 	bool m_showingDialog;
 };
 
-typedef std::unique_ptr<CheckersGameFrame> CheckersGameFrameUniPtr;
+typedef std::unique_ptr<GameFrame> GameFrameUniPtr;

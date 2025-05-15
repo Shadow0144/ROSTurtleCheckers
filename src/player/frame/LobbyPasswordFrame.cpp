@@ -1,0 +1,142 @@
+#include "player/frame/LobbyPasswordFrame.hpp"
+
+#include <QFrame>
+#include <QMouseEvent>
+#include <QPaintEvent>
+#include <QPointF>
+#include <QStackedLayout>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QScrollArea>
+#include <QLabel>
+#include <QString>
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QButtonGroup>
+#include <QCheckBox>
+#include <QIcon>
+#include <QPixmap>
+#include <QSpacerItem>
+#include <QStyle>
+#include <QSizePolicy>
+
+#include <cstdlib>
+#include <ctime>
+#include <functional>
+#include <memory>
+#include <string>
+#include <chrono>
+#include <vector>
+#include <iostream>
+
+#include "shared/CheckersConsts.hpp"
+#include "player/Parameters.hpp"
+#include "player/CheckersPlayerWindow.hpp"
+#include "player/ImageLibrary.hpp"
+
+LobbyPasswordFrame::LobbyPasswordFrame(
+    CheckersPlayerWindow *parentWindow)
+    : QFrame(parentWindow, Qt::WindowFlags())
+{
+    m_playerWindow = parentWindow;
+
+    auto enterLobbyPasswordLayout = new QVBoxLayout(this);
+    enterLobbyPasswordLayout->setAlignment(Qt::AlignCenter);
+
+    auto enterLobbyPasswordTitleLabel = new QLabel("Turtle Checkers");
+    auto titleFont = enterLobbyPasswordTitleLabel->font();
+    titleFont.setPointSize(TITLE_FONT_SIZE);
+    enterLobbyPasswordTitleLabel->setFont(titleFont);
+    enterLobbyPasswordLayout->addWidget(enterLobbyPasswordTitleLabel);
+
+    auto lobbyNameLayout = new QHBoxLayout();
+
+    m_lobbyNameLabel = new QLabel("");
+    lobbyNameLayout->addWidget(m_lobbyNameLabel);
+
+    m_lobbyIdLabel = new QLabel("");
+    lobbyNameLayout->addWidget(m_lobbyIdLabel);
+
+    enterLobbyPasswordLayout->addLayout(lobbyNameLayout);
+
+    auto lobbyPasswordLabel = new QLabel("Lobby password");
+    enterLobbyPasswordLayout->addWidget(lobbyPasswordLabel);
+
+    m_lobbyPasswordLineEdit = new QLineEdit();
+    m_lobbyPasswordLineEdit->setEchoMode(QLineEdit::Password);
+    m_lobbyPasswordLineEdit->setProperty("in_use", false);
+    connect(m_lobbyPasswordLineEdit, &QLineEdit::textChanged, this, &LobbyPasswordFrame::onEnterLobbyPasswordTextChanged);
+    enterLobbyPasswordLayout->addWidget(m_lobbyPasswordLineEdit);
+
+    m_passwordIncorrectLabel = new QLabel("Incorrect password");
+    m_passwordIncorrectLabel->setProperty("error", true);
+    auto passwordIncorrectLabelSizePolicy = m_passwordIncorrectLabel->sizePolicy();
+    passwordIncorrectLabelSizePolicy.setRetainSizeWhenHidden(true);
+    m_passwordIncorrectLabel->setSizePolicy(passwordIncorrectLabelSizePolicy);
+    m_passwordIncorrectLabel->setVisible(false);
+    enterLobbyPasswordLayout->addWidget(m_passwordIncorrectLabel);
+
+    auto enterLobbyPasswordButtonLayout = new QHBoxLayout();
+
+    std::string confirmPasswordString = "Join Lobby";
+    m_confirmPasswordButton = new QPushButton(confirmPasswordString.c_str());
+    m_confirmPasswordButton->setEnabled(false);
+    connect(m_confirmPasswordButton, &QPushButton::released, this,
+            &LobbyPasswordFrame::handleConfirmPasswordButton);
+    enterLobbyPasswordButtonLayout->addWidget(m_confirmPasswordButton);
+
+    std::string cancelJoinLobbyString = "Cancel";
+    auto cancelJoinLobbyButton = new QPushButton(cancelJoinLobbyString.c_str());
+    connect(cancelJoinLobbyButton, &QPushButton::released, this,
+            &LobbyPasswordFrame::handleCancelButton);
+    enterLobbyPasswordButtonLayout->addWidget(cancelJoinLobbyButton);
+
+    enterLobbyPasswordLayout->addLayout(enterLobbyPasswordButtonLayout);
+}
+
+LobbyPasswordFrame::~LobbyPasswordFrame()
+{
+}
+
+void LobbyPasswordFrame::showEvent(QShowEvent *event)
+{
+	(void)event; // NO LINT
+    
+    m_lobbyNameLabel->setText(Parameters::getLobbyName().c_str());
+    std::string lobbyIdWithHash = "#" + Parameters::getLobbyId();
+    m_lobbyIdLabel->setText(lobbyIdWithHash.c_str());
+
+    m_lobbyPasswordLineEdit->clear();
+    m_confirmPasswordButton->setEnabled(false);
+    m_passwordIncorrectLabel->setVisible(false);
+}
+
+void LobbyPasswordFrame::setPasswordIncorrect()
+{
+    m_passwordIncorrectLabel->setVisible(true);
+    m_confirmPasswordButton->setEnabled(false);
+}
+
+void LobbyPasswordFrame::onEnterLobbyPasswordTextChanged(const QString &lobbyPassword)
+{
+    m_confirmPasswordButton->setEnabled(!lobbyPassword.isEmpty());
+    m_lobbyPasswordLineEdit->setProperty("in_use", !lobbyPassword.isEmpty());
+    // Update the style
+    m_lobbyPasswordLineEdit->style()->unpolish(m_lobbyPasswordLineEdit);
+    m_lobbyPasswordLineEdit->style()->polish(m_lobbyPasswordLineEdit);
+    m_lobbyPasswordLineEdit->update();
+    m_confirmPasswordButton->setEnabled(!lobbyPassword.isEmpty());
+    m_passwordIncorrectLabel->setVisible(false);
+}
+
+void LobbyPasswordFrame::handleCancelButton()
+{
+    m_playerWindow->moveToLobbyListFrame();
+}
+
+void LobbyPasswordFrame::handleConfirmPasswordButton()
+{
+    m_playerWindow->joinLobby(m_lobbyPasswordLineEdit->text().toStdString());
+}

@@ -28,19 +28,27 @@ endif()
 
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
-qt5_wrap_cpp(CheckersGameWindow_MOCS 
+qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/player/TileRender.hpp
   include/player/TurtlePieceRender.hpp
   include/player/CheckersBoardRender.hpp
-  include/player/frame/CheckersMainMenuFrame.hpp
-  include/player/frame/CheckersGameFrame.hpp
+  include/player/frame/CreateAccountFrame.hpp
+  include/player/frame/CreateLobbyFrame.hpp
+  include/player/frame/GameFrame.hpp
+  include/player/frame/InLobbyFrame.hpp
+  include/player/frame/LobbyListFrame.hpp
+  include/player/frame/LobbyPasswordFrame.hpp
+  include/player/frame/LoginAccountFrame.hpp
+  include/player/frame/MainMenuFrame.hpp
+  include/player/frame/TitleFrame.hpp
   include/player/CheckersPlayerWindow.hpp 
   include/player/CheckersPlayerNode.hpp)
 
-add_executable(checkers_player_node 
+add_executable(checkers_player_node
   src/shared/RSAKeyGenerator.cpp
   src/player/ImageLibrary.cpp
   src/shared/Tile.cpp
+  src/player/Parameters.cpp
   src/player/TileRender.cpp
   src/player/TileRenderFactory.cpp
   src/shared/TurtlePiece.cpp
@@ -49,9 +57,16 @@ add_executable(checkers_player_node
   src/player/TurtleGraveyard.cpp
   src/player/HUD.cpp
   src/player/CheckersBoardRender.cpp
-  src/player/frame/CheckersMainMenuFrame.cpp 
-  src/player/frame/CheckersGameFrame.cpp 
-  src/player/CheckersPlayerWindow.cpp 
+  src/player/frame/CreateAccountFrame.cpp
+  src/player/frame/CreateLobbyFrame.cpp
+  src/player/frame/GameFrame.cpp
+  src/player/frame/InLobbyFrame.cpp
+  src/player/frame/LobbyListFrame.cpp
+  src/player/frame/LobbyPasswordFrame.cpp
+  src/player/frame/LoginAccountFrame.cpp
+  src/player/frame/MainMenuFrame.cpp
+  src/player/frame/TitleFrame.cpp
+  src/player/CheckersPlayerWindow.cpp
   src/player/CheckersPlayerNode.cpp
   ${CheckersGameWindow_MOCS})
 ament_target_dependencies(checkers_player_node
@@ -61,7 +76,7 @@ ament_target_dependencies(checkers_player_node
 target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
-add_executable(checkers_game_master_node 
+add_executable(checkers_game_master_node
   src/shared/RSAKeyGenerator.cpp
   src/shared/Tile.cpp
   src/game_master/TileFactory.cpp
@@ -71,7 +86,7 @@ add_executable(checkers_game_master_node
   src/game_master/CheckersGameLobby.cpp
   src/game_master/CheckersGameMasterNode.cpp)
 ament_target_dependencies(checkers_game_master_node
-  rclcpp 
+  rclcpp
   turtle_checkers_interfaces)
 
 install(TARGETS

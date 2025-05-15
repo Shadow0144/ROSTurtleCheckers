@@ -95,7 +95,7 @@ constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 constexpr int ICON_HEIGHT_WIDTH = 20;
 
 constexpr int LOBBY_SCROLL_W = 350;
-constexpr int LOBBY_SCROLL_H = 250;
+constexpr int LOBBY_SCROLL_H = 150;
 
 constexpr int BG_RGB[3] = {0u, 0u, 0u};
 constexpr int TEXT_RGB[3] = {255u, 255u, 255u};

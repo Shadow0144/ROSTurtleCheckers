@@ -88,7 +88,7 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
     m_playerReadySubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
 
-    RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting turtles checkers game!");
+    RCLCPP_INFO(m_nodeHandle->get_logger(), "Creating checkers game lobby!");
 }
 
 const std::string &CheckersGameLobby::getLobbyName() const

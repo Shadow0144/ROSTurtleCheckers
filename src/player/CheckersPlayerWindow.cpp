@@ -5,9 +5,10 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/Parameters.hpp"
 #include "player/CheckersPlayerNode.hpp"
-#include "player/frame/CheckersMainMenuFrame.hpp"
-#include "player/frame/CheckersGameFrame.hpp"
+#include "player/frame/MainMenuFrame.hpp"
+#include "player/frame/GameFrame.hpp"
 
 CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &playerNode)
     : QMainWindow()
@@ -21,10 +22,33 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
 
     setMouseTracking(true);
 
-    m_checkersMainMenuFrame = new CheckersMainMenuFrame(this);
-    setCentralWidget(m_checkersMainMenuFrame);
+    QWidget *windowLayoutWidget = new QWidget(this);
+    m_windowLayout = new QStackedLayout(windowLayoutWidget);
 
-    m_checkersGameFrame = nullptr;
+    // Create and add the screens to the layout
+    m_createAccountFrame = new CreateAccountFrame(this);
+    m_createLobbyFrame = new CreateLobbyFrame(this);
+    m_gameFrame = new GameFrame(this);
+    m_inLobbyFrame = new InLobbyFrame(this);
+    m_lobbyListFrame = new LobbyListFrame(this);
+    m_lobbyPasswordFrame = new LobbyPasswordFrame(this);
+    m_loginAccountFrame = new LoginAccountFrame(this);
+    m_mainMenuFrame = new MainMenuFrame(this);
+    m_titleFrame = new TitleFrame(this);
+
+    m_windowLayout->insertWidget(CREATE_ACCOUNT_INDEX, m_createAccountFrame);
+    m_windowLayout->insertWidget(CREATE_LOBBY_INDEX, m_createLobbyFrame);
+    m_windowLayout->insertWidget(GAME_INDEX, m_gameFrame);
+    m_windowLayout->insertWidget(IN_LOBBY_INDEX, m_inLobbyFrame);
+    m_windowLayout->insertWidget(LOBBY_LIST_INDEX, m_lobbyListFrame);
+    m_windowLayout->insertWidget(LOBBY_PASSWORD_INDEX, m_lobbyPasswordFrame);
+    m_windowLayout->insertWidget(LOGIN_ACCOUNT_INDEX, m_loginAccountFrame);
+    m_windowLayout->insertWidget(MAIN_MENU_INDEX, m_mainMenuFrame);
+    m_windowLayout->insertWidget(TITLE_INDEX, m_titleFrame);
+
+    m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
+
+    setCentralWidget(windowLayoutWidget);
 }
 
 void CheckersPlayerWindow::closeEvent(QCloseEvent *event)
@@ -39,33 +63,67 @@ void CheckersPlayerWindow::closeEvent(QCloseEvent *event)
 
 void CheckersPlayerWindow::setConnectedToServer(bool connected)
 {
-    m_connectedToServer = connected;
-    if (m_checkersMainMenuFrame)
-    {
-        m_checkersMainMenuFrame->setConnectedToServer(connected);
-    }
+    // TODO - Update title screen and/or return to it
+    /*
+        m_connectedToServer = connected;
+        m_titleFrame->setConnectedToServer(connected);
+        if (!m_connectedToServer)
+        {
+            moveToTitleFrame();
+        }
+    */
 }
 
-void CheckersPlayerWindow::createLobby(const std::string &playerName,
-                                       const std::string &lobbyName,
-                                       const std::string &lobbyPassword,
-                                       TurtlePieceColor playerColor)
+void CheckersPlayerWindow::moveToMainMenuFrame()
+{
+    m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
+}
+
+void CheckersPlayerWindow::moveToCreateLobbyFrame()
+{
+    m_windowLayout->setCurrentIndex(CREATE_LOBBY_INDEX);
+}
+
+void CheckersPlayerWindow::moveToLobbyListFrame()
+{
+    m_windowLayout->setCurrentIndex(LOBBY_LIST_INDEX);
+}
+
+void CheckersPlayerWindow::moveToLobbyPasswordFrame()
+{
+    m_windowLayout->setCurrentIndex(LOBBY_PASSWORD_INDEX);
+}
+
+void CheckersPlayerWindow::moveToInLobbyFrame()
+{
+    m_windowLayout->setCurrentIndex(IN_LOBBY_INDEX);
+}
+
+void CheckersPlayerWindow::moveToGameFrame()
+{
+    m_windowLayout->setCurrentIndex(GAME_INDEX);
+}
+
+void CheckersPlayerWindow::createLobby(const std::string &lobbyPassword)
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->createLobby(playerName, lobbyName, lobbyPassword, playerColor);
+        playerNode->createLobby(Parameters::getPlayerName(),
+                                Parameters::getLobbyName(),
+                                lobbyPassword,
+                                Parameters::getPlayerColor());
     }
 }
 
-void CheckersPlayerWindow::joinLobby(const std::string &playerName,
-                                     const std::string &lobbyName,
-                                     const std::string &lobbyId,
-                                     const std::string &lobbyPassword,
-                                     TurtlePieceColor playerColor)
+void CheckersPlayerWindow::joinLobby(const std::string &lobbyPassword)
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->joinLobby(playerName, lobbyName, lobbyId, lobbyPassword, playerColor);
+        playerNode->joinLobby(Parameters::getPlayerName(),
+                              Parameters::getLobbyName(),
+                              Parameters::getLobbyId(),
+                              lobbyPassword,
+                              Parameters::getPlayerColor());
     }
 }
 
@@ -83,22 +141,16 @@ void CheckersPlayerWindow::updateLobbyList(const std::vector<std::string> &lobby
                                            const std::vector<std::string> &blackPlayerNames,
                                            const std::vector<std::string> &redPlayerNames)
 {
-    if (m_checkersMainMenuFrame)
-    {
-        m_checkersMainMenuFrame->displayLobbyList(lobbyNames,
-                                                  lobbyIds,
-                                                  hasPasswords,
-                                                  blackPlayerNames,
-                                                  redPlayerNames);
-    }
+    m_lobbyListFrame->displayLobbyList(lobbyNames,
+                                       lobbyIds,
+                                       hasPasswords,
+                                       blackPlayerNames,
+                                       redPlayerNames);
 }
 
 void CheckersPlayerWindow::setPasswordIncorrect()
 {
-    if (m_checkersMainMenuFrame)
-    {
-        m_checkersMainMenuFrame->setPasswordIncorrect();
-    }
+    m_lobbyPasswordFrame->setPasswordIncorrect();
 }
 
 void CheckersPlayerWindow::leaveLobby()
@@ -124,79 +176,52 @@ void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
                                             bool blackPlayerReady,
                                             bool redPlayerReady)
 {
-
-    if (m_checkersMainMenuFrame)
-    {
-        m_checkersMainMenuFrame->connectedToLobby(lobbyName,
-                                                  lobbyId,
-                                                  blackPlayerName,
-                                                  redPlayerName,
-                                                  blackPlayerReady,
-                                                  redPlayerReady);
-    }
+    Parameters::setLobbyName(lobbyName);
+    Parameters::setLobbyId(lobbyId);
+    m_inLobbyFrame->setLobbyInfo(blackPlayerName,
+                                 redPlayerName,
+                                 blackPlayerReady,
+                                 redPlayerReady);
+    moveToInLobbyFrame();
 }
 
 void CheckersPlayerWindow::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)
 {
-    if (m_checkersMainMenuFrame)
-    {
-        m_checkersMainMenuFrame->playerJoinedLobby(playerName, playerColor);
-    }
+    m_inLobbyFrame->playerJoinedLobby(playerName, playerColor);
 }
 
 void CheckersPlayerWindow::playerLeftLobby(const std::string &playerName)
 {
-    if (m_checkersMainMenuFrame)
-    {
-        m_checkersMainMenuFrame->playerLeftLobby(playerName);
-    }
+    m_inLobbyFrame->playerLeftLobby(playerName);
 }
 
 void CheckersPlayerWindow::setPlayerReady(const std::string &playerName, bool ready)
 {
-    if (m_checkersMainMenuFrame)
-    {
-        m_checkersMainMenuFrame->setPlayerReady(playerName, ready);
-    }
+    m_inLobbyFrame->setPlayerReady(playerName, ready);
 }
 
 void CheckersPlayerWindow::requestedPieceMoveAccepted(bool moveAccepted)
 {
-    if (m_checkersGameFrame)
-    {
-        m_checkersGameFrame->requestedPieceMoveAccepted(moveAccepted);
-    }
+    m_gameFrame->requestedPieceMoveAccepted(moveAccepted);
 }
 
 void CheckersPlayerWindow::requestedReachableTiles(const std::vector<size_t> &reachableTileIndices)
 {
-    if (m_checkersGameFrame)
-    {
-        m_checkersGameFrame->requestedReachableTiles(reachableTileIndices);
-    }
+    m_gameFrame->requestedReachableTiles(reachableTileIndices);
 }
 
 void CheckersPlayerWindow::declaredWinner(Winner winner)
 {
-    if (m_checkersGameFrame)
-    {
-        m_checkersGameFrame->declaredWinner(winner);
-    }
+    m_gameFrame->declaredWinner(winner);
 }
 
 void CheckersPlayerWindow::gameStarted(GameState gameState,
-                                       const std::string &lobbyName,
-                                       const std::string &lobbyId,
-                                       const std::string &playerName,
-                                       TurtlePieceColor playerColor,
                                        const std::vector<size_t> &movableTileIndices)
 {
-    m_checkersGameFrame = new CheckersGameFrame(this, playerName);
-    setCentralWidget(m_checkersGameFrame); // This will delete the main menu frame
-    m_checkersMainMenuFrame = nullptr;
+    m_gameFrame->connectedToGame();
+    m_gameFrame->gameStarted(gameState, movableTileIndices);
 
-    m_checkersGameFrame->connectedToGame(lobbyName, lobbyId, playerColor);
-    m_checkersGameFrame->gameStarted(gameState, movableTileIndices);
+    moveToGameFrame();
 
     update();
 }
@@ -205,11 +230,8 @@ void CheckersPlayerWindow::updatedBoard(size_t sourceTileIndex, size_t destinati
                                         GameState gameState, int slainPieceTileIndex, bool kingPiece,
                                         const std::vector<size_t> &movableTileIndices)
 {
-    if (m_checkersGameFrame)
-    {
-        m_checkersGameFrame->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
-                                          slainPieceTileIndex, kingPiece, movableTileIndices);
-    }
+    m_gameFrame->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
+                              slainPieceTileIndex, kingPiece, movableTileIndices);
 }
 
 void CheckersPlayerWindow::requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex)
@@ -254,26 +276,10 @@ void CheckersPlayerWindow::forfit()
 
 void CheckersPlayerWindow::drawDeclined()
 {
-    if (m_checkersGameFrame)
-    {
-        m_checkersGameFrame->drawDeclined();
-    }
+    m_gameFrame->drawDeclined();
 }
 
 void CheckersPlayerWindow::drawOffered()
 {
-    if (m_checkersGameFrame)
-    {
-        m_checkersGameFrame->drawOffered();
-    }
-}
-
-void CheckersPlayerWindow::returnToMainMenu(const std::string &playerName)
-{
-    m_checkersMainMenuFrame = new CheckersMainMenuFrame(this);
-    m_checkersMainMenuFrame->setPlayerName(playerName);
-    setCentralWidget(m_checkersMainMenuFrame); // This will delete the game frame
-    m_checkersGameFrame = nullptr;
-
-    update();
+    m_gameFrame->drawOffered();
 }

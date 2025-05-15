@@ -94,10 +94,6 @@ private:
 
     std::unique_ptr<CheckersPlayerWindow> m_checkersPlayerWindow;
 
-    std::string m_playerName;
-    std::string m_lobbyName;
-    std::string m_lobbyId;
-
     rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedPtr m_getLobbyListClient;
