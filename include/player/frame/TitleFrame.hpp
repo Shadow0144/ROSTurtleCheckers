@@ -36,7 +36,7 @@ public:
 
 private:
 	void handleCreateAccountButton();
-	void handleLoginButton();
+	void handleLoginAccountButton();
 	void handleQuitButton();
 
 	CheckersPlayerWindow *m_playerWindow;
@@ -46,6 +46,7 @@ private:
 	QPushButton *m_createAccountButton;
 	QPushButton *m_loginAccountButton;
 
+	QLabel *m_connectingToServerLabel;
 	QLabel *m_connectedToServerLabel;
 };
 

@@ -37,7 +37,7 @@ public:
 	void setPasswordIncorrect();
 
 public slots:
-	void onEnterLobbyPasswordTextChanged(const QString &lobbyPassword);
+	void validatePasswordText(const QString &lobbyPassword);
 
 private:
 	void handleCancelButton();

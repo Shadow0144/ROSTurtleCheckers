@@ -65,9 +65,12 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     enterLobbyPasswordLayout->addWidget(lobbyPasswordLabel);
 
     m_lobbyPasswordLineEdit = new QLineEdit();
+    std::string lobbyPasswordRegex = "^[a-zA-Z0-9a-zA-Z0-9\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_LOBBY_PASS) + "}$";
+    auto lobbyPasswordValidator = new QRegularExpressionValidator(QRegularExpression(lobbyPasswordRegex.c_str()));
+    m_lobbyPasswordLineEdit->setValidator(lobbyPasswordValidator);
     m_lobbyPasswordLineEdit->setEchoMode(QLineEdit::Password);
     m_lobbyPasswordLineEdit->setProperty("in_use", false);
-    connect(m_lobbyPasswordLineEdit, &QLineEdit::textChanged, this, &LobbyPasswordFrame::onEnterLobbyPasswordTextChanged);
+    connect(m_lobbyPasswordLineEdit, &QLineEdit::textChanged, this, &LobbyPasswordFrame::validatePasswordText);
     enterLobbyPasswordLayout->addWidget(m_lobbyPasswordLineEdit);
 
     m_passwordIncorrectLabel = new QLabel("Incorrect password");
@@ -102,8 +105,8 @@ LobbyPasswordFrame::~LobbyPasswordFrame()
 
 void LobbyPasswordFrame::showEvent(QShowEvent *event)
 {
-	(void)event; // NO LINT
-    
+    (void)event; // NO LINT
+
     m_lobbyNameLabel->setText(Parameters::getLobbyName().c_str());
     std::string lobbyIdWithHash = "#" + Parameters::getLobbyId();
     m_lobbyIdLabel->setText(lobbyIdWithHash.c_str());
@@ -119,7 +122,7 @@ void LobbyPasswordFrame::setPasswordIncorrect()
     m_confirmPasswordButton->setEnabled(false);
 }
 
-void LobbyPasswordFrame::onEnterLobbyPasswordTextChanged(const QString &lobbyPassword)
+void LobbyPasswordFrame::validatePasswordText(const QString &lobbyPassword)
 {
     m_confirmPasswordButton->setEnabled(!lobbyPassword.isEmpty());
     m_lobbyPasswordLineEdit->setProperty("in_use", !lobbyPassword.isEmpty());

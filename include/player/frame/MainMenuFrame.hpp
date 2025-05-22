@@ -31,9 +31,8 @@ class MainMenuFrame : public QFrame
 public:
 	MainMenuFrame(CheckersPlayerWindow *parentWindow);
 	~MainMenuFrame();
-
-public slots:
-	void validatePlayerNameText(const QString &playerName);
+	
+	void showEvent(QShowEvent* event) override;
 
 private:
 	void handleCreateLobbyButton();
@@ -43,6 +42,8 @@ private:
 	CheckersPlayerWindow *m_playerWindow;
 
 	QLineEdit *m_playerNameLineEdit;
+
+	QLabel *m_playerNameLabel;
 
 	QPushButton *m_createLobbyButton;
 	QPushButton *m_joinLobbyButton;

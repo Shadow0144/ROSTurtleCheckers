@@ -31,12 +31,18 @@ public:
 
     void setConnectedToServer(bool connected);
 
+    void moveToTitleFrame();
+    void moveToCreateAccountFrame();
+    void moveToLoginAccountFrame();
     void moveToMainMenuFrame();
     void moveToCreateLobbyFrame();
     void moveToLobbyListFrame();
     void moveToLobbyPasswordFrame();
     void moveToInLobbyFrame();
     void moveToGameFrame();
+
+    void createAccount(const std::string &playerName, const std::string &playerPassword);
+    void loginAccount(const std::string &playerName, const std::string &playerPassword);
 
     void createLobby(const std::string &lobbyPassword);
     void joinLobby(const std::string &lobbyPassword);
@@ -50,6 +56,9 @@ public:
     void leaveLobby();
 
     void setReady(bool ready);
+
+    void loggedIn(const std::string &playerName);
+    void failedLogin(const std::string &errorMessage);
 
     void connectedToLobby(const std::string &lobbyName,
                           const std::string &lobbyId,

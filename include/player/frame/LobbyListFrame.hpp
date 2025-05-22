@@ -72,9 +72,9 @@ private:
 	QPushButton *m_joinLobbyButton;
 	QPushButton *m_commitJoinLobbyButton;
 
-	QRadioButton *m_joinLobbyBlackRadioButton;
-	QRadioButton *m_joinLobbyRandomRadioButton;
-	QRadioButton *m_joinLobbyRedRadioButton;
+	QRadioButton *m_blackRadioButton;
+	QRadioButton *m_randomRadioButton;
+	QRadioButton *m_redRadioButton;
 
 	TurtlePieceColor m_playerDesiredColor;
 

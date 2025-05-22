@@ -36,7 +36,7 @@ public:
 
 public slots:
 	void validateLobbyNameText(const QString &lobbyName);
-	void onCreateLobbyPasswordTextChanged(const QString &lobbyPassword);
+	void validatePasswordText(const QString &lobbyPassword);
 
 private:
 	void handleCancelButton();
@@ -49,13 +49,13 @@ private:
 	CheckersPlayerWindow *m_playerWindow;
 
 	QLineEdit *m_lobbyNameLineEdit;
-	QLineEdit *m_createLobbyPasswordLineEdit;
+	QLineEdit *m_lobbyPasswordLineEdit;
 
 	QPushButton *m_createLobbyButton;
 
-	QRadioButton *m_createLobbyBlackRadioButton;
-	QRadioButton *m_createLobbyRandomRadioButton;
-	QRadioButton *m_createLobbyRedRadioButton;
+	QRadioButton *m_blackRadioButton;
+	QRadioButton *m_randomRadioButton;
+	QRadioButton *m_redRadioButton;
 
 	TurtlePieceColor m_playerDesiredColor;
 };

@@ -1,8 +1,11 @@
 #include "game_master/CheckersGameMasterNode.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+#include "ament_index_cpp/get_package_share_directory.hpp" // For getting the styles directory
 
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
+#include "turtle_checkers_interfaces/srv/create_account.hpp"
+#include "turtle_checkers_interfaces/srv/login_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
@@ -15,6 +18,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/RSAKeyGenerator.hpp"
+#include "shared/TurtleLogger.hpp"
 #include "game_master/CheckersGameLobby.hpp"
 
 using std::placeholders::_1;
@@ -22,16 +26,30 @@ using std::placeholders::_2;
 
 CheckersGameMasterNode::CheckersGameMasterNode()
 {
-    // Create the RSA key pair
-    RSAKeyGenerator::generateRSAKeyPair(m_publicKey, m_privateKey);
-
     // A game node creates a 2-player game for player nodes to publish their moves to
     // The game node publishes when it is ready for which player's next move, what the last move was, and when a winner is decided
     m_gameMasterNode = rclcpp::Node::make_shared("checkers_game_master_node");
 
+    // Initialize the logger
+    TurtleLogger::initialize("checkers_game_master_node");
+
+    // Create the RSA key pair
+    RSAKeyGenerator::generateRSAKeyPair(m_publicKey, m_privateKey);
+
+    // Create/load the player database
+    m_databaseHandler = std::make_unique<DatabaseHandler>(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/db");
+
+    // Create the services and subscriptions
+
     m_connectToGameMasterService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::ConnectToGameMaster>(
         "ConnectToGameMaster", std::bind(&CheckersGameMasterNode::connectToGameMasterRequest,
                                          this, std::placeholders::_1, std::placeholders::_2));
+    m_createAccountService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::CreateAccount>(
+        "CreateAccount", std::bind(&CheckersGameMasterNode::createAccountRequest,
+                                   this, std::placeholders::_1, std::placeholders::_2));
+    m_loginAccountService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::LoginAccount>(
+        "LoginAccount", std::bind(&CheckersGameMasterNode::loginAccountRequest,
+                                  this, std::placeholders::_1, std::placeholders::_2));
     m_createLobbyService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::CreateLobby>(
         "CreateLobby", std::bind(&CheckersGameMasterNode::createLobbyRequest,
                                  this, std::placeholders::_1, std::placeholders::_2));
@@ -45,7 +63,7 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     m_leaveLobbySubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LeaveLobby>(
         "LeaveLobby", 10, std::bind(&CheckersGameMasterNode::leaveLobbyCallback, this, std::placeholders::_1));
 
-    RCLCPP_INFO(m_gameMasterNode->get_logger(), "Starting Turtles Checkers game node; now accepting players!");
+    TurtleLogger::logInfo("Starting Turtles Checkers game node; now accepting players!");
 }
 
 void CheckersGameMasterNode::connectToGameMasterRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request> request,
@@ -55,53 +73,99 @@ void CheckersGameMasterNode::connectToGameMasterRequest(const std::shared_ptr<tu
 
     response->game_master_public_key = m_publicKey;
 }
+void CheckersGameMasterNode::createAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Request> request,
+                                                  std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Response> response)
+{
+    response->player_name = request->player_name;
+    auto hashedPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_player_password, m_privateKey, m_publicKey);
+    response->created = m_databaseHandler->addPlayer(request->player_name, hashedPlayerPassword);
+    response->error_msg = m_databaseHandler->getErrorMessage();
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
+
+    m_playerPublicKeys[request->player_name] = RSAKeyGenerator::unencrypt(request->encrypted_player_public_key, m_privateKey, m_publicKey);
+}
+
+void CheckersGameMasterNode::loginAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::LoginAccount::Request> request,
+                                                 std::shared_ptr<turtle_checkers_interfaces::srv::LoginAccount::Response> response)
+{
+    response->player_name = request->player_name;
+
+    if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+    {
+        // Already logged in
+        response->logged_in = false;
+        response->error_msg = "Player already logged in";
+    }
+    else
+    {
+        auto hashedPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_player_password, m_privateKey, m_publicKey);
+        response->logged_in = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPlayerPassword);
+        response->error_msg = m_databaseHandler->getErrorMessage();
+
+        m_playerPublicKeys[request->player_name] = RSAKeyGenerator::unencrypt(request->encrypted_player_public_key, m_privateKey, m_publicKey);
+    }
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::LoginAccount::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
+}
 
 void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Request> request,
                                                 std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Response> response)
 {
     response->created = false;
-    uint16_t attempts = 0u;
 
-    // TODO: Check player name and lobby name
-
-    do
+    if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
     {
-        std::string lobbyName = request->lobby_name;
-        std::stringstream ss;
-        ss << std::setfill('0') << std::setw(4) << std::to_string(m_nextLobbyId); // Add leading 0s
-        std::string lobbyId = ss.str();
-        m_nextLobbyId = (m_nextLobbyId + 1u) % MAX_LOBBY_LIMIT; // Increment the ID
-        attempts++;
-        std::string fullName = lobbyName + "#" + lobbyId;
-        uint32_t encryptedHashedLobbyPassword = request->encrypted_hashed_lobby_password; // Encrypted with own public key
-        uint32_t unencryptedHashedLobbyPassword = RSAKeyGenerator::unencrypt(encryptedHashedLobbyPassword, m_privateKey, m_publicKey);
-        if (m_checkersGameLobbies.find(fullName) == m_checkersGameLobbies.end())
+        uint16_t attempts = 0u;
+        do
         {
-            auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode,
-                                                                         m_publicKey, m_privateKey,
-                                                                         lobbyName,
-                                                                         lobbyId,
-                                                                         unencryptedHashedLobbyPassword);
-            m_checkersGameLobbies[fullName] = checkersGameLobby;
-            checkersGameLobby->addPlayer(request->player_name,
-                                         request->player_public_key,
-                                         static_cast<TurtlePieceColor>(request->desired_player_color));
-            response->created = true;
-            response->error_msg = "";
-            response->lobby_name = lobbyName;
-            response->lobby_id = lobbyId;
-            response->black_player_name = checkersGameLobby->getBlackPlayerName();
-            response->red_player_name = checkersGameLobby->getRedPlayerName();
-            response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
-            response->red_player_ready = checkersGameLobby->getRedPlayerReady();
-        }
-    } while (!response->created && attempts <= MAX_LOBBY_LIMIT);
+            std::string lobbyName = request->lobby_name;
+            std::stringstream ss;
+            ss << std::setfill('0') << std::setw(4) << std::to_string(m_nextLobbyId); // Add leading 0s
+            std::string lobbyId = ss.str();
+            m_nextLobbyId = (m_nextLobbyId + 1u) % MAX_LOBBY_LIMIT; // Increment the ID
+            attempts++;
+            std::string fullName = lobbyName + "#" + lobbyId;
+            uint32_t encryptedHashedLobbyPassword = request->encrypted_hashed_lobby_password; // Encrypted with own public key
+            uint32_t unencryptedHashedLobbyPassword = RSAKeyGenerator::unencrypt(encryptedHashedLobbyPassword, m_privateKey, m_publicKey);
+            if (m_checkersGameLobbies.find(fullName) == m_checkersGameLobbies.end())
+            {
+                auto checkersGameLobby = std::make_shared<CheckersGameLobby>(m_gameMasterNode,
+                                                                             m_publicKey,
+                                                                             m_privateKey,
+                                                                             lobbyName,
+                                                                             lobbyId,
+                                                                             unencryptedHashedLobbyPassword);
+                m_checkersGameLobbies[fullName] = checkersGameLobby;
+                checkersGameLobby->addPlayer(request->player_name, m_playerPublicKeys[request->player_name],
+                                             static_cast<TurtlePieceColor>(request->desired_player_color));
+                response->created = true;
+                response->error_msg = "";
+                response->lobby_name = lobbyName;
+                response->lobby_id = lobbyId;
+                response->black_player_name = checkersGameLobby->getBlackPlayerName();
+                response->red_player_name = checkersGameLobby->getRedPlayerName();
+                response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
+                response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+            }
+        } while (!response->created && attempts <= MAX_LOBBY_LIMIT);
 
-    if (!response->created)
+        if (!response->created)
+        {
+            std::string lobbyAlreadyExistsError = "Lobby already exists.";
+            response->error_msg = lobbyAlreadyExistsError;
+            TurtleLogger::logWarn(lobbyAlreadyExistsError);
+        }
+    }
+    else
     {
-        std::string lobbyAlreadyExistsError = "Lobby already exists.";
-        response->error_msg = lobbyAlreadyExistsError;
-        RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyAlreadyExistsError);
+        std::string playerPublicKeyMissingError = "Player public key missing.";
+        response->error_msg = playerPublicKeyMissingError;
+        TurtleLogger::logWarn(playerPublicKeyMissingError);
     }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
@@ -132,59 +196,66 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
 {
     response->joined = false;
 
-    // TODO: Check player name
-
-    auto lobbyName = request->lobby_name + "#" + request->lobby_id;
-    if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
+    if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
     {
-        auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
-
-        uint32_t encryptedHashedLobbyPassword = request->encrypted_hashed_lobby_password; // Encrypted with own public key
-        uint32_t unencryptedHashedLobbyPassword = RSAKeyGenerator::unencrypt(encryptedHashedLobbyPassword, m_privateKey, m_publicKey);
-        if (checkersGameLobby->passwordMatches(unencryptedHashedLobbyPassword))
+        auto lobbyName = request->lobby_name + "#" + request->lobby_id;
+        if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
         {
-            if (checkersGameLobby->isPlayerSlotAvailable())
+            auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
+
+            uint32_t encryptedHashedLobbyPassword = request->encrypted_hashed_lobby_password; // Encrypted with own public key
+            uint32_t unencryptedHashedLobbyPassword = RSAKeyGenerator::unencrypt(encryptedHashedLobbyPassword, m_privateKey, m_publicKey);
+            if (checkersGameLobby->passwordMatches(unencryptedHashedLobbyPassword))
             {
-                if (!checkersGameLobby->containsPlayer(request->player_name))
+                if (checkersGameLobby->isPlayerSlotAvailable())
                 {
-                    checkersGameLobby->addPlayer(request->player_name,
-                                                 request->player_public_key,
-                                                 static_cast<TurtlePieceColor>(request->desired_player_color));
-                    response->joined = true;
-                    response->error_msg = "";
-                    response->lobby_name = request->lobby_name;
-                    response->lobby_id = request->lobby_id;
-                    response->black_player_name = checkersGameLobby->getBlackPlayerName();
-                    response->red_player_name = checkersGameLobby->getRedPlayerName();
-                    response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
-                    response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+                    if (!checkersGameLobby->containsPlayer(request->player_name))
+                    {
+                        checkersGameLobby->addPlayer(request->player_name,
+                                                     m_playerPublicKeys[request->player_name],
+                                                     static_cast<TurtlePieceColor>(request->desired_player_color));
+                        response->joined = true;
+                        response->error_msg = "";
+                        response->lobby_name = request->lobby_name;
+                        response->lobby_id = request->lobby_id;
+                        response->black_player_name = checkersGameLobby->getBlackPlayerName();
+                        response->red_player_name = checkersGameLobby->getRedPlayerName();
+                        response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
+                        response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+                    }
+                    else
+                    {
+                        std::string playerAlreadyInLobbyError = "Player " + request->player_name + " already connected to this lobby.";
+                        response->error_msg = playerAlreadyInLobbyError;
+                        TurtleLogger::logWarn(playerAlreadyInLobbyError);
+                    }
                 }
                 else
                 {
-                    std::string playerAlreadyInLobbyError = "Player " + request->player_name + " already connected to this lobby.";
-                    response->error_msg = playerAlreadyInLobbyError;
-                    RCLCPP_WARN(m_gameMasterNode->get_logger(), playerAlreadyInLobbyError);
+                    std::string lobbyFullError = "Lobby is full.";
+                    response->error_msg = lobbyFullError;
+                    TurtleLogger::logWarn(lobbyFullError);
                 }
             }
             else
             {
-                std::string lobbyFullError = "Lobby is full.";
-                response->error_msg = lobbyFullError;
-                RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyFullError);
+                std::string incorrectPasswordError = "Incorrect password.";
+                response->error_msg = incorrectPasswordError;
+                TurtleLogger::logInfo(incorrectPasswordError);
             }
         }
         else
         {
-            std::string incorrectPasswordError = "Incorrect password.";
-            response->error_msg = incorrectPasswordError;
-            RCLCPP_INFO(m_gameMasterNode->get_logger(), incorrectPasswordError);
+            std::string lobbyDoesNotExistError = "Lobby does not exist.";
+            response->error_msg = lobbyDoesNotExistError;
+            TurtleLogger::logWarn(lobbyDoesNotExistError);
         }
     }
     else
     {
-        std::string lobbyDoesNotExistError = "Lobby does not exist.";
-        response->error_msg = lobbyDoesNotExistError;
-        RCLCPP_WARN(m_gameMasterNode->get_logger(), lobbyDoesNotExistError);
+        std::string playerPublicKeyMissingError = "Player public key missing.";
+        response->error_msg = playerPublicKeyMissingError;
+        TurtleLogger::logWarn(playerPublicKeyMissingError);
     }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(

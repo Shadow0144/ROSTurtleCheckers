@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 class RSAKeyGenerator
 {
@@ -9,6 +10,8 @@ public:
     
     static uint64_t encrypt(uint64_t message, uint64_t key);
     static uint64_t unencrypt(uint64_t message, uint64_t privateKey, uint64_t publicKey);
+
+    static uint64_t hashString(const std::string &input);
 
     static uint64_t createChecksumSignature(uint64_t hash, uint64_t publicKey, uint64_t privateKey);
     static bool checksumSignatureMatches(uint64_t hash, uint64_t publicKey, uint64_t signature);

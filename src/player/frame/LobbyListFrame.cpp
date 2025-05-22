@@ -68,23 +68,23 @@ LobbyListFrame::LobbyListFrame(
     auto joinLobbyDesiredColorLayout = new QHBoxLayout();
     joinLobbyDesiredColorLayout->setAlignment(Qt::AlignCenter);
 
-    m_joinLobbyBlackRadioButton = new QRadioButton();
-    m_joinLobbyRandomRadioButton = new QRadioButton();
-    m_joinLobbyRedRadioButton = new QRadioButton();
+    m_blackRadioButton = new QRadioButton();
+    m_randomRadioButton = new QRadioButton();
+    m_redRadioButton = new QRadioButton();
 
-    m_joinLobbyBlackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
-    m_joinLobbyRandomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
-    m_joinLobbyRedRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
+    m_blackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
+    m_randomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
+    m_redRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
 
-    m_joinLobbyRandomRadioButton->setChecked(true);
+    m_randomRadioButton->setChecked(true);
 
-    connect(m_joinLobbyBlackRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onBlackTurtleToggled);
-    connect(m_joinLobbyRandomRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onRandomTurtleToggled);
-    connect(m_joinLobbyRedRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onRedTurtleToggled);
+    connect(m_blackRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onBlackTurtleToggled);
+    connect(m_randomRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onRandomTurtleToggled);
+    connect(m_redRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onRedTurtleToggled);
 
-    joinLobbyDesiredColorLayout->addWidget(m_joinLobbyBlackRadioButton);
-    joinLobbyDesiredColorLayout->addWidget(m_joinLobbyRandomRadioButton);
-    joinLobbyDesiredColorLayout->addWidget(m_joinLobbyRedRadioButton);
+    joinLobbyDesiredColorLayout->addWidget(m_blackRadioButton);
+    joinLobbyDesiredColorLayout->addWidget(m_randomRadioButton);
+    joinLobbyDesiredColorLayout->addWidget(m_redRadioButton);
 
     joinLobbyLayout->addLayout(joinLobbyDesiredColorLayout);
 
@@ -120,7 +120,7 @@ void LobbyListFrame::showEvent(QShowEvent *event)
     }
 
     m_playerWindow->getLobbyList();
-    m_joinLobbyRandomRadioButton->setChecked(true);
+    m_randomRadioButton->setChecked(true);
 }
 
 void LobbyListFrame::displayLobbyList(const std::vector<std::string> &lobbyNames,

@@ -31,23 +31,30 @@ class CreateAccountFrame : public QFrame
 public:
 	CreateAccountFrame(CheckersPlayerWindow *parentWindow);
 	~CreateAccountFrame();
+	
+	void showEvent(QShowEvent* event) override;
+
+	void failedLogin(const std::string &errorMessage);
 
 public slots:
 	void validatePlayerNameText(const QString &playerName);
-	void onCreatePlayerPasswordTextChanged(const QString &playerPassword);
+	void validatePasswordText(const QString &playerPassword);
 
 private:
-	void handleCancelCreatePlayerButton();
-	void handleCommitCreatePlayerButton();
+	void handleCreateAccountButton();
+	void handleCancelButton();
 
 	CheckersPlayerWindow *m_playerWindow;
 
 	QLineEdit *m_playerNameLineEdit;
-	QLineEdit *m_createPlayerPasswordLineEdit;
+	QLineEdit *m_passwordLineEdit;
 
-	QPushButton *m_commitCreatePlayerButton;
+	QLabel *m_errorMessageLabel;
 
-	std::string m_playerName;
+	QPushButton *m_createAccountButton;
+
+	bool m_playerNameValid;
+	bool m_playerPasswordValid;
 };
 
 typedef std::unique_ptr<CreateAccountFrame> CreateAccountFrameUniPtr;

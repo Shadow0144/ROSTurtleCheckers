@@ -51,28 +51,25 @@ MainMenuFrame::MainMenuFrame(
     titleLabel->setFont(titleFont);
     mainLayout->addWidget(titleLabel);
 
-    auto playerNameLabel = new QLabel("Player name");
-    mainLayout->addWidget(playerNameLabel);
+    auto playerNameLayout = new QHBoxLayout();
 
-    m_playerNameLineEdit = new QLineEdit();
-    std::string playerNameRegex = "^[a-zA-Z0-9_]{1," + std::to_string(MAX_CHARS_NAME) + "}$";
-    auto playerNameValidator = new QRegularExpressionValidator(QRegularExpression(playerNameRegex.c_str()));
-    m_playerNameLineEdit->setValidator(playerNameValidator);
-    m_playerNameLineEdit->setProperty("valid", false);
-    connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &MainMenuFrame::validatePlayerNameText);
-    mainLayout->addWidget(m_playerNameLineEdit);
+    auto playerNameLabel = new QLabel("Player name: ");
+    playerNameLayout->addWidget(playerNameLabel);
+
+    m_playerNameLabel = new QLabel("");
+    playerNameLayout->addWidget(m_playerNameLabel);
+
+    mainLayout->addLayout(playerNameLayout);
 
     auto buttonLayout = new QHBoxLayout();
 
     std::string createLobbyString = "Create Lobby";
     m_createLobbyButton = new QPushButton(createLobbyString.c_str());
-    m_createLobbyButton->setEnabled(false);
     connect(m_createLobbyButton, &QPushButton::released, this, &MainMenuFrame::handleCreateLobbyButton);
     buttonLayout->addWidget(m_createLobbyButton);
 
     std::string joinLobbyString = "Join Lobby";
     m_joinLobbyButton = new QPushButton(joinLobbyString.c_str());
-    m_joinLobbyButton->setEnabled(false);
     connect(m_joinLobbyButton, &QPushButton::released, this, &MainMenuFrame::handleJoinLobbyButton);
     buttonLayout->addWidget(m_joinLobbyButton);
 
@@ -88,33 +85,11 @@ MainMenuFrame::~MainMenuFrame()
 {
 }
 
-void MainMenuFrame::validatePlayerNameText(const QString &playerName)
+void MainMenuFrame::showEvent(QShowEvent *event)
 {
-    QString playerNameCopy = playerName; // Remove the const
-    int pos = 0;
-    QValidator::State state = m_playerNameLineEdit->validator()->validate(playerNameCopy, pos);
-    if (!playerName.isEmpty() && state == QValidator::Acceptable)
-    {
-        m_playerNameLineEdit->setProperty("valid", true);
-        m_createLobbyButton->setEnabled(true);
-        m_joinLobbyButton->setEnabled(true);
-        Parameters::setPlayerName(playerName.toStdString());
-    }
-    else if (playerName.isEmpty() || state == QValidator::Invalid)
-    {
-        m_playerNameLineEdit->setProperty("valid", false);
-        m_createLobbyButton->setEnabled(false);
-        m_joinLobbyButton->setEnabled(false);
-        Parameters::setPlayerName("");
-    }
-    else // Intermediate
-    {
-        // Do nothing
-    }
-    // Update the style
-    m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
-    m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
-    m_playerNameLineEdit->update();
+    (void)event; // NO LINT
+
+    m_playerNameLabel->setText(Parameters::getPlayerName().c_str());
 }
 
 void MainMenuFrame::handleCreateLobbyButton()

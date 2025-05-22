@@ -57,7 +57,7 @@ CreateLobbyFrame::CreateLobbyFrame(
     createLobbyLayout->addWidget(lobbyNameLabel);
 
     m_lobbyNameLineEdit = new QLineEdit();
-    std::string lobbyNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_NAME - 1) + "}$";
+    std::string lobbyNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_LOBBY_NAME) + "}$";
     auto lobbyNameValidator = new QRegularExpressionValidator(QRegularExpression(lobbyNameRegex.c_str()));
     m_lobbyNameLineEdit->setValidator(lobbyNameValidator);
     m_lobbyNameLineEdit->setProperty("valid", false);
@@ -67,32 +67,35 @@ CreateLobbyFrame::CreateLobbyFrame(
     auto lobbyPasswordLabel = new QLabel("Lobby password");
     createLobbyLayout->addWidget(lobbyPasswordLabel);
 
-    m_createLobbyPasswordLineEdit = new QLineEdit();
-    m_createLobbyPasswordLineEdit->setEchoMode(QLineEdit::Password);
-    m_createLobbyPasswordLineEdit->setProperty("in_use", false);
-    connect(m_createLobbyPasswordLineEdit, &QLineEdit::textChanged, this, &CreateLobbyFrame::onCreateLobbyPasswordTextChanged);
-    createLobbyLayout->addWidget(m_createLobbyPasswordLineEdit);
+    m_lobbyPasswordLineEdit = new QLineEdit();
+    std::string lobbyPasswordRegex = "^[a-zA-Z0-9a-zA-Z0-9\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_LOBBY_PASS) + "}$";
+    auto lobbyPasswordValidator = new QRegularExpressionValidator(QRegularExpression(lobbyPasswordRegex.c_str()));
+    m_lobbyPasswordLineEdit->setValidator(lobbyPasswordValidator);
+    m_lobbyPasswordLineEdit->setEchoMode(QLineEdit::Password);
+    m_lobbyPasswordLineEdit->setProperty("in_use", false);
+    connect(m_lobbyPasswordLineEdit, &QLineEdit::textChanged, this, &CreateLobbyFrame::validatePasswordText);
+    createLobbyLayout->addWidget(m_lobbyPasswordLineEdit);
 
     auto createLobbyDesiredColorLayout = new QHBoxLayout();
     createLobbyDesiredColorLayout->setAlignment(Qt::AlignCenter);
 
-    m_createLobbyBlackRadioButton = new QRadioButton();
-    m_createLobbyRandomRadioButton = new QRadioButton();
-    m_createLobbyRedRadioButton = new QRadioButton();
+    m_blackRadioButton = new QRadioButton();
+    m_randomRadioButton = new QRadioButton();
+    m_redRadioButton = new QRadioButton();
 
-    m_createLobbyBlackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
-    m_createLobbyRandomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
-    m_createLobbyRedRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
+    m_blackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
+    m_randomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
+    m_redRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
 
-    m_createLobbyRandomRadioButton->setChecked(true);
+    m_randomRadioButton->setChecked(true);
 
-    connect(m_createLobbyBlackRadioButton, &QRadioButton::toggled, this, &CreateLobbyFrame::onBlackTurtleToggled);
-    connect(m_createLobbyRandomRadioButton, &QRadioButton::toggled, this, &CreateLobbyFrame::onRandomTurtleToggled);
-    connect(m_createLobbyRedRadioButton, &QRadioButton::toggled, this, &CreateLobbyFrame::onRedTurtleToggled);
+    connect(m_blackRadioButton, &QRadioButton::toggled, this, &CreateLobbyFrame::onBlackTurtleToggled);
+    connect(m_randomRadioButton, &QRadioButton::toggled, this, &CreateLobbyFrame::onRandomTurtleToggled);
+    connect(m_redRadioButton, &QRadioButton::toggled, this, &CreateLobbyFrame::onRedTurtleToggled);
 
-    createLobbyDesiredColorLayout->addWidget(m_createLobbyBlackRadioButton);
-    createLobbyDesiredColorLayout->addWidget(m_createLobbyRandomRadioButton);
-    createLobbyDesiredColorLayout->addWidget(m_createLobbyRedRadioButton);
+    createLobbyDesiredColorLayout->addWidget(m_blackRadioButton);
+    createLobbyDesiredColorLayout->addWidget(m_randomRadioButton);
+    createLobbyDesiredColorLayout->addWidget(m_redRadioButton);
 
     createLobbyLayout->addLayout(createLobbyDesiredColorLayout);
 
@@ -127,13 +130,13 @@ void CreateLobbyFrame::showEvent(QShowEvent *event)
     m_lobbyNameLineEdit->style()->unpolish(m_lobbyNameLineEdit);
     m_lobbyNameLineEdit->style()->polish(m_lobbyNameLineEdit);
     m_lobbyNameLineEdit->update();
-    m_createLobbyPasswordLineEdit->clear();
-    m_createLobbyPasswordLineEdit->setProperty("in_use", false);
-    m_createLobbyPasswordLineEdit->style()->unpolish(m_createLobbyPasswordLineEdit);
-    m_createLobbyPasswordLineEdit->style()->polish(m_createLobbyPasswordLineEdit);
-    m_createLobbyPasswordLineEdit->update();
+    m_lobbyPasswordLineEdit->clear();
+    m_lobbyPasswordLineEdit->setProperty("in_use", false);
+    m_lobbyPasswordLineEdit->style()->unpolish(m_lobbyPasswordLineEdit);
+    m_lobbyPasswordLineEdit->style()->polish(m_lobbyPasswordLineEdit);
+    m_lobbyPasswordLineEdit->update();
     m_createLobbyButton->setEnabled(false);
-    m_createLobbyRandomRadioButton->setChecked(true);
+    m_randomRadioButton->setChecked(true);
 }
 
 void CreateLobbyFrame::validateLobbyNameText(const QString &lobbyName)
@@ -163,13 +166,13 @@ void CreateLobbyFrame::validateLobbyNameText(const QString &lobbyName)
     m_lobbyNameLineEdit->update();
 }
 
-void CreateLobbyFrame::onCreateLobbyPasswordTextChanged(const QString &lobbyPassword)
+void CreateLobbyFrame::validatePasswordText(const QString &lobbyPassword)
 {
-    m_createLobbyPasswordLineEdit->setProperty("in_use", !lobbyPassword.isEmpty());
+    m_lobbyPasswordLineEdit->setProperty("in_use", !lobbyPassword.isEmpty());
     // Update the style
-    m_createLobbyPasswordLineEdit->style()->unpolish(m_createLobbyPasswordLineEdit);
-    m_createLobbyPasswordLineEdit->style()->polish(m_createLobbyPasswordLineEdit);
-    m_createLobbyPasswordLineEdit->update();
+    m_lobbyPasswordLineEdit->style()->unpolish(m_lobbyPasswordLineEdit);
+    m_lobbyPasswordLineEdit->style()->polish(m_lobbyPasswordLineEdit);
+    m_lobbyPasswordLineEdit->update();
 }
 
 void CreateLobbyFrame::handleCancelButton()
@@ -179,7 +182,7 @@ void CreateLobbyFrame::handleCancelButton()
 
 void CreateLobbyFrame::handleCreateLobbyButton()
 {
-    auto lobbyPassword = m_createLobbyPasswordLineEdit->text().toStdString();
+    auto lobbyPassword = m_lobbyPasswordLineEdit->text().toStdString();
     m_playerWindow->createLobby(lobbyPassword);
 }
 

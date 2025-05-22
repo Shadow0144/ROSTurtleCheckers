@@ -8,9 +8,11 @@
 #include "ament_index_cpp/get_package_share_directory.hpp" // For getting the styles directory
 
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
+#include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
+#include "turtle_checkers_interfaces/srv/login_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
@@ -33,9 +35,11 @@
 
 #include <algorithm>
 #include <string>
+#include <thread>
 
 #include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
+#include "shared/TurtleLogger.hpp"
 #include "player/Parameters.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 
@@ -44,12 +48,15 @@ using std::placeholders::_1;
 CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
     : QApplication(argc, argv)
 {
-    // Create the RSA key pair
-    RSAKeyGenerator::generateRSAKeyPair(m_publicKey, m_privateKey);
-
     // Create the node
     rclcpp::init(argc, argv);
     m_playerNode = rclcpp::Node::make_shared("checkers_player_node");
+
+    // Initialize the logger
+    TurtleLogger::initialize("checkers_player_node");
+
+    // Create the RSA key pair
+    RSAKeyGenerator::generateRSAKeyPair(m_publicKey, m_privateKey);
 
     // Set the UI styles
     QString stylesPath = (ament_index_cpp::get_package_share_directory("turtle_checkers") +
@@ -78,7 +85,7 @@ int CheckersPlayerNode::exec()
     m_checkersPlayerWindow->show();
 
     // Try to subscribe to a game and connect to a lobby
-    RCLCPP_INFO(m_playerNode->get_logger(), "Player " + Parameters::getPlayerName() + " searching for lobby...");
+    TurtleLogger::logInfo("Player " + Parameters::getPlayerName() + " searching for lobby...");
 
     rcl_interfaces::msg::FloatingPointRange range;
     range.from_value = 0.01f;
@@ -93,11 +100,15 @@ int CheckersPlayerNode::exec()
     holonomicDescriptor.description = "If true, then turtles will be holonomic";
     m_playerNode->declare_parameter("holonomic", rclcpp::ParameterValue(false), holonomicDescriptor);
 
-    RCLCPP_INFO(
-        m_playerNode->get_logger(), "Starting turtle checkers board with node name %s", m_playerNode->get_fully_qualified_name());
+    TurtleLogger::logInfo(std::string("Starting turtle checkers board with node name ") + m_playerNode->get_fully_qualified_name());
 
     m_connectToGameMasterClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::ConnectToGameMaster>(
         "ConnectToGameMaster");
+
+    m_createAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateAccount>(
+        "CreateAccount");
+    m_loginAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::LoginAccount>(
+        "LoginAccount");
 
     m_createLobbyClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateLobby>(
         "CreateLobby");
@@ -110,20 +121,7 @@ int CheckersPlayerNode::exec()
         "LeaveLobby", 10);
 
     // Ensure the game master node is reachable, then get the public key from it
-    // TODO - We should refactor the menus so we enter a name before connecting
-    while (!m_connectToGameMasterClient->wait_for_service(std::chrono::seconds(10)))
-    {
-        if (!rclcpp::ok())
-        {
-            RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
-            return 0;
-        }
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Service not available, waiting again...");
-    }
-    auto request = std::make_shared<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request>();
-    m_connectToGameMasterClient->async_send_request(request,
-                                                    std::bind(&CheckersPlayerNode::connectToGameMasterResponse,
-                                                              this, std::placeholders::_1));
+    std::thread(&CheckersPlayerNode::connectToGameMaster, this).detach();
 
     return QApplication::exec();
 }
@@ -140,6 +138,60 @@ void CheckersPlayerNode::parameterEventCallback(
             m_checkersPlayerWindow->update();
         }
     }
+}
+
+void CheckersPlayerNode::connectToGameMaster()
+{
+    bool alive = true;
+    while (alive && !m_connectToGameMasterClient->wait_for_service(std::chrono::seconds(10)))
+    {
+        if (!rclcpp::ok())
+        {
+            TurtleLogger::logError("Interrupted while waiting for the service. Exiting.");
+            alive = false;
+            QApplication::quit(); // Stop running the application and exit
+        }
+        TurtleLogger::logInfo("Service not available, waiting again...");
+    }
+    if (alive)
+    {
+        auto request = std::make_shared<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request>();
+        m_connectToGameMasterClient->async_send_request(request,
+                                                        std::bind(&CheckersPlayerNode::connectToGameMasterResponse,
+                                                                  this, std::placeholders::_1));
+    }
+}
+
+void CheckersPlayerNode::createAccount(
+    const std::string &playerName,
+    const std::string &playerPassword)
+{
+    auto request = std::make_shared<turtle_checkers_interfaces::srv::CreateAccount::Request>();
+    request->player_name = playerName;
+    uint64_t hashedPlayerPassword = RSAKeyGenerator::hashString(playerPassword);
+    uint64_t encryptedHashedPlayerPassword = RSAKeyGenerator::encrypt(hashedPlayerPassword, m_gameMasterPublicKey);
+    request->encrypted_hashed_player_password = encryptedHashedPlayerPassword;
+    uint64_t encryptedPlayerPublicKey = RSAKeyGenerator::encrypt(m_publicKey, m_gameMasterPublicKey);
+    request->encrypted_player_public_key = encryptedPlayerPublicKey;
+    m_createAccountClient->async_send_request(request,
+                                              std::bind(&CheckersPlayerNode::createAccountResponse,
+                                                        this, std::placeholders::_1));
+}
+
+void CheckersPlayerNode::loginAccount(
+    const std::string &playerName,
+    const std::string &playerPassword)
+{
+    auto request = std::make_shared<turtle_checkers_interfaces::srv::LoginAccount::Request>();
+    request->player_name = playerName;
+    uint64_t hashedPlayerPassword = RSAKeyGenerator::hashString(playerPassword);
+    uint64_t encryptedHashedPlayerPassword = RSAKeyGenerator::encrypt(hashedPlayerPassword, m_gameMasterPublicKey);
+    request->encrypted_hashed_player_password = encryptedHashedPlayerPassword;
+    uint64_t encryptedPlayerPublicKey = RSAKeyGenerator::encrypt(m_publicKey, m_gameMasterPublicKey);
+    request->encrypted_player_public_key = encryptedPlayerPublicKey;
+    m_loginAccountClient->async_send_request(request,
+                                             std::bind(&CheckersPlayerNode::loginAccountResponse,
+                                                       this, std::placeholders::_1));
 }
 
 void CheckersPlayerNode::createLobby(
@@ -162,7 +214,6 @@ void CheckersPlayerNode::createLobby(
         request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
     }
     request->desired_player_color = static_cast<size_t>(playerDesiredColor);
-    request->player_public_key = m_publicKey;
     m_createLobbyClient->async_send_request(request,
                                             std::bind(&CheckersPlayerNode::createLobbyResponse,
                                                       this, std::placeholders::_1));
@@ -190,7 +241,6 @@ void CheckersPlayerNode::joinLobby(
         request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
     }
     request->desired_player_color = static_cast<size_t>(playerDesiredColor);
-    request->player_public_key = m_publicKey;
     m_joinLobbyClient->async_send_request(request,
                                           std::bind(&CheckersPlayerNode::joinLobbyResponse,
                                                     this, std::placeholders::_1));
@@ -231,7 +281,24 @@ void CheckersPlayerNode::connectToGameMasterResponse(rclcpp::Client<turtle_check
 
     m_gameMasterPublicKey = result->game_master_public_key;
 
+    m_checkersPlayerWindow->setConnectedToServer(true);
+
     m_checkersPlayerWindow->update();
+}
+
+void CheckersPlayerNode::createAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedFuture future)
+{
+    auto result = future.get();
+
+    if (result->created)
+    {
+        m_checkersPlayerWindow->loggedIn(result->player_name);
+    }
+    else
+    {
+        m_checkersPlayerWindow->failedLogin(result->error_msg);
+        TurtleLogger::logWarn(result->error_msg);
+    }
 }
 
 void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future)
@@ -250,7 +317,7 @@ void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_inte
     }
     else
     {
-        RCLCPP_WARN(m_playerNode->get_logger(), result->error_msg);
+        TurtleLogger::logWarn(result->error_msg);
     }
 }
 
@@ -285,7 +352,7 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
         {
             m_checkersPlayerWindow->setPasswordIncorrect();
         }
-        RCLCPP_WARN(m_playerNode->get_logger(), result->error_msg);
+        TurtleLogger::logWarn(result->error_msg);
     }
 }
 
@@ -320,6 +387,21 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/OfferDraw", 10);
     m_playerReadyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>(
         lobbyName + "/id" + lobbyId + "/PlayerReady", 10);
+}
+
+void CheckersPlayerNode::loginAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LoginAccount>::SharedFuture future)
+{
+    auto result = future.get();
+
+    if (result->logged_in)
+    {
+        m_checkersPlayerWindow->loggedIn(result->player_name);
+    }
+    else
+    {
+        m_checkersPlayerWindow->failedLogin(result->error_msg);
+        TurtleLogger::logWarn(result->error_msg);
+    }
 }
 
 void CheckersPlayerNode::requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future)

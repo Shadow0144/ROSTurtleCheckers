@@ -6,9 +6,9 @@ if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
 
-# Default to C++14
+# Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -20,6 +20,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Widgets)
+find_package(SQLite3 REQUIRED)
 find_package(turtle_checkers_interfaces REQUIRED)
 
 if (Qt5_POSITION_INDEPENDENT_CODE)
@@ -48,10 +49,11 @@ add_executable(checkers_player_node
   src/shared/RSAKeyGenerator.cpp
   src/player/ImageLibrary.cpp
   src/shared/Tile.cpp
+  src/shared/TurtleLogger.cpp
+  src/shared/TurtlePiece.cpp
   src/player/Parameters.cpp
   src/player/TileRender.cpp
   src/player/TileRenderFactory.cpp
-  src/shared/TurtlePiece.cpp
   src/player/TurtlePieceRender.cpp
   src/player/TurtlePieceRenderFactory.cpp
   src/player/TurtleGraveyard.cpp
@@ -79,15 +81,20 @@ target_link_libraries(checkers_player_node
 add_executable(checkers_game_master_node
   src/shared/RSAKeyGenerator.cpp
   src/shared/Tile.cpp
-  src/game_master/TileFactory.cpp
+  src/shared/TurtleLogger.cpp
   src/shared/TurtlePiece.cpp
+  src/game_master/DatabaseHandler.cpp
+  src/game_master/TileFactory.cpp
   src/game_master/TurtlePieceFactory.cpp
   src/game_master/MasterBoard.cpp
   src/game_master/CheckersGameLobby.cpp
   src/game_master/CheckersGameMasterNode.cpp)
 ament_target_dependencies(checkers_game_master_node
+  ament_index_cpp
   rclcpp
   turtle_checkers_interfaces)
+target_link_libraries(checkers_game_master_node
+  SQLite::SQLite3)
 
 install(TARGETS
   checkers_player_node

@@ -12,9 +12,11 @@
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 
+#include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
+#include "turtle_checkers_interfaces/srv/login_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
@@ -213,6 +215,19 @@ struct std::hash<turtle_checkers_interfaces::msg::UpdateBoard>
 };
 
 template <>
+struct std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr>
+{
+    size_t operator()(const turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr &response) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<bool>{}(response->created));
+        hashCombine(combinedHash, std::hash<std::string>{}(response->player_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
+        return combinedHash;
+    }
+};
+
+template <>
 struct std::hash<turtle_checkers_interfaces::srv::CreateLobby::Response::SharedPtr>
 {
     size_t operator()(const turtle_checkers_interfaces::srv::CreateLobby::Response::SharedPtr &response) const noexcept
@@ -257,6 +272,19 @@ struct std::hash<turtle_checkers_interfaces::srv::JoinLobby::Response::SharedPtr
         hashCombine(combinedHash, std::hash<std::string>{}(response->red_player_name));
         hashCombine(combinedHash, std::hash<bool>{}(response->black_player_ready));
         hashCombine(combinedHash, std::hash<bool>{}(response->red_player_ready));
+        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::srv::LoginAccount::Response::SharedPtr>
+{
+    size_t operator()(const turtle_checkers_interfaces::srv::LoginAccount::Response::SharedPtr &response) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<bool>{}(response->logged_in));
+        hashCombine(combinedHash, std::hash<std::string>{}(response->player_name));
         hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
         return combinedHash;
     }

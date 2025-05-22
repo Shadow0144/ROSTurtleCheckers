@@ -31,35 +31,30 @@ class LoginAccountFrame : public QFrame
 public:
 	LoginAccountFrame(CheckersPlayerWindow *parentWindow);
 	~LoginAccountFrame();
+	
+	void showEvent(QShowEvent* event) override;
 
-	const std::string &getPlayerName() const;
-	const std::string &getLobbyName() const;
-	const std::string &getLobbyId() const;
-
-	void setPlayerName(const std::string &playerName);
-
-	void setPasswordIncorrect();
+	void failedLogin(const std::string &errorMessage);
 
 public slots:
-	void onEnterLobbyPasswordTextChanged(const QString &lobbyPassword);
+	void validatePlayerNameText(const QString &playerName);
+	void validatePasswordText(const QString &playerPassword);
 
 private:
-	void handleCancelEnterLobbyPasswordButton();
-	void handleConfirmPassword(size_t lobbyIndex);
+	void handleLoginAccountButton();
+	void handleCancelButton();
 
 	CheckersPlayerWindow *m_playerWindow;
 
-	QLineEdit *m_enterLobbyPasswordLineEdit;
+	QLineEdit *m_playerNameLineEdit;
+	QLineEdit *m_passwordLineEdit;
 
-	QPushButton *m_createLobbyButton;
-	QPushButton *m_commitCreateLobbyButton;
-	QPushButton *m_joinLobbyButton;
-	QPushButton *m_commitJoinLobbyButton;
-	QLabel *m_passwordIncorrectLabel;
+	QLabel *m_errorMessageLabel;
 
-	std::string m_playerName;
-	std::string m_lobbyName;
-	std::string m_lobbyId;
+	QPushButton *m_loginAccountButton;
+
+	bool m_playerNameValid;
+	bool m_playerPasswordValid;
 };
 
 typedef std::unique_ptr<LoginAccountFrame> LoginAccountFrameUniPtr;

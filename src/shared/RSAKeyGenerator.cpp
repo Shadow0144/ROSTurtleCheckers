@@ -9,7 +9,7 @@
 
 #include "shared/CheckersConsts.hpp"
 
-int64_t e = 65537;
+constexpr int64_t e = 65537;
 
 void RSAKeyGenerator::generateRSAKeyPair(uint64_t &publicKey, uint64_t &privateKey)
 {
@@ -50,7 +50,9 @@ int64_t RSAKeyGenerator::generateLargePrime(uint64_t numBits)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<int64_t> distrib(std::pow(2, numBits - 1), std::pow(2, numBits) - 1);
+    uint64_t min = 1ULL << (numBits - 1);
+    uint64_t max = (1ULL << numBits) - 1;
+    std::uniform_int_distribution<int64_t> distrib(min, max);
 
     int64_t largePrime;
     do
@@ -121,16 +123,16 @@ bool RSAKeyGenerator::isPrime(int64_t n, int64_t k)
 uint64_t RSAKeyGenerator::modularExponentiation(uint64_t base, uint64_t exp, uint64_t mod)
 {
     uint64_t res = 1;
-    base %= mod;  // Make sure base is in the correct range [0, mod-1]
+    base %= mod; // Make sure base is in the correct range [0, mod-1]
 
     while (exp > 0)
     {
-        if (exp % 2 == 1)  // If exp is odd
+        if (exp % 2 == 1) // If exp is odd
         {
-            res = (res * base) % mod;  // Multiply the result with the base and apply mod
+            res = (res * base) % mod; // Multiply the result with the base and apply mod
         }
-        base = (base * base) % mod;  // Square the base and apply mod
-        exp /= 2;  // Halve the exponent
+        base = (base * base) % mod; // Square the base and apply mod
+        exp /= 2;                   // Halve the exponent
     }
 
     return res;
@@ -167,6 +169,28 @@ int64_t RSAKeyGenerator::modInverse(int64_t e, int64_t phi)
     }
 
     return (x % phi + phi) % phi;
+}
+
+uint64_t RSAKeyGenerator::hashString(const std::string &input)
+{
+    uint64_t hash = 0xcbf29ce484222325ULL;   // FNV offset basis
+    const uint64_t prime = 0x100000001b3ULL; // FNV prime
+
+    for (char c : input)
+    {
+        hash ^= static_cast<uint8_t>(c);
+        hash *= prime;
+        hash ^= (hash >> 32); // Extra diffusion
+    }
+
+    // Mix more
+    hash ^= (hash >> 33);
+    hash *= 0xff51afd7ed558ccdULL;
+    hash ^= (hash >> 33);
+    hash *= 0xc4ceb9fe1a85ec53ULL;
+    hash ^= (hash >> 33);
+
+    return static_cast<uint16_t>(hash); // Take lower 16 bits
 }
 
 uint64_t RSAKeyGenerator::encrypt(uint64_t message, uint64_t key)

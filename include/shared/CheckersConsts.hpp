@@ -113,5 +113,9 @@ constexpr int HUD_BG_RGB[3] = {100u, 100u, 100u};
 constexpr int GRAVEYARD_BG_RGB[3] = {50u, 50u, 50u};
 
 constexpr int NUM_BITS_RSA = 16;
+constexpr int NUM_CHARS_SALT = 6;
 
-constexpr int MAX_CHARS_NAME = 24;
+constexpr int MAX_CHARS_PLAYER_NAME = 24;
+constexpr int MAX_CHARS_PLAYER_PASS = 3;
+constexpr int MAX_CHARS_LOBBY_NAME = 24;
+constexpr int MAX_CHARS_LOBBY_PASS = 24;

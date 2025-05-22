@@ -3,9 +3,11 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
+#include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
+#include "turtle_checkers_interfaces/srv/login_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
@@ -42,6 +44,11 @@ public:
 
     int exec();
 
+    void createAccount(const std::string &playerName,
+                       const std::string &playerPassword);
+    void loginAccount(const std::string &playerName,
+                      const std::string &playerPassword);
+
     void createLobby(const std::string &playerName,
                      const std::string &lobbyName,
                      const std::string &lobbyPassword,
@@ -71,9 +78,11 @@ public slots:
 
 private:
     void connectToGameMasterResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedFuture future);
+    void createAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedFuture future);
     void createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future);
     void getLobbyListResponse(rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedFuture future);
     void joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future);
+    void loginAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LoginAccount>::SharedFuture future);
     void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
     void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
 
@@ -88,6 +97,8 @@ private:
 
     void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event);
 
+    void connectToGameMaster();
+
     void createLobbyInterfaces(const std::string &lobbyName, const std::string &lobbyId);
 
     std::shared_ptr<rclcpp::Node> m_playerNode;
@@ -95,6 +106,8 @@ private:
     std::unique_ptr<CheckersPlayerWindow> m_checkersPlayerWindow;
 
     rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::LoginAccount>::SharedPtr m_loginAccountClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedPtr m_getLobbyListClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyClient;

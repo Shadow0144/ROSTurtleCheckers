@@ -39,149 +39,178 @@ CreateAccountFrame::CreateAccountFrame(
     CheckersPlayerWindow *parentWindow)
     : QFrame(parentWindow, Qt::WindowFlags())
 {
-    /*m_playerWindow = parentWindow;
-    m_playerName = "";
-    m_playerName = "";
-    m_playerId = "";
-    m_playerDesiredColor = TurtlePieceColor::None;
-    m_playerColor = TurtlePieceColor::None;
-    m_blackPlayerName = "";
-    m_redPlayerName = "";
-    m_blackPlayerReady = false;
-    m_redPlayerReady = false;
+    m_playerWindow = parentWindow;
 
-    setMouseTracking(true);
+    m_playerNameValid = false;
+    m_playerPasswordValid = false;
 
-    auto createPlayerLayout = new QVBoxLayout(this);
-    createPlayerLayout->setAlignment(Qt::AlignCenter);
+    auto createAccountLayout = new QVBoxLayout(this);
+    createAccountLayout->setAlignment(Qt::AlignCenter);
 
-    auto createPlayerTitleLabel = new QLabel("Turtle Checkers");
-    auto titleFont = createPlayerTitleLabel->font();
+    auto createAccountTitleLabel = new QLabel("Turtle Checkers");
+    auto titleFont = createAccountTitleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
-    createPlayerTitleLabel->setFont(titleFont);
-    createPlayerLayout->addWidget(createPlayerTitleLabel);
+    createAccountTitleLabel->setFont(titleFont);
+    createAccountLayout->addWidget(createAccountTitleLabel);
 
     auto playerNameLabel = new QLabel("Player name");
-    createPlayerLayout->addWidget(playerNameLabel);
+    createAccountLayout->addWidget(playerNameLabel);
 
     m_playerNameLineEdit = new QLineEdit();
-    std::string playerNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_NAME - 1) + "}$";
+    std::string playerNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_PLAYER_NAME) + "}$";
     auto playerNameValidator = new QRegularExpressionValidator(QRegularExpression(playerNameRegex.c_str()));
     m_playerNameLineEdit->setValidator(playerNameValidator);
     m_playerNameLineEdit->setProperty("valid", false);
     connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &CreateAccountFrame::validatePlayerNameText);
-    createPlayerLayout->addWidget(m_playerNameLineEdit);
+    createAccountLayout->addWidget(m_playerNameLineEdit);
 
     auto playerPasswordLabel = new QLabel("Player password");
-    createPlayerLayout->addWidget(playerPasswordLabel);
+    createAccountLayout->addWidget(playerPasswordLabel);
 
-    m_createPlayerPasswordLineEdit = new QLineEdit();
-    m_createPlayerPasswordLineEdit->setEchoMode(QLineEdit::Password);
-    m_createPlayerPasswordLineEdit->setProperty("in_use", false);
-    connect(m_createPlayerPasswordLineEdit, &QLineEdit::textChanged, this, &CreateAccountFrame::onCreatePlayerPasswordTextChanged);
-    createPlayerLayout->addWidget(m_createPlayerPasswordLineEdit);
+    m_passwordLineEdit = new QLineEdit();
+    std::string playerPasswordRegex = "^[a-zA-Z0-9a-zA-Z0-9\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_PLAYER_PASS) + "}$";
+    auto playerPasswordValidator = new QRegularExpressionValidator(QRegularExpression(playerPasswordRegex.c_str()));
+    m_passwordLineEdit->setValidator(playerPasswordValidator);
+    m_passwordLineEdit->setEchoMode(QLineEdit::Password);
+    m_playerNameLineEdit->setProperty("valid", false);
+    connect(m_passwordLineEdit, &QLineEdit::textChanged, this, &CreateAccountFrame::validatePasswordText);
+    createAccountLayout->addWidget(m_passwordLineEdit);
 
-    auto createPlayerDesiredColorLayout = new QHBoxLayout();
-    createPlayerDesiredColorLayout->setAlignment(Qt::AlignCenter);
+    auto passwordWarningLabel1 = new QLabel("This application is a learning project for me, thus passwords are NOT robustly secured.");
+    auto passwordWarningLabel2 = new QLabel("Do NOT use passwords you use elsewhere.");
+    auto passwordWarningLabel3 = new QLabel("To prevent password reuse, passwords can be a maximum of 3 characters in length.");
+    auto passwordWarningLabel4 = new QLabel("You may use alphanumeric characters and/or the following symbols:");
+    auto passwordWarningLabel5 = new QLabel("\t` ~ ! @ # $ % ^ & * ( ) - _ = + [ ] { } | ; : , . < > ?");
+    createAccountLayout->addWidget(passwordWarningLabel1);
+    createAccountLayout->addWidget(passwordWarningLabel2);
+    createAccountLayout->addWidget(passwordWarningLabel3);
+    createAccountLayout->addWidget(passwordWarningLabel4);
+    createAccountLayout->addWidget(passwordWarningLabel5);
 
-    m_createPlayerBlackRadioButton = new QRadioButton();
-    m_createPlayerRandomRadioButton = new QRadioButton();
-    m_createPlayerRedRadioButton = new QRadioButton();
+    m_errorMessageLabel = new QLabel("");
+    m_errorMessageLabel->setProperty("error", true);
+    auto errorMessageLabelSizePolicy = m_errorMessageLabel->sizePolicy();
+    errorMessageLabelSizePolicy.setRetainSizeWhenHidden(true);
+    m_errorMessageLabel->setSizePolicy(errorMessageLabelSizePolicy);
+    m_errorMessageLabel->setVisible(false);
+    createAccountLayout->addWidget(m_errorMessageLabel);
 
-    m_createPlayerBlackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
-    m_createPlayerRandomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
-    m_createPlayerRedRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
+    auto createAccountButtonLayout = new QHBoxLayout();
 
-    connect(m_createPlayerBlackRadioButton, &QRadioButton::toggled, this, &CreateAccountFrame::onBlackTurtleToggled);
-    connect(m_createPlayerRandomRadioButton, &QRadioButton::toggled, this, &CreateAccountFrame::onRandomTurtleToggled);
-    connect(m_createPlayerRedRadioButton, &QRadioButton::toggled, this, &CreateAccountFrame::onRedTurtleToggled);
+    std::string createAccountString = "Create Account";
+    m_createAccountButton = new QPushButton(createAccountString.c_str());
+    m_createAccountButton->setEnabled(false);
+    connect(m_createAccountButton, &QPushButton::released, this,
+            &CreateAccountFrame::handleCreateAccountButton);
+    createAccountButtonLayout->addWidget(m_createAccountButton);
 
-    createPlayerDesiredColorLayout->addWidget(m_createPlayerBlackRadioButton);
-    createPlayerDesiredColorLayout->addWidget(m_createPlayerRandomRadioButton);
-    createPlayerDesiredColorLayout->addWidget(m_createPlayerRedRadioButton);
+    std::string cancelString = "Cancel";
+    auto cancelButton = new QPushButton(cancelString.c_str());
+    connect(cancelButton, &QPushButton::released, this,
+            &CreateAccountFrame::handleCancelButton);
+    createAccountButtonLayout->addWidget(cancelButton);
 
-    createPlayerLayout->addLayout(createPlayerDesiredColorLayout);
-
-    auto createPlayerButtonLayout = new QHBoxLayout();
-
-    std::string commitCreatePlayerString = "Create Player";
-    m_commitCreatePlayerButton = new QPushButton(commitCreatePlayerString.c_str());
-    m_commitCreatePlayerButton->setEnabled(false);
-    connect(m_commitCreatePlayerButton, &QPushButton::released, this,
-            &CreateAccountFrame::handleCommitCreatePlayerButton);
-    createPlayerButtonLayout->addWidget(m_commitCreatePlayerButton);
-
-    std::string cancelCreatePlayerString = "Cancel";
-    auto cancelCreatePlayerButton = new QPushButton(cancelCreatePlayerString.c_str());
-    connect(cancelCreatePlayerButton, &QPushButton::released, this,
-            &CreateAccountFrame::handleCancelCreatePlayerButton);
-    createPlayerButtonLayout->addWidget(cancelCreatePlayerButton);
-
-    createPlayerLayout->addLayout(createPlayerButtonLayout);*/
+    createAccountLayout->addLayout(createAccountButtonLayout);
 }
 
 CreateAccountFrame::~CreateAccountFrame()
 {
 }
 
-void CreateAccountFrame::validatePlayerNameText(const QString &playerName)
+void CreateAccountFrame::showEvent(QShowEvent *event)
 {
-    /*QString playerNameCopy = playerName; // Remove the const
-    int pos = 0;
-    QValidator::State state = m_playerNameLineEdit->validator()->validate(playerNameCopy, pos);
-    if (!playerName.isEmpty() && state == QValidator::Acceptable)
-    {
-        m_playerNameLineEdit->setProperty("valid", true);
-        m_commitCreatePlayerButton->setEnabled(true);
-        m_playerName = playerName.toStdString();
-    }
-    else if (playerName.isEmpty() || state == QValidator::Invalid)
-    {
-        m_playerNameLineEdit->setProperty("valid", false);
-        m_commitCreatePlayerButton->setEnabled(false);
-        m_playerName = "";
-    }
-    else // Intermediate
-    {
-        // Do nothing
-    }
-    // Update the style
-    m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
-    m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
-    m_playerNameLineEdit->update();*/
-}
+    (void)event; // NO LINT
 
-void CreateAccountFrame::onCreatePlayerPasswordTextChanged(const QString &playerPassword)
-{
-    /*m_createPlayerPasswordLineEdit->setProperty("in_use", !playerPassword.isEmpty());
-    // Update the style
-    m_createPlayerPasswordLineEdit->style()->unpolish(m_createPlayerPasswordLineEdit);
-    m_createPlayerPasswordLineEdit->style()->polish(m_createPlayerPasswordLineEdit);
-    m_createPlayerPasswordLineEdit->update();*/
-}
-
-void CreateAccountFrame::handleCancelCreatePlayerButton()
-{
-    /*m_playerName = "";
-    m_playerId = "";
-    m_playerDesiredColor = TurtlePieceColor::None;
+    m_playerNameValid = false;
+    m_playerPasswordValid = false;
     m_playerNameLineEdit->clear();
     m_playerNameLineEdit->setProperty("valid", false);
     m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
     m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
     m_playerNameLineEdit->update();
-    m_createPlayerPasswordLineEdit->clear();
-    m_createPlayerPasswordLineEdit->setProperty("in_use", false);
-    m_createPlayerPasswordLineEdit->style()->unpolish(m_createPlayerPasswordLineEdit);
-    m_createPlayerPasswordLineEdit->style()->polish(m_createPlayerPasswordLineEdit);
-    m_createPlayerPasswordLineEdit->update();
-    m_commitCreatePlayerButton->setEnabled(false);
-    m_playerNameLineEdit->setText(m_playerName.c_str());
-    m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);*/
+    m_playerNameLineEdit->clear();
+    m_passwordLineEdit->setProperty("valid", false);
+    m_passwordLineEdit->style()->unpolish(m_passwordLineEdit);
+    m_passwordLineEdit->style()->polish(m_passwordLineEdit);
+    m_passwordLineEdit->update();
+    m_errorMessageLabel->setVisible(false);
+    m_createAccountButton->setEnabled(false);
 }
 
-void CreateAccountFrame::handleCommitCreatePlayerButton()
+void CreateAccountFrame::failedLogin(const std::string &errorMessage)
 {
-    /*auto playerPassword = m_createPlayerPasswordLineEdit->text().toStdString();
-    m_playerWindow->createPlayer(m_playerName, m_playerName, playerPassword, m_playerDesiredColor);*/
+    std::string createAccountString = "Create Account";
+    m_createAccountButton->setText(createAccountString.c_str());
+    m_errorMessageLabel->setText(errorMessage.c_str());
+    m_errorMessageLabel->setVisible(true);
+}
+
+void CreateAccountFrame::validatePlayerNameText(const QString &playerName)
+{
+    QString playerNameCopy = playerName; // Remove the const
+    int pos = 0;
+    QValidator::State state = m_playerNameLineEdit->validator()->validate(playerNameCopy, pos);
+    if (!playerName.isEmpty() && state == QValidator::Acceptable)
+    {
+        m_playerNameLineEdit->setProperty("valid", true);
+        m_playerNameValid = true;
+    }
+    else if (playerName.isEmpty() || state == QValidator::Invalid)
+    {
+        m_playerNameLineEdit->setProperty("valid", false);
+        m_playerNameValid = false;
+    }
+    else // Intermediate
+    {
+        // Do nothing
+    }
+    m_createAccountButton->setEnabled(m_playerNameValid && m_playerPasswordValid);
+    m_errorMessageLabel->setVisible(false);
+    // Update the style
+    m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
+    m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
+    m_playerNameLineEdit->update();
+}
+
+void CreateAccountFrame::validatePasswordText(const QString &playerPassword)
+{
+    QString playerPasswordCopy = playerPassword; // Remove the const
+    int pos = 0;
+    QValidator::State state = m_passwordLineEdit->validator()->validate(playerPasswordCopy, pos);
+    if (!playerPassword.isEmpty() && state == QValidator::Acceptable)
+    {
+        m_passwordLineEdit->setProperty("valid", true);
+        m_playerPasswordValid = true;
+    }
+    else if (playerPassword.isEmpty() || state == QValidator::Invalid)
+    {
+        m_passwordLineEdit->setProperty("valid", false);
+        m_playerPasswordValid = false;
+    }
+    else // Intermediate
+    {
+        // Do nothing
+    }
+    m_createAccountButton->setEnabled(m_playerNameValid && m_playerPasswordValid);
+    m_errorMessageLabel->setVisible(false);
+    // Update the style
+    m_passwordLineEdit->style()->unpolish(m_passwordLineEdit);
+    m_passwordLineEdit->style()->polish(m_passwordLineEdit);
+    m_passwordLineEdit->update();
+}
+
+void CreateAccountFrame::handleCreateAccountButton()
+{
+    std::string creatingAccountString = "Creating...";
+    m_createAccountButton->setText(creatingAccountString.c_str());
+    m_createAccountButton->setEnabled(false);
+
+    auto playerName = m_playerNameLineEdit->text().toStdString();
+    auto playerPassword = m_passwordLineEdit->text().toStdString();
+    m_playerWindow->createAccount(playerName, playerPassword);
+}
+
+void CreateAccountFrame::handleCancelButton()
+{
+    m_playerWindow->moveToTitleFrame();
 }

@@ -39,120 +39,167 @@ LoginAccountFrame::LoginAccountFrame(
     CheckersPlayerWindow *parentWindow)
     : QFrame(parentWindow, Qt::WindowFlags())
 {
-    /*m_playerWindow = parentWindow;
-    m_playerName = "";
-    m_lobbyName = "";
-    m_lobbyId = "";
-    m_playerDesiredColor = TurtlePieceColor::None;
-    m_playerColor = TurtlePieceColor::None;
-    m_blackPlayerName = "";
-    m_redPlayerName = "";
-    m_blackPlayerReady = false;
-    m_redPlayerReady = false;
+    m_playerWindow = parentWindow;
 
-    setMouseTracking(true);
+    m_playerNameValid = false;
+    m_playerPasswordValid = false;
 
-    auto enterLobbyPasswordLayout = new QVBoxLayout(this);
-    enterLobbyPasswordLayout->setAlignment(Qt::AlignCenter);
+    auto loginAccountLayout = new QVBoxLayout(this);
+    loginAccountLayout->setAlignment(Qt::AlignCenter);
 
-    auto enterLobbyPasswordTitleLabel = new QLabel("Turtle Checkers");
-    auto titleFont = enterLobbyPasswordTitleLabel->font();
+    auto loginAccountTitleLabel = new QLabel("Turtle Checkers");
+    auto titleFont = loginAccountTitleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
-    enterLobbyPasswordTitleLabel->setFont(titleFont);
-    enterLobbyPasswordLayout->addWidget(enterLobbyPasswordTitleLabel);
+    loginAccountTitleLabel->setFont(titleFont);
+    loginAccountLayout->addWidget(loginAccountTitleLabel);
 
-    auto lobbyNameLayout = new QHBoxLayout();
+    auto playerNameLabel = new QLabel("Player name");
+    loginAccountLayout->addWidget(playerNameLabel);
 
-    auto lobbyNameLabel = new QLabel(m_lobbyName.c_str());
-    lobbyNameLayout->addWidget(lobbyNameLabel);
+    m_playerNameLineEdit = new QLineEdit();
+    std::string playerNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_PLAYER_NAME) + "}$";
+    auto playerNameValidator = new QRegularExpressionValidator(QRegularExpression(playerNameRegex.c_str()));
+    m_playerNameLineEdit->setValidator(playerNameValidator);
+    m_playerNameLineEdit->setProperty("valid", false);
+    connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &LoginAccountFrame::validatePlayerNameText);
+    loginAccountLayout->addWidget(m_playerNameLineEdit);
 
-    std::string lobbyIdWithHash = "#" + m_lobbyId;
-    auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
-    lobbyNameLayout->addWidget(lobbyIdLabel);
+    auto playerPasswordLabel = new QLabel("Player password");
+    loginAccountLayout->addWidget(playerPasswordLabel);
 
-    enterLobbyPasswordLayout->addLayout(lobbyNameLayout);
+    m_passwordLineEdit = new QLineEdit();
+    std::string playerPasswordRegex = "^[a-zA-Z0-9a-zA-Z0-9\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_PLAYER_PASS) + "}$";
+    auto playerPasswordValidator = new QRegularExpressionValidator(QRegularExpression(playerPasswordRegex.c_str()));
+    m_passwordLineEdit->setValidator(playerPasswordValidator);
+    m_passwordLineEdit->setEchoMode(QLineEdit::Password);
+    m_playerNameLineEdit->setProperty("valid", false);
+    connect(m_passwordLineEdit, &QLineEdit::textChanged, this, &LoginAccountFrame::validatePasswordText);
+    loginAccountLayout->addWidget(m_passwordLineEdit);
 
-    auto lobbyPasswordLabel = new QLabel("Lobby password");
-    enterLobbyPasswordLayout->addWidget(lobbyPasswordLabel);
+    m_errorMessageLabel = new QLabel("");
+    m_errorMessageLabel->setProperty("error", true);
+    auto errorMessageLabelSizePolicy = m_errorMessageLabel->sizePolicy();
+    errorMessageLabelSizePolicy.setRetainSizeWhenHidden(true);
+    m_errorMessageLabel->setSizePolicy(errorMessageLabelSizePolicy);
+    m_errorMessageLabel->setVisible(false);
+    loginAccountLayout->addWidget(m_errorMessageLabel);
 
-    m_enterLobbyPasswordLineEdit = new QLineEdit();
-    m_enterLobbyPasswordLineEdit->setEchoMode(QLineEdit::Password);
-    m_enterLobbyPasswordLineEdit->setProperty("in_use", false);
-    connect(m_enterLobbyPasswordLineEdit, &QLineEdit::textChanged, this, &LoginAccountFrame::onEnterLobbyPasswordTextChanged);
-    enterLobbyPasswordLayout->addWidget(m_enterLobbyPasswordLineEdit);
+    auto loginAccountButtonLayout = new QHBoxLayout();
 
-    m_passwordIncorrectLabel = new QLabel("Incorrect password");
-    m_passwordIncorrectLabel->setProperty("error", true);
-    auto passwordIncorrectLabelSizePolicy = m_passwordIncorrectLabel->sizePolicy();
-    passwordIncorrectLabelSizePolicy.setRetainSizeWhenHidden(true);
-    m_passwordIncorrectLabel->setSizePolicy(passwordIncorrectLabelSizePolicy);
-    m_passwordIncorrectLabel->setVisible(false);
-    enterLobbyPasswordLayout->addWidget(m_passwordIncorrectLabel);
+    std::string loginAccountString = "Login";
+    m_loginAccountButton = new QPushButton(loginAccountString.c_str());
+    m_loginAccountButton->setEnabled(false);
+    connect(m_loginAccountButton, &QPushButton::released, this,
+            &LoginAccountFrame::handleLoginAccountButton);
+    loginAccountButtonLayout->addWidget(m_loginAccountButton);
 
-    auto enterLobbyPasswordButtonLayout = new QHBoxLayout();
+    std::string cancelString = "Cancel";
+    auto cancelButton = new QPushButton(cancelString.c_str());
+    connect(cancelButton, &QPushButton::released, this,
+            &LoginAccountFrame::handleCancelButton);
+    loginAccountButtonLayout->addWidget(cancelButton);
 
-    std::string commitJoinLobbyString = "Join Lobby";
-    m_commitJoinLobbyButton = new QPushButton(commitJoinLobbyString.c_str());
-    m_commitJoinLobbyButton->setEnabled(false);
-    connect(m_commitJoinLobbyButton, &QPushButton::released, this,
-            [lobbyIndex, this]()
-            { this->handleConfirmPassword(lobbyIndex); });
-    enterLobbyPasswordButtonLayout->addWidget(m_commitJoinLobbyButton);
-
-    std::string cancelJoinLobbyString = "Cancel";
-    auto cancelJoinLobbyButton = new QPushButton(cancelJoinLobbyString.c_str());
-    connect(cancelJoinLobbyButton, &QPushButton::released, this,
-            &LoginAccountFrame::handleCancelEnterLobbyPasswordButton);
-    enterLobbyPasswordButtonLayout->addWidget(cancelJoinLobbyButton);
-
-    enterLobbyPasswordLayout->addLayout(enterLobbyPasswordButtonLayout);*/
+    loginAccountLayout->addLayout(loginAccountButtonLayout);
 }
 
 LoginAccountFrame::~LoginAccountFrame()
 {
 }
 
-const std::string &LoginAccountFrame::getPlayerName() const
+void LoginAccountFrame::showEvent(QShowEvent *event)
 {
-    return m_playerName;
+    (void)event; // NO LINT
+
+    m_playerNameValid = false;
+    m_playerPasswordValid = false;
+    m_playerNameLineEdit->clear();
+    m_playerNameLineEdit->setProperty("valid", false);
+    m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
+    m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
+    m_playerNameLineEdit->update();
+    m_playerNameLineEdit->clear();
+    m_passwordLineEdit->setProperty("valid", false);
+    m_passwordLineEdit->style()->unpolish(m_passwordLineEdit);
+    m_passwordLineEdit->style()->polish(m_passwordLineEdit);
+    m_passwordLineEdit->update();
+    m_errorMessageLabel->setVisible(false);
+    m_loginAccountButton->setEnabled(false);
 }
 
-const std::string &LoginAccountFrame::getLobbyName() const
+void LoginAccountFrame::failedLogin(const std::string &errorMessage)
 {
-    return m_lobbyName;
+    std::string loginAccountString = "Login";
+    m_loginAccountButton->setText(loginAccountString.c_str());
+    m_errorMessageLabel->setText(errorMessage.c_str());
+    m_errorMessageLabel->setVisible(true);
 }
 
-void LoginAccountFrame::setPasswordIncorrect()
+void LoginAccountFrame::validatePlayerNameText(const QString &playerName)
 {
-    //m_passwordIncorrectLabel->setVisible(true);
-}
-
-void LoginAccountFrame::onEnterLobbyPasswordTextChanged(const QString &lobbyPassword)
-{
-    /*m_commitJoinLobbyButton->setEnabled(!lobbyPassword.isEmpty());
-    m_createLobbyPasswordLineEdit->setProperty("in_use", !lobbyPassword.isEmpty());
-    // Update the style
-    m_createLobbyPasswordLineEdit->style()->unpolish(m_createLobbyPasswordLineEdit);
-    m_createLobbyPasswordLineEdit->style()->polish(m_createLobbyPasswordLineEdit);
-    m_createLobbyPasswordLineEdit->update();*/
-}
-
-void LoginAccountFrame::handleCancelEnterLobbyPasswordButton()
-{
-    /*m_enterLobbyPasswordLineEdit->clear();
-    m_enterLobbyPasswordLineEdit->setProperty("in_use", false);
-    m_enterLobbyPasswordLineEdit->style()->unpolish(m_enterLobbyPasswordLineEdit);
-    m_enterLobbyPasswordLineEdit->style()->polish(m_enterLobbyPasswordLineEdit);
-    m_enterLobbyPasswordLineEdit->update();
-    m_windowLayout->setCurrentIndex(JOIN_LOBBY_INDEX);*/
-}
-
-void LoginAccountFrame::handleConfirmPassword(size_t lobbyIndex)
-{
-    /*auto lobbyPassword = "";
-    if (m_enterLobbyPasswordLineEdit)
+    QString playerNameCopy = playerName; // Remove the const
+    int pos = 0;
+    QValidator::State state = m_playerNameLineEdit->validator()->validate(playerNameCopy, pos);
+    if (!playerName.isEmpty() && state == QValidator::Acceptable)
     {
-        m_enterLobbyPasswordLineEdit->text().toStdString();
+        m_playerNameLineEdit->setProperty("valid", true);
+        m_playerNameValid = true;
     }
-    m_playerWindow->joinLobby(m_playerName, m_lobbyNames[lobbyIndex], m_lobbyIds[lobbyIndex], lobbyPassword, m_playerDesiredColor);*/
+    else if (playerName.isEmpty() || state == QValidator::Invalid)
+    {
+        m_playerNameLineEdit->setProperty("valid", false);
+        m_playerNameValid = false;
+    }
+    else // Intermediate
+    {
+        // Do nothing
+    }
+    m_loginAccountButton->setEnabled(m_playerNameValid && m_playerPasswordValid);
+    m_errorMessageLabel->setVisible(false);
+    // Update the style
+    m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
+    m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
+    m_playerNameLineEdit->update();
+}
+
+void LoginAccountFrame::validatePasswordText(const QString &playerPassword)
+{
+    QString playerPasswordCopy = playerPassword; // Remove the const
+    int pos = 0;
+    QValidator::State state = m_passwordLineEdit->validator()->validate(playerPasswordCopy, pos);
+    if (!playerPassword.isEmpty() && state == QValidator::Acceptable)
+    {
+        m_passwordLineEdit->setProperty("valid", true);
+        m_playerPasswordValid = true;
+    }
+    else if (playerPassword.isEmpty() || state == QValidator::Invalid)
+    {
+        m_passwordLineEdit->setProperty("valid", false);
+        m_playerPasswordValid = false;
+    }
+    else // Intermediate
+    {
+        // Do nothing
+    }
+    m_loginAccountButton->setEnabled(m_playerNameValid && m_playerPasswordValid);
+    m_errorMessageLabel->setVisible(false);
+    // Update the style
+    m_passwordLineEdit->style()->unpolish(m_passwordLineEdit);
+    m_passwordLineEdit->style()->polish(m_passwordLineEdit);
+    m_passwordLineEdit->update();
+}
+
+void LoginAccountFrame::handleLoginAccountButton()
+{
+    std::string creatingAccountString = "Logging in...";
+    m_loginAccountButton->setText(creatingAccountString.c_str());
+    m_loginAccountButton->setEnabled(false);
+
+    auto playerName = m_playerNameLineEdit->text().toStdString();
+    auto playerPassword = m_passwordLineEdit->text().toStdString();
+    m_playerWindow->loginAccount(playerName, playerPassword);
+}
+
+void LoginAccountFrame::handleCancelButton()
+{
+    m_playerWindow->moveToTitleFrame();
 }

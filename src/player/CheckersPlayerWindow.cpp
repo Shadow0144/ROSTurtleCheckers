@@ -46,7 +46,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_windowLayout->insertWidget(MAIN_MENU_INDEX, m_mainMenuFrame);
     m_windowLayout->insertWidget(TITLE_INDEX, m_titleFrame);
 
-    m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
+    m_windowLayout->setCurrentIndex(TITLE_INDEX);
 
     setCentralWidget(windowLayoutWidget);
 }
@@ -63,15 +63,27 @@ void CheckersPlayerWindow::closeEvent(QCloseEvent *event)
 
 void CheckersPlayerWindow::setConnectedToServer(bool connected)
 {
-    // TODO - Update title screen and/or return to it
-    /*
-        m_connectedToServer = connected;
-        m_titleFrame->setConnectedToServer(connected);
-        if (!m_connectedToServer)
-        {
-            moveToTitleFrame();
-        }
-    */
+    m_connectedToServer = connected;
+    m_titleFrame->setConnectedToServer(connected);
+    if (!m_connectedToServer)
+    {
+        moveToTitleFrame();
+    }
+}
+
+void CheckersPlayerWindow::moveToTitleFrame()
+{
+    m_windowLayout->setCurrentIndex(TITLE_INDEX);
+}
+
+void CheckersPlayerWindow::moveToCreateAccountFrame()
+{
+    m_windowLayout->setCurrentIndex(CREATE_ACCOUNT_INDEX);
+}
+
+void CheckersPlayerWindow::moveToLoginAccountFrame()
+{
+    m_windowLayout->setCurrentIndex(LOGIN_ACCOUNT_INDEX);
 }
 
 void CheckersPlayerWindow::moveToMainMenuFrame()
@@ -102,6 +114,22 @@ void CheckersPlayerWindow::moveToInLobbyFrame()
 void CheckersPlayerWindow::moveToGameFrame()
 {
     m_windowLayout->setCurrentIndex(GAME_INDEX);
+}
+
+void CheckersPlayerWindow::createAccount(const std::string &playerName, const std::string &playerPassword)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->createAccount(playerName, playerPassword);
+    }
+}
+
+void CheckersPlayerWindow::loginAccount(const std::string &playerName, const std::string &playerPassword)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->loginAccount(playerName, playerPassword);
+    }
 }
 
 void CheckersPlayerWindow::createLobby(const std::string &lobbyPassword)
@@ -167,6 +195,18 @@ void CheckersPlayerWindow::setReady(bool ready)
     {
         playerNode->setReady(ready);
     }
+}
+
+void CheckersPlayerWindow::loggedIn(const std::string &playerName)
+{
+    Parameters::setPlayerName(playerName);
+    moveToMainMenuFrame();
+}
+
+void CheckersPlayerWindow::failedLogin(const std::string &errorMessage)
+{
+    m_createAccountFrame->failedLogin(errorMessage);
+    m_loginAccountFrame->failedLogin(errorMessage);
 }
 
 void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
