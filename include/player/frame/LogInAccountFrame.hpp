@@ -25,23 +25,23 @@
 
 class CheckersPlayerWindow;
 
-class LoginAccountFrame : public QFrame
+class LogInAccountFrame : public QFrame
 {
 	Q_OBJECT
 public:
-	LoginAccountFrame(CheckersPlayerWindow *parentWindow);
-	~LoginAccountFrame();
+	LogInAccountFrame(CheckersPlayerWindow *parentWindow);
+	~LogInAccountFrame();
 	
 	void showEvent(QShowEvent* event) override;
 
-	void failedLogin(const std::string &errorMessage);
+	void failedLogIn(const std::string &errorMessage);
 
 public slots:
 	void validatePlayerNameText(const QString &playerName);
 	void validatePasswordText(const QString &playerPassword);
 
 private:
-	void handleLoginAccountButton();
+	void handleLogInAccountButton();
 	void handleCancelButton();
 
 	CheckersPlayerWindow *m_playerWindow;
@@ -51,10 +51,10 @@ private:
 
 	QLabel *m_errorMessageLabel;
 
-	QPushButton *m_loginAccountButton;
+	QPushButton *m_logInAccountButton;
 
 	bool m_playerNameValid;
 	bool m_playerPasswordValid;
 };
 
-typedef std::unique_ptr<LoginAccountFrame> LoginAccountFrameUniPtr;
+typedef std::unique_ptr<LogInAccountFrame> LogInAccountFrameUniPtr;

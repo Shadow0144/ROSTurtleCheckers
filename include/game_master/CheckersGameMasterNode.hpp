@@ -8,7 +8,7 @@
 
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
-#include "turtle_checkers_interfaces/srv/login_account.hpp"
+#include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
@@ -30,8 +30,8 @@ private:
                                     std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Response> response);
     void createAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Request> request,
                               std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Response> response);
-    void loginAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::LoginAccount::Request> request,
-                             std::shared_ptr<turtle_checkers_interfaces::srv::LoginAccount::Response> response);
+    void logInAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::LogInAccount::Request> request,
+                             std::shared_ptr<turtle_checkers_interfaces::srv::LogInAccount::Response> response);
     void joinLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Request> request,
                           std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Response> response);
     void createLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Request> request,
@@ -43,7 +43,7 @@ private:
 
     rclcpp::Service<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterService;
     rclcpp::Service<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountService;
-    rclcpp::Service<turtle_checkers_interfaces::srv::LoginAccount>::SharedPtr m_loginAccountService;
+    rclcpp::Service<turtle_checkers_interfaces::srv::LogInAccount>::SharedPtr m_logInAccountService;
     rclcpp::Service<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyService;
     rclcpp::Service<turtle_checkers_interfaces::srv::GetLobbyList>::SharedPtr m_getLobbyListService;
     rclcpp::Service<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyService;

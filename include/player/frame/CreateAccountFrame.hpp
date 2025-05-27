@@ -34,7 +34,7 @@ public:
 	
 	void showEvent(QShowEvent* event) override;
 
-	void failedLogin(const std::string &errorMessage);
+	void failedCreate(const std::string &errorMessage);
 
 public slots:
 	void validatePlayerNameText(const QString &playerName);

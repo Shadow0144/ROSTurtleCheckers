@@ -17,7 +17,7 @@
 #include "player/frame/InLobbyFrame.hpp"
 #include "player/frame/LobbyListFrame.hpp"
 #include "player/frame/LobbyPasswordFrame.hpp"
-#include "player/frame/LoginAccountFrame.hpp"
+#include "player/frame/LogInAccountFrame.hpp"
 #include "player/frame/MainMenuFrame.hpp"
 #include "player/frame/TitleFrame.hpp"
 
@@ -33,7 +33,7 @@ public:
 
     void moveToTitleFrame();
     void moveToCreateAccountFrame();
-    void moveToLoginAccountFrame();
+    void moveToLogInAccountFrame();
     void moveToMainMenuFrame();
     void moveToCreateLobbyFrame();
     void moveToLobbyListFrame();
@@ -42,7 +42,7 @@ public:
     void moveToGameFrame();
 
     void createAccount(const std::string &playerName, const std::string &playerPassword);
-    void loginAccount(const std::string &playerName, const std::string &playerPassword);
+    void logInAccount(const std::string &playerName, const std::string &playerPassword);
 
     void createLobby(const std::string &lobbyPassword);
     void joinLobby(const std::string &lobbyPassword);
@@ -58,7 +58,8 @@ public:
     void setReady(bool ready);
 
     void loggedIn(const std::string &playerName);
-    void failedLogin(const std::string &errorMessage);
+    void failedLogIn(const std::string &errorMessage);
+    void failedCreate(const std::string &errorMessage);
 
     void connectedToLobby(const std::string &lobbyName,
                           const std::string &lobbyId,
@@ -100,7 +101,7 @@ private:
         Game,
         LobbyList,
         LobbyPassword,
-        LoginAccount,
+        LogInAccount,
         MainMenu,
         Title
     };
@@ -113,7 +114,7 @@ private:
     static constexpr int IN_LOBBY_INDEX = 3;
     static constexpr int LOBBY_LIST_INDEX = 4;
     static constexpr int LOBBY_PASSWORD_INDEX = 5;
-    static constexpr int LOGIN_ACCOUNT_INDEX = 6;
+    static constexpr int LOG_IN_ACCOUNT_INDEX = 6;
     static constexpr int MAIN_MENU_INDEX = 7;
     static constexpr int TITLE_INDEX = 8;
 
@@ -127,7 +128,7 @@ private:
     InLobbyFrame *m_inLobbyFrame;
     LobbyListFrame *m_lobbyListFrame;
     LobbyPasswordFrame *m_lobbyPasswordFrame;
-    LoginAccountFrame *m_loginAccountFrame;
+    LogInAccountFrame *m_logInAccountFrame;
     MainMenuFrame *m_mainMenuFrame;
     TitleFrame *m_titleFrame;
 };

@@ -12,7 +12,7 @@
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
-#include "turtle_checkers_interfaces/srv/login_account.hpp"
+#include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
@@ -107,8 +107,8 @@ int CheckersPlayerNode::exec()
 
     m_createAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateAccount>(
         "CreateAccount");
-    m_loginAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::LoginAccount>(
-        "LoginAccount");
+    m_logInAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::LogInAccount>(
+        "LogInAccount");
 
     m_createLobbyClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateLobby>(
         "CreateLobby");
@@ -178,19 +178,19 @@ void CheckersPlayerNode::createAccount(
                                                         this, std::placeholders::_1));
 }
 
-void CheckersPlayerNode::loginAccount(
+void CheckersPlayerNode::logInAccount(
     const std::string &playerName,
     const std::string &playerPassword)
 {
-    auto request = std::make_shared<turtle_checkers_interfaces::srv::LoginAccount::Request>();
+    auto request = std::make_shared<turtle_checkers_interfaces::srv::LogInAccount::Request>();
     request->player_name = playerName;
     uint64_t hashedPlayerPassword = RSAKeyGenerator::hashString(playerPassword);
     uint64_t encryptedHashedPlayerPassword = RSAKeyGenerator::encrypt(hashedPlayerPassword, m_gameMasterPublicKey);
     request->encrypted_hashed_player_password = encryptedHashedPlayerPassword;
     uint64_t encryptedPlayerPublicKey = RSAKeyGenerator::encrypt(m_publicKey, m_gameMasterPublicKey);
     request->encrypted_player_public_key = encryptedPlayerPublicKey;
-    m_loginAccountClient->async_send_request(request,
-                                             std::bind(&CheckersPlayerNode::loginAccountResponse,
+    m_logInAccountClient->async_send_request(request,
+                                             std::bind(&CheckersPlayerNode::logInAccountResponse,
                                                        this, std::placeholders::_1));
 }
 
@@ -296,7 +296,7 @@ void CheckersPlayerNode::createAccountResponse(rclcpp::Client<turtle_checkers_in
     }
     else
     {
-        m_checkersPlayerWindow->failedLogin(result->error_msg);
+        m_checkersPlayerWindow->failedCreate(result->error_msg);
         TurtleLogger::logWarn(result->error_msg);
     }
 }
@@ -389,7 +389,7 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/PlayerReady", 10);
 }
 
-void CheckersPlayerNode::loginAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LoginAccount>::SharedFuture future)
+void CheckersPlayerNode::logInAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LogInAccount>::SharedFuture future)
 {
     auto result = future.get();
 
@@ -399,7 +399,7 @@ void CheckersPlayerNode::loginAccountResponse(rclcpp::Client<turtle_checkers_int
     }
     else
     {
-        m_checkersPlayerWindow->failedLogin(result->error_msg);
+        m_checkersPlayerWindow->failedLogIn(result->error_msg);
         TurtleLogger::logWarn(result->error_msg);
     }
 }

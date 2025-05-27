@@ -7,7 +7,7 @@
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
-#include "turtle_checkers_interfaces/srv/login_account.hpp"
+#include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
@@ -46,7 +46,7 @@ public:
 
     void createAccount(const std::string &playerName,
                        const std::string &playerPassword);
-    void loginAccount(const std::string &playerName,
+    void logInAccount(const std::string &playerName,
                       const std::string &playerPassword);
 
     void createLobby(const std::string &playerName,
@@ -82,7 +82,7 @@ private:
     void createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future);
     void getLobbyListResponse(rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedFuture future);
     void joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future);
-    void loginAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LoginAccount>::SharedFuture future);
+    void logInAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LogInAccount>::SharedFuture future);
     void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
     void requestPieceMoveResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedFuture future);
 
@@ -107,7 +107,7 @@ private:
 
     rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountClient;
-    rclcpp::Client<turtle_checkers_interfaces::srv::LoginAccount>::SharedPtr m_loginAccountClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::LogInAccount>::SharedPtr m_logInAccountClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedPtr m_getLobbyListClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyClient;

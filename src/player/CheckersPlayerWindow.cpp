@@ -32,7 +32,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_inLobbyFrame = new InLobbyFrame(this);
     m_lobbyListFrame = new LobbyListFrame(this);
     m_lobbyPasswordFrame = new LobbyPasswordFrame(this);
-    m_loginAccountFrame = new LoginAccountFrame(this);
+    m_logInAccountFrame = new LogInAccountFrame(this);
     m_mainMenuFrame = new MainMenuFrame(this);
     m_titleFrame = new TitleFrame(this);
 
@@ -42,7 +42,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_windowLayout->insertWidget(IN_LOBBY_INDEX, m_inLobbyFrame);
     m_windowLayout->insertWidget(LOBBY_LIST_INDEX, m_lobbyListFrame);
     m_windowLayout->insertWidget(LOBBY_PASSWORD_INDEX, m_lobbyPasswordFrame);
-    m_windowLayout->insertWidget(LOGIN_ACCOUNT_INDEX, m_loginAccountFrame);
+    m_windowLayout->insertWidget(LOG_IN_ACCOUNT_INDEX, m_logInAccountFrame);
     m_windowLayout->insertWidget(MAIN_MENU_INDEX, m_mainMenuFrame);
     m_windowLayout->insertWidget(TITLE_INDEX, m_titleFrame);
 
@@ -81,9 +81,9 @@ void CheckersPlayerWindow::moveToCreateAccountFrame()
     m_windowLayout->setCurrentIndex(CREATE_ACCOUNT_INDEX);
 }
 
-void CheckersPlayerWindow::moveToLoginAccountFrame()
+void CheckersPlayerWindow::moveToLogInAccountFrame()
 {
-    m_windowLayout->setCurrentIndex(LOGIN_ACCOUNT_INDEX);
+    m_windowLayout->setCurrentIndex(LOG_IN_ACCOUNT_INDEX);
 }
 
 void CheckersPlayerWindow::moveToMainMenuFrame()
@@ -124,11 +124,11 @@ void CheckersPlayerWindow::createAccount(const std::string &playerName, const st
     }
 }
 
-void CheckersPlayerWindow::loginAccount(const std::string &playerName, const std::string &playerPassword)
+void CheckersPlayerWindow::logInAccount(const std::string &playerName, const std::string &playerPassword)
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->loginAccount(playerName, playerPassword);
+        playerNode->logInAccount(playerName, playerPassword);
     }
 }
 
@@ -203,10 +203,14 @@ void CheckersPlayerWindow::loggedIn(const std::string &playerName)
     moveToMainMenuFrame();
 }
 
-void CheckersPlayerWindow::failedLogin(const std::string &errorMessage)
+void CheckersPlayerWindow::failedLogIn(const std::string &errorMessage)
 {
-    m_createAccountFrame->failedLogin(errorMessage);
-    m_loginAccountFrame->failedLogin(errorMessage);
+    m_logInAccountFrame->failedLogIn(errorMessage);
+}
+
+void CheckersPlayerWindow::failedCreate(const std::string &errorMessage)
+{
+    m_createAccountFrame->failedCreate(errorMessage);
 }
 
 void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,

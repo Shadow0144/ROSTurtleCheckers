@@ -62,17 +62,17 @@ TitleFrame::TitleFrame(
 
     auto buttonLayout = new QHBoxLayout();
 
-    std::string createAccountString = "Create New Account";
+    std::string createAccountString = "Create Account";
     m_createAccountButton = new QPushButton(createAccountString.c_str());
     m_createAccountButton->setEnabled(false);
     connect(m_createAccountButton, &QPushButton::released, this, &TitleFrame::handleCreateAccountButton);
     buttonLayout->addWidget(m_createAccountButton);
 
-    std::string loginAccountString = "Login";
-    m_loginAccountButton = new QPushButton(loginAccountString.c_str());
-    m_loginAccountButton->setEnabled(false);
-    connect(m_loginAccountButton, &QPushButton::released, this, &TitleFrame::handleLoginAccountButton);
-    buttonLayout->addWidget(m_loginAccountButton);
+    std::string logInAccountString = "Log In";
+    m_logInAccountButton = new QPushButton(logInAccountString.c_str());
+    m_logInAccountButton->setEnabled(false);
+    connect(m_logInAccountButton, &QPushButton::released, this, &TitleFrame::handleLogInAccountButton);
+    buttonLayout->addWidget(m_logInAccountButton);
 
     std::string quitString = "Quit";
     auto quitButton = new QPushButton(quitString.c_str());
@@ -90,7 +90,7 @@ void TitleFrame::setConnectedToServer(bool connected)
 {
     m_connectedToServer = connected;
     m_createAccountButton->setEnabled(m_connectedToServer);
-    m_loginAccountButton->setEnabled(m_connectedToServer);
+    m_logInAccountButton->setEnabled(m_connectedToServer);
     m_connectedToServerLabel->setVisible(m_connectedToServerLabel);
     m_connectingToServerLabel->setVisible(!m_connectedToServerLabel);
 }
@@ -100,9 +100,9 @@ void TitleFrame::handleCreateAccountButton()
     m_playerWindow->moveToCreateAccountFrame();
 }
 
-void TitleFrame::handleLoginAccountButton()
+void TitleFrame::handleLogInAccountButton()
 {
-    m_playerWindow->moveToLoginAccountFrame();
+    m_playerWindow->moveToLogInAccountFrame();
 }
 
 void TitleFrame::handleQuitButton()

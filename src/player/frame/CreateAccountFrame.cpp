@@ -137,7 +137,7 @@ void CreateAccountFrame::showEvent(QShowEvent *event)
     m_createAccountButton->setEnabled(false);
 }
 
-void CreateAccountFrame::failedLogin(const std::string &errorMessage)
+void CreateAccountFrame::failedCreate(const std::string &errorMessage)
 {
     std::string createAccountString = "Create Account";
     m_createAccountButton->setText(createAccountString.c_str());

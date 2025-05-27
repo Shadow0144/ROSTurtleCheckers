@@ -5,7 +5,7 @@
 
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
-#include "turtle_checkers_interfaces/srv/login_account.hpp"
+#include "turtle_checkers_interfaces/srv/logIn_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
@@ -47,8 +47,8 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     m_createAccountService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::CreateAccount>(
         "CreateAccount", std::bind(&CheckersGameMasterNode::createAccountRequest,
                                    this, std::placeholders::_1, std::placeholders::_2));
-    m_loginAccountService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::LoginAccount>(
-        "LoginAccount", std::bind(&CheckersGameMasterNode::loginAccountRequest,
+    m_logInAccountService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::LogInAccount>(
+        "LogInAccount", std::bind(&CheckersGameMasterNode::logInAccountRequest,
                                   this, std::placeholders::_1, std::placeholders::_2));
     m_createLobbyService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::CreateLobby>(
         "CreateLobby", std::bind(&CheckersGameMasterNode::createLobbyRequest,
@@ -88,8 +88,8 @@ void CheckersGameMasterNode::createAccountRequest(const std::shared_ptr<turtle_c
     m_playerPublicKeys[request->player_name] = RSAKeyGenerator::unencrypt(request->encrypted_player_public_key, m_privateKey, m_publicKey);
 }
 
-void CheckersGameMasterNode::loginAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::LoginAccount::Request> request,
-                                                 std::shared_ptr<turtle_checkers_interfaces::srv::LoginAccount::Response> response)
+void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::LogInAccount::Request> request,
+                                                 std::shared_ptr<turtle_checkers_interfaces::srv::LogInAccount::Response> response)
 {
     response->player_name = request->player_name;
 
@@ -109,7 +109,7 @@ void CheckersGameMasterNode::loginAccountRequest(const std::shared_ptr<turtle_ch
     }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
-        std::hash<turtle_checkers_interfaces::srv::LoginAccount::Response::SharedPtr>{}(response),
+        std::hash<turtle_checkers_interfaces::srv::LogInAccount::Response::SharedPtr>{}(response),
         m_publicKey, m_privateKey);
 }
 
