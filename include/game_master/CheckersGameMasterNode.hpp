@@ -13,6 +13,7 @@
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/log_out_account.hpp"
 
 #include "shared/RSAKeyGenerator.hpp"
 #include "game_master/DatabaseHandler.hpp"
@@ -40,6 +41,7 @@ private:
                              std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Response> response);
 
     void leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message);
+    void logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message);
 
     rclcpp::Service<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterService;
     rclcpp::Service<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountService;
@@ -49,6 +51,7 @@ private:
     rclcpp::Service<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyService;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountSubscription;
 
     std::shared_ptr<rclcpp::Node> m_gameMasterNode;
     

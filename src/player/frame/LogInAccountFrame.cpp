@@ -117,18 +117,20 @@ void LogInAccountFrame::showEvent(QShowEvent *event)
     m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
     m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
     m_playerNameLineEdit->update();
-    m_playerNameLineEdit->clear();
+    m_passwordLineEdit->clear();
     m_passwordLineEdit->setProperty("valid", false);
     m_passwordLineEdit->style()->unpolish(m_passwordLineEdit);
     m_passwordLineEdit->style()->polish(m_passwordLineEdit);
     m_passwordLineEdit->update();
-    m_errorMessageLabel->setVisible(false);
+    std::string logInAccountString = "Log In";
+    m_logInAccountButton->setText(logInAccountString.c_str());
     m_logInAccountButton->setEnabled(false);
+    m_errorMessageLabel->setVisible(false);
 }
 
 void LogInAccountFrame::failedLogIn(const std::string &errorMessage)
 {
-    std::string logInAccountString = "LogIn";
+    std::string logInAccountString = "Log In";
     m_logInAccountButton->setText(logInAccountString.c_str());
     m_errorMessageLabel->setText(errorMessage.c_str());
     m_errorMessageLabel->setVisible(true);
@@ -190,8 +192,8 @@ void LogInAccountFrame::validatePasswordText(const QString &playerPassword)
 
 void LogInAccountFrame::handleLogInAccountButton()
 {
-    std::string creatingAccountString = "Logging in...";
-    m_logInAccountButton->setText(creatingAccountString.c_str());
+    std::string loggingInAccountString = "Logging in...";
+    m_logInAccountButton->setText(loggingInAccountString.c_str());
     m_logInAccountButton->setEnabled(false);
 
     auto playerName = m_playerNameLineEdit->text().toStdString();

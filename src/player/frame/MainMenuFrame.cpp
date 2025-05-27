@@ -59,6 +59,11 @@ MainMenuFrame::MainMenuFrame(
     m_playerNameLabel = new QLabel("");
     playerNameLayout->addWidget(m_playerNameLabel);
 
+    std::string logOutAccountString = "Log Out";
+    auto logOutAccountButton = new QPushButton(logOutAccountString.c_str());
+    connect(logOutAccountButton, &QPushButton::released, this, &MainMenuFrame::handleLogOutAccountButton);
+    playerNameLayout->addWidget(logOutAccountButton);
+
     mainLayout->addLayout(playerNameLayout);
 
     auto buttonLayout = new QHBoxLayout();
@@ -90,6 +95,11 @@ void MainMenuFrame::showEvent(QShowEvent *event)
     (void)event; // NO LINT
 
     m_playerNameLabel->setText(Parameters::getPlayerName().c_str());
+}
+
+void MainMenuFrame::handleLogOutAccountButton()
+{
+    m_playerWindow->logOutAccount();
 }
 
 void MainMenuFrame::handleCreateLobbyButton()

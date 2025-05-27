@@ -119,6 +119,8 @@ int CheckersPlayerNode::exec()
 
     m_leaveLobbyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::LeaveLobby>(
         "LeaveLobby", 10);
+    m_logOutAccountPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::LogOutAccount>(
+        "LogOutAccount", 10);
 
     // Ensure the game master node is reachable, then get the public key from it
     std::thread(&CheckersPlayerNode::connectToGameMaster, this).detach();
@@ -173,6 +175,7 @@ void CheckersPlayerNode::createAccount(
     request->encrypted_hashed_player_password = encryptedHashedPlayerPassword;
     uint64_t encryptedPlayerPublicKey = RSAKeyGenerator::encrypt(m_publicKey, m_gameMasterPublicKey);
     request->encrypted_player_public_key = encryptedPlayerPublicKey;
+    // No signature
     m_createAccountClient->async_send_request(request,
                                               std::bind(&CheckersPlayerNode::createAccountResponse,
                                                         this, std::placeholders::_1));
@@ -189,9 +192,21 @@ void CheckersPlayerNode::logInAccount(
     request->encrypted_hashed_player_password = encryptedHashedPlayerPassword;
     uint64_t encryptedPlayerPublicKey = RSAKeyGenerator::encrypt(m_publicKey, m_gameMasterPublicKey);
     request->encrypted_player_public_key = encryptedPlayerPublicKey;
+    // No signature
     m_logInAccountClient->async_send_request(request,
                                              std::bind(&CheckersPlayerNode::logInAccountResponse,
                                                        this, std::placeholders::_1));
+}
+
+void CheckersPlayerNode::logOutAccount()
+{
+    // Tell the game master we've logged out
+    auto message = turtle_checkers_interfaces::msg::LogOutAccount();
+    message.player_name = Parameters::getPlayerName();
+    message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::LogOutAccount>{}(message),
+        m_publicKey, m_privateKey);
+    m_logOutAccountPublisher->publish(message);
 }
 
 void CheckersPlayerNode::createLobby(
@@ -214,6 +229,9 @@ void CheckersPlayerNode::createLobby(
         request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
     }
     request->desired_player_color = static_cast<size_t>(playerDesiredColor);
+    request->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::CreateLobby::Request::SharedPtr>{}(request),
+        m_publicKey, m_privateKey);
     m_createLobbyClient->async_send_request(request,
                                             std::bind(&CheckersPlayerNode::createLobbyResponse,
                                                       this, std::placeholders::_1));
@@ -241,6 +259,9 @@ void CheckersPlayerNode::joinLobby(
         request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
     }
     request->desired_player_color = static_cast<size_t>(playerDesiredColor);
+    request->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::JoinLobby::Request::SharedPtr>{}(request),
+        m_publicKey, m_privateKey);
     m_joinLobbyClient->async_send_request(request,
                                           std::bind(&CheckersPlayerNode::joinLobbyResponse,
                                                     this, std::placeholders::_1));
@@ -249,6 +270,7 @@ void CheckersPlayerNode::joinLobby(
 void CheckersPlayerNode::getLobbyList()
 {
     auto request = std::make_shared<turtle_checkers_interfaces::srv::GetLobbyList::Request>();
+    // No signature required
     m_getLobbyListClient->async_send_request(request,
                                              std::bind(&CheckersPlayerNode::getLobbyListResponse,
                                                        this, std::placeholders::_1));
@@ -261,6 +283,9 @@ void CheckersPlayerNode::leaveLobby()
     message.lobby_name = Parameters::getLobbyName();
     message.lobby_id = Parameters::getLobbyId();
     message.player_name = Parameters::getPlayerName();
+    message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::LeaveLobby>{}(message),
+        m_publicKey, m_privateKey);
     m_leaveLobbyPublisher->publish(message);
 }
 
@@ -272,12 +297,17 @@ void CheckersPlayerNode::setReady(bool ready)
     message.lobby_id = Parameters::getLobbyId();
     message.player_name = Parameters::getPlayerName();
     message.ready = ready;
+    message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::PlayerReady>{}(message),
+        m_publicKey, m_privateKey);
     m_playerReadyPublisher->publish(message);
 }
 
 void CheckersPlayerNode::connectToGameMasterResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedFuture future)
 {
     auto result = future.get();
+
+    // No checksum to check
 
     m_gameMasterPublicKey = result->game_master_public_key;
 
@@ -290,9 +320,17 @@ void CheckersPlayerNode::createAccountResponse(rclcpp::Client<turtle_checkers_in
 {
     auto result = future.get();
 
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr>{}(result),
+            m_gameMasterPublicKey, result->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
     if (result->created)
     {
-        m_checkersPlayerWindow->loggedIn(result->player_name);
+        m_checkersPlayerWindow->accountCreated(result->player_name);
     }
     else
     {
@@ -304,6 +342,14 @@ void CheckersPlayerNode::createAccountResponse(rclcpp::Client<turtle_checkers_in
 void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future)
 {
     auto result = future.get();
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::srv::CreateLobby::Response::SharedPtr>{}(result),
+            m_gameMasterPublicKey, result->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
 
     if (result->created)
     {
@@ -325,6 +371,14 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
 {
     auto result = future.get();
 
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::srv::GetLobbyList::Response::SharedPtr>{}(result),
+            m_gameMasterPublicKey, result->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
     m_checkersPlayerWindow->updateLobbyList(result->lobby_names,
                                             result->lobby_ids,
                                             result->has_passwords,
@@ -335,6 +389,14 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
 void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future)
 {
     auto result = future.get();
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::srv::JoinLobby::Response::SharedPtr>{}(result),
+            m_gameMasterPublicKey, result->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
 
     if (result->joined)
     {
@@ -392,6 +454,14 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
 void CheckersPlayerNode::logInAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LogInAccount>::SharedFuture future)
 {
     auto result = future.get();
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::srv::LogInAccount::Response::SharedPtr>{}(result),
+            m_gameMasterPublicKey, result->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
 
     if (result->logged_in)
     {

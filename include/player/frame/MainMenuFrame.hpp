@@ -31,10 +31,11 @@ class MainMenuFrame : public QFrame
 public:
 	MainMenuFrame(CheckersPlayerWindow *parentWindow);
 	~MainMenuFrame();
-	
-	void showEvent(QShowEvent* event) override;
+
+	void showEvent(QShowEvent *event) override;
 
 private:
+	void handleLogOutAccountButton();
 	void handleCreateLobbyButton();
 	void handleJoinLobbyButton();
 	void handleQuitButton();

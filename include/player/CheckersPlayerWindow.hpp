@@ -43,6 +43,7 @@ public:
 
     void createAccount(const std::string &playerName, const std::string &playerPassword);
     void logInAccount(const std::string &playerName, const std::string &playerPassword);
+    void logOutAccount();
 
     void createLobby(const std::string &lobbyPassword);
     void joinLobby(const std::string &lobbyPassword);
@@ -59,6 +60,7 @@ public:
 
     void loggedIn(const std::string &playerName);
     void failedLogIn(const std::string &errorMessage);
+    void accountCreated(const std::string &playerName);
     void failedCreate(const std::string &errorMessage);
 
     void connectedToLobby(const std::string &lobbyName,

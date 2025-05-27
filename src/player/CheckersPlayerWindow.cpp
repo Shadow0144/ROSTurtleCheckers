@@ -132,6 +132,16 @@ void CheckersPlayerWindow::logInAccount(const std::string &playerName, const std
     }
 }
 
+void CheckersPlayerWindow::logOutAccount()
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->logOutAccount();
+    }
+    Parameters::setPlayerName(""); // Clear out the player name
+    moveToTitleFrame();
+}
+
 void CheckersPlayerWindow::createLobby(const std::string &lobbyPassword)
 {
     if (auto playerNode = m_playerNode.lock())
@@ -187,6 +197,8 @@ void CheckersPlayerWindow::leaveLobby()
     {
         playerNode->leaveLobby();
     }
+    Parameters::setLobbyName(""); // Clear out the lobby name
+    Parameters::setLobbyId(""); // Clear out the lobby ID
 }
 
 void CheckersPlayerWindow::setReady(bool ready)
@@ -206,6 +218,12 @@ void CheckersPlayerWindow::loggedIn(const std::string &playerName)
 void CheckersPlayerWindow::failedLogIn(const std::string &errorMessage)
 {
     m_logInAccountFrame->failedLogIn(errorMessage);
+}
+
+void CheckersPlayerWindow::accountCreated(const std::string &playerName)
+{
+    Parameters::setPlayerName(playerName);
+    moveToMainMenuFrame();
 }
 
 void CheckersPlayerWindow::failedCreate(const std::string &errorMessage)

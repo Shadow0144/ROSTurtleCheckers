@@ -5,11 +5,12 @@
 
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
-#include "turtle_checkers_interfaces/srv/logIn_account.hpp"
+#include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/log_out_account.hpp"
 
 #include <memory>
 #include <string>
@@ -17,6 +18,7 @@
 #include <iomanip>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
 #include "shared/TurtleLogger.hpp"
 #include "game_master/CheckersGameLobby.hpp"
@@ -62,6 +64,8 @@ CheckersGameMasterNode::CheckersGameMasterNode()
 
     m_leaveLobbySubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LeaveLobby>(
         "LeaveLobby", 10, std::bind(&CheckersGameMasterNode::leaveLobbyCallback, this, std::placeholders::_1));
+    m_logOutAccountSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LogOutAccount>(
+        "LogOutAccount", 10, std::bind(&CheckersGameMasterNode::logOutAccountCallback, this, std::placeholders::_1));
 
     TurtleLogger::logInfo("Starting Turtles Checkers game node; now accepting players!");
 }
@@ -277,6 +281,15 @@ void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces
             // If the lobby is empty, close it
             m_checkersGameLobbies.erase(lobbyName);
         }
+    }
+}
+
+void CheckersGameMasterNode::logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message)
+{
+    // TODO Confirm that the message has the correct key for the player
+    if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
+    {
+        m_playerPublicKeys.erase(message->player_name);
     }
 }
 

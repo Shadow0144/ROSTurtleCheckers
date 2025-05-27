@@ -128,13 +128,15 @@ void CreateAccountFrame::showEvent(QShowEvent *event)
     m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
     m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
     m_playerNameLineEdit->update();
-    m_playerNameLineEdit->clear();
+    m_passwordLineEdit->clear();
     m_passwordLineEdit->setProperty("valid", false);
     m_passwordLineEdit->style()->unpolish(m_passwordLineEdit);
     m_passwordLineEdit->style()->polish(m_passwordLineEdit);
     m_passwordLineEdit->update();
-    m_errorMessageLabel->setVisible(false);
+    std::string createAccountString = "Create Account";
+    m_createAccountButton->setText(createAccountString.c_str());
     m_createAccountButton->setEnabled(false);
+    m_errorMessageLabel->setVisible(false);
 }
 
 void CreateAccountFrame::failedCreate(const std::string &errorMessage)
