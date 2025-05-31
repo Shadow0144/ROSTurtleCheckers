@@ -20,6 +20,7 @@
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
@@ -27,6 +28,7 @@
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 
 #include <QApplication>
 #include <QFile>
@@ -289,6 +291,20 @@ void CheckersPlayerNode::leaveLobby()
     m_leaveLobbyPublisher->publish(message);
 }
 
+void CheckersPlayerNode::kickPlayer(const std::string &playerName)
+{
+    // Tell the game master to kick a player
+    auto message = turtle_checkers_interfaces::msg::KickPlayer();
+    message.lobby_name = Parameters::getLobbyName();
+    message.lobby_id = Parameters::getLobbyId();
+    message.requesting_player_name = Parameters::getPlayerName();
+    message.kick_player_name = playerName;
+    message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::KickPlayer>{}(message),
+        m_publicKey, m_privateKey);
+    m_kickPlayerPublisher->publish(message);
+}
+
 void CheckersPlayerNode::setReady(bool ready)
 {
     // Tell the game master if this player is ready or not
@@ -353,11 +369,21 @@ void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_inte
 
     if (result->created)
     {
+        TurtlePieceColor lobbyOwnerPlayerColor = TurtlePieceColor::None;
+        if (Parameters::getPlayerName() == result->black_player_name)
+        {
+            lobbyOwnerPlayerColor = TurtlePieceColor::Black;
+        }
+        else if (Parameters::getPlayerName() == result->red_player_name)
+        {
+            lobbyOwnerPlayerColor = TurtlePieceColor::Red;
+        }
         createLobbyInterfaces(result->lobby_name, result->lobby_id);
         m_checkersPlayerWindow->connectedToLobby(result->lobby_name,
                                                  result->lobby_id,
                                                  result->black_player_name,
                                                  result->red_player_name,
+                                                 lobbyOwnerPlayerColor,
                                                  result->black_player_ready,
                                                  result->red_player_ready);
     }
@@ -400,11 +426,21 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
 
     if (result->joined)
     {
+        TurtlePieceColor lobbyOwnerPlayerColor = TurtlePieceColor::None;
+        if (Parameters::getPlayerName() == result->black_player_name)
+        {
+            lobbyOwnerPlayerColor = TurtlePieceColor::Red;
+        }
+        else if (Parameters::getPlayerName() == result->red_player_name)
+        {
+            lobbyOwnerPlayerColor = TurtlePieceColor::Black;
+        }
         createLobbyInterfaces(result->lobby_name, result->lobby_id);
         m_checkersPlayerWindow->connectedToLobby(result->lobby_name,
                                                  result->lobby_id,
                                                  result->black_player_name,
                                                  result->red_player_name,
+                                                 lobbyOwnerPlayerColor,
                                                  result->black_player_ready,
                                                  result->red_player_ready);
     }
@@ -442,9 +478,13 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/PlayerLeftLobby", 10, std::bind(&CheckersPlayerNode::playerLeftLobbyCallback, this, _1));
     m_playerReadiedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerReadied>(
         lobbyName + "/id" + lobbyId + "/PlayerReadied", 10, std::bind(&CheckersPlayerNode::playerReadiedCallback, this, _1));
+    m_updateLobbyOwnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>(
+        lobbyName + "/id" + lobbyId + "/UpdateLobbyOwner", 10, std::bind(&CheckersPlayerNode::updateLobbyOwnerCallback, this, _1));
 
     m_forfitPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Forfit>(
         lobbyName + "/id" + lobbyId + "/Forfit", 10);
+    m_kickPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::KickPlayer>(
+        lobbyName + "/id" + lobbyId + "/KickPlayer", 10);
     m_offerDrawPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::OfferDraw>(
         lobbyName + "/id" + lobbyId + "/OfferDraw", 10);
     m_playerReadyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>(
@@ -674,6 +714,24 @@ void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::m
                                          slainPieceTileIndex, kingPiece, movableTileIndices);
 
     m_checkersPlayerWindow->update();
+}
+
+void CheckersPlayerNode::updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::UpdateLobbyOwner>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->updateLobbyOwner(message->lobby_owner_player_name);
 }
 
 void CheckersPlayerNode::requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex)

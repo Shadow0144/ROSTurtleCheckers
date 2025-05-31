@@ -67,11 +67,14 @@ public:
                           const std::string &lobbyId,
                           const std::string &blackPlayerName,
                           const std::string &redPlayerName,
+                          TurtlePieceColor lobbyOwnerColor,
                           bool blackPlayerReady,
                           bool redPlayerReady);
 
     void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
     void playerLeftLobby(const std::string &playerName);
+    void updateLobbyOwner(const std::string &playerName);
+    void kickPlayer(const std::string &playerName);
     void setPlayerReady(const std::string &playerName, bool ready);
 
     void requestedPieceMoveAccepted(bool moveAccepted);

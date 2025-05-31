@@ -198,7 +198,20 @@ void CheckersPlayerWindow::leaveLobby()
         playerNode->leaveLobby();
     }
     Parameters::setLobbyName(""); // Clear out the lobby name
-    Parameters::setLobbyId(""); // Clear out the lobby ID
+    Parameters::setLobbyId("");   // Clear out the lobby ID
+}
+
+void CheckersPlayerWindow::updateLobbyOwner(const std::string &playerName)
+{
+    m_inLobbyFrame->updateLobbyOwner(playerName);
+}
+
+void CheckersPlayerWindow::kickPlayer(const std::string &playerName)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->kickPlayer(playerName);
+    }
 }
 
 void CheckersPlayerWindow::setReady(bool ready)
@@ -235,6 +248,7 @@ void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
                                             const std::string &lobbyId,
                                             const std::string &blackPlayerName,
                                             const std::string &redPlayerName,
+                                            TurtlePieceColor lobbyOwnerColor,
                                             bool blackPlayerReady,
                                             bool redPlayerReady)
 {
@@ -242,6 +256,7 @@ void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
     Parameters::setLobbyId(lobbyId);
     m_inLobbyFrame->setLobbyInfo(blackPlayerName,
                                  redPlayerName,
+                                 lobbyOwnerColor,
                                  blackPlayerReady,
                                  redPlayerReady);
     moveToInLobbyFrame();

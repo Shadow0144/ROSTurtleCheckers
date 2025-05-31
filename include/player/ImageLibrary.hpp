@@ -11,6 +11,8 @@ class ImageLibrary
 {
 public:
     static QImage getLockImage();
+    static QImage getLobbyOwnerImage();
+    static QImage getKickImage();
 
     static QImage getTurtleImage(TurtlePieceColor turtleColor);
     static QImage getKingImage(TurtlePieceColor turtleColor);
@@ -30,6 +32,8 @@ private:
     static void createLibraryInstance();
 
     QImage m_lockImage;
+    QImage m_lobbyOwnerImage;
+    QImage m_kickImage;
 
     QVector<QImage> m_blackTurtleImages;
     QVector<QImage> m_redTurtleImages;

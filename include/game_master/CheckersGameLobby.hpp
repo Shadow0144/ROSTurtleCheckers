@@ -14,12 +14,14 @@
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 
 #include "game_master/MasterBoard.hpp"
 
@@ -43,6 +45,9 @@ public:
                                uint64_t playerPublicKey,
                                TurtlePieceColor desiredColor);
     void removePlayer(const std::string &playerName);
+
+    void setLobbyOwner(const std::string &playerName);
+    const std::string &getLobbyOwner() const;
 
     const std::string &getBlackPlayerName() const;
     const std::string &getRedPlayerName() const;
@@ -68,6 +73,7 @@ private:
                                   std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Response> response);
 
     void forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message);
+    void kickPlayerCallback(const turtle_checkers_interfaces::msg::KickPlayer::SharedPtr message);
     void offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message);
     void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
 
@@ -87,13 +93,16 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
 
     std::string m_lobbyName;
     std::string m_lobbyId;
+    std::string m_lobbyOwnerPlayerName;
     std::string m_blackPlayerName;
     bool m_blackPlayerReady;
     std::string m_redPlayerName;

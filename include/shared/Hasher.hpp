@@ -5,6 +5,7 @@
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
@@ -12,6 +13,7 @@
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
@@ -111,6 +113,20 @@ struct std::hash<turtle_checkers_interfaces::msg::GameStart>
         hashCombine(combinedHash, std::hash<std::string>{}(message.red_player_name));
         hashCombine(combinedHash, std::hash<size_t>{}(message.game_state));
         hashCombine(combinedHash, std::hash<std::vector<size_t>>{}(message.movable_tile_indices));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::KickPlayer>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::KickPlayer &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.requesting_player_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.kick_player_name));
         return combinedHash;
     }
 };
@@ -222,6 +238,19 @@ struct std::hash<turtle_checkers_interfaces::msg::UpdateBoard>
         hashCombine(combinedHash, std::hash<int64_t>{}(message.slain_piece_tile_index));
         hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(message.movable_tile_indices));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.game_state));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::UpdateLobbyOwner>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::UpdateLobbyOwner &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_owner_player_name));
         return combinedHash;
     }
 };

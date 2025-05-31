@@ -11,12 +11,14 @@
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 
 #include <ctime>
 #include <memory>
@@ -49,6 +51,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
 
     m_isBlackTurn = true;
 
+    m_lobbyOwnerPlayerName = "";
+
     m_blackPlayerName = "";
     m_redPlayerName = "";
 
@@ -80,9 +84,13 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
         m_lobbyName + "/id" + m_lobbyId + "/PlayerLeftLobby", 10);
     m_playerReadiedPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerReadied>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReadied", 10);
+    m_updateLobbyOwnerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateLobbyOwner>(
+        m_lobbyName + "/id" + m_lobbyId + "/UpdateLobbyOwner", 10);
 
     m_forfitSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::Forfit>(
         m_lobbyName + "/id" + m_lobbyId + "/Forfit", 10, std::bind(&CheckersGameLobby::forfitCallback, this, std::placeholders::_1));
+    m_kickPlayerSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::KickPlayer>(
+        m_lobbyName + "/id" + m_lobbyId + "/KickPlayer", 10, std::bind(&CheckersGameLobby::kickPlayerCallback, this, std::placeholders::_1));
     m_offerDrawSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::OfferDraw>(
         m_lobbyName + "/id" + m_lobbyId + "/OfferDraw", 10, std::bind(&CheckersGameLobby::offerDrawCallback, this, std::placeholders::_1));
     m_playerReadySubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
@@ -114,6 +122,16 @@ bool CheckersGameLobby::isPlayerSlotAvailable() const
 bool CheckersGameLobby::containsPlayer(const std::string &playerName) const
 {
     return ((playerName == m_blackPlayerName) || (playerName == m_redPlayerName));
+}
+
+void CheckersGameLobby::setLobbyOwner(const std::string &playerName)
+{
+    m_lobbyOwnerPlayerName = playerName;
+}
+
+const std::string &CheckersGameLobby::getLobbyOwner() const
+{
+    return m_lobbyOwnerPlayerName;
 }
 
 TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, uint64_t playerPublicKey, TurtlePieceColor desiredColor)
@@ -187,15 +205,18 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, uin
 
 void CheckersGameLobby::removePlayer(const std::string &playerName)
 {
+    m_lobbyOwnerPlayerName = "";
     if (playerName == m_blackPlayerName)
     {
         m_blackPlayerName.clear();
         m_blackPlayerReady = false;
+        m_lobbyOwnerPlayerName = m_redPlayerName;
     }
     else if (playerName == m_redPlayerName)
     {
         m_redPlayerName.clear();
         m_redPlayerReady = false;
+        m_lobbyOwnerPlayerName = m_blackPlayerName;
     }
 
     auto message = turtle_checkers_interfaces::msg::PlayerLeftLobby();
@@ -206,6 +227,19 @@ void CheckersGameLobby::removePlayer(const std::string &playerName)
         std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>{}(message),
         m_publicKey, m_privateKey);
     m_playerLeftLobbyPublisher->publish(message);
+
+    // Also update the lobby owner
+    if (!m_lobbyOwnerPlayerName.empty())
+    {
+        auto message = turtle_checkers_interfaces::msg::UpdateLobbyOwner();
+        message.lobby_name = m_lobbyName;
+        message.lobby_id = m_lobbyId;
+        message.lobby_owner_player_name = m_lobbyOwnerPlayerName;
+        message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::msg::UpdateLobbyOwner>{}(message),
+            m_publicKey, m_privateKey);
+        m_updateLobbyOwnerPublisher->publish(message);
+    }
 }
 
 const std::string &CheckersGameLobby::getBlackPlayerName() const
@@ -400,6 +434,14 @@ void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Fo
         std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
         m_publicKey, m_privateKey);
     m_declareWinnerPublisher->publish(winnerMessage);
+}
+
+void CheckersGameLobby::kickPlayerCallback(const turtle_checkers_interfaces::msg::KickPlayer::SharedPtr message)
+{
+    if (message->requesting_player_name == m_lobbyOwnerPlayerName)
+    {
+        removePlayer(message->kick_player_name);
+    }
 }
 
 void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message)

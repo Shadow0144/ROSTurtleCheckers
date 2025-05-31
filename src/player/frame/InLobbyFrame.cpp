@@ -69,7 +69,21 @@ InLobbyFrame::InLobbyFrame(
 
     auto blackPlayerLayout = new QHBoxLayout();
 
+    m_blackPlayerLobbyOwnerLabel = new QLabel();
+    auto blackPlayerLobbyOwnerIcon = QPixmap::fromImage(ImageLibrary::getLobbyOwnerImage());
+    auto scaledBlackPlayerLobbyOwnerIcon = blackPlayerLobbyOwnerIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    m_blackPlayerLobbyOwnerLabel->setPixmap(scaledBlackPlayerLobbyOwnerIcon);
+    auto blackPlayerLobbyOwnerIconLabelSizePolicy = m_blackPlayerLobbyOwnerLabel->sizePolicy();
+    blackPlayerLobbyOwnerIconLabelSizePolicy.setRetainSizeWhenHidden(true);
+    m_blackPlayerLobbyOwnerLabel->setSizePolicy(blackPlayerLobbyOwnerIconLabelSizePolicy);
+    m_blackPlayerLobbyOwnerLabel->setVisible(false);
+    blackPlayerLayout->addWidget(m_blackPlayerLobbyOwnerLabel);
+
     m_blackReadyInLobbyCheckBox = new QCheckBox(readyInLobbyString.c_str());
+    m_blackReadyInLobbyCheckBox->setEnabled(false);
+    connect(m_blackReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
+            &InLobbyFrame::handleBlackReadyButtonToggled);
     blackPlayerLayout->addWidget(m_blackReadyInLobbyCheckBox);
 
     auto blackTurtleIconLabel = new QLabel();
@@ -87,15 +101,45 @@ InLobbyFrame::InLobbyFrame(
     m_blackPlayerNameLabel->setEnabled(blackPlayerJoined);
     blackPlayerLayout->addWidget(m_blackPlayerNameLabel);
 
-    m_blackReadyInLobbyCheckBox->setEnabled(false);
-    connect(m_blackReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
-            &InLobbyFrame::handleBlackReadyButtonToggled);
+    m_blackPlayerKickButton = new QPushButton();
+    auto blackPlayerKickIcon = QPixmap::fromImage(ImageLibrary::getKickImage());
+    auto scaledBlackPlayerKickIcon = blackPlayerKickIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                                Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    m_blackPlayerKickButton->setIcon(scaledBlackPlayerKickIcon);
+    auto blackPlayerKickButtonSizePolicy = m_blackPlayerKickButton->sizePolicy();
+    blackPlayerKickButtonSizePolicy.setRetainSizeWhenHidden(true);
+    m_blackPlayerKickButton->setSizePolicy(blackPlayerKickButtonSizePolicy);
+    m_blackPlayerKickButton->setEnabled(false);
+    m_blackPlayerKickButton->setVisible(false);
+    connect(m_blackPlayerKickButton, &QPushButton::released, this,
+            &InLobbyFrame::handleBlackKickButton);
+    blackPlayerLayout->addWidget(m_blackPlayerKickButton);
 
     inLobbyLayout->addLayout(blackPlayerLayout);
 
     auto redPlayerLayout = new QHBoxLayout();
 
+    m_redPlayerLobbyOwnerLabel = new QLabel();
+    auto redPlayerLobbyOwnerIcon = QPixmap::fromImage(ImageLibrary::getLobbyOwnerImage());
+    auto scaledRedPlayerLobbyOwnerIcon = redPlayerLobbyOwnerIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                                        Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    m_redPlayerLobbyOwnerLabel->setPixmap(scaledRedPlayerLobbyOwnerIcon);
+    auto redPlayerLobbyOwnerIconLabelSizePolicy = m_redPlayerLobbyOwnerLabel->sizePolicy();
+    redPlayerLobbyOwnerIconLabelSizePolicy.setRetainSizeWhenHidden(true);
+    m_redPlayerLobbyOwnerLabel->setSizePolicy(redPlayerLobbyOwnerIconLabelSizePolicy);
+    m_redPlayerLobbyOwnerLabel->setVisible(false);
+    redPlayerLayout->addWidget(m_redPlayerLobbyOwnerLabel);
+
     m_redReadyInLobbyCheckBox = new QCheckBox(readyInLobbyString.c_str());
+    m_redReadyInLobbyCheckBox->setEnabled(false);
+    connect(m_redReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
+            &InLobbyFrame::handleRedReadyButtonToggled);
+    redPlayerLayout->addWidget(m_redReadyInLobbyCheckBox);
+
+    m_redReadyInLobbyCheckBox = new QCheckBox(readyInLobbyString.c_str());
+    m_redReadyInLobbyCheckBox->setEnabled(false);
+    connect(m_redReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
+            &InLobbyFrame::handleRedReadyButtonToggled);
     redPlayerLayout->addWidget(m_redReadyInLobbyCheckBox);
 
     auto redTurtleIconLabel = new QLabel();
@@ -109,9 +153,19 @@ InLobbyFrame::InLobbyFrame(
     m_redPlayerNameLabel->setEnabled(redPlayerJoined);
     redPlayerLayout->addWidget(m_redPlayerNameLabel);
 
-    m_redReadyInLobbyCheckBox->setEnabled(false);
-    connect(m_redReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
-            &InLobbyFrame::handleRedReadyButtonToggled);
+    m_redPlayerKickButton = new QPushButton();
+    auto redPlayerKickIcon = QPixmap::fromImage(ImageLibrary::getKickImage());
+    auto scaledRedPlayerKickIcon = redPlayerKickIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    m_redPlayerKickButton->setIcon(scaledRedPlayerKickIcon);
+    auto redPlayerKickButtonSizePolicy = m_redPlayerKickButton->sizePolicy();
+    redPlayerKickButtonSizePolicy.setRetainSizeWhenHidden(true);
+    m_redPlayerKickButton->setSizePolicy(redPlayerKickButtonSizePolicy);
+    m_redPlayerKickButton->setEnabled(false);
+    m_redPlayerKickButton->setVisible(false);
+    connect(m_redPlayerKickButton, &QPushButton::released, this,
+            &InLobbyFrame::handleRedKickButton);
+    redPlayerLayout->addWidget(m_redPlayerKickButton);
 
     inLobbyLayout->addLayout(redPlayerLayout);
 
@@ -132,7 +186,7 @@ InLobbyFrame::~InLobbyFrame()
 
 void InLobbyFrame::showEvent(QShowEvent *event)
 {
-	(void)event; // NO LINT
+    (void)event; // NO LINT
 
     m_lobbyNameLabel->setText(Parameters::getLobbyName().c_str());
     std::string lobbyIdWithHash = "#" + Parameters::getLobbyId();
@@ -141,6 +195,7 @@ void InLobbyFrame::showEvent(QShowEvent *event)
 
 void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
                                 const std::string &redPlayerName,
+                                TurtlePieceColor lobbyOwnerColor,
                                 bool blackPlayerReady,
                                 bool redPlayerReady)
 {
@@ -220,6 +275,8 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         }
     }
+
+    setLobbyOwnerColor(lobbyOwnerColor);
 }
 
 void InLobbyFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)
@@ -251,13 +308,16 @@ void InLobbyFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceC
     }
     break;
     }
+    setLobbyOwnerColor(m_lobbyOwnerColor); // (Re)enable the kick button
 }
 
 void InLobbyFrame::playerLeftLobby(const std::string &playerName)
 {
     if (playerName == Parameters::getPlayerName())
     {
-        // Do nothing
+        // We've been kicked
+        m_playerWindow->leaveLobby();
+        m_playerWindow->moveToMainMenuFrame();
     }
 
     if (playerName == m_blackPlayerName)
@@ -273,6 +333,77 @@ void InLobbyFrame::playerLeftLobby(const std::string &playerName)
         m_redPlayerNameLabel->setEnabled(false);
         m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         m_redPlayerName.clear();
+    }
+}
+
+void InLobbyFrame::updateLobbyOwner(const std::string &lobbyOwnerPlayerName)
+{
+    if (lobbyOwnerPlayerName == m_blackPlayerName)
+    {
+        setLobbyOwnerColor(TurtlePieceColor::Black);
+    }
+    else if (lobbyOwnerPlayerName == m_redPlayerName)
+    {
+        setLobbyOwnerColor(TurtlePieceColor::Red);
+    }
+    else
+    {
+        setLobbyOwnerColor(TurtlePieceColor::None);
+    }
+}
+
+void InLobbyFrame::setLobbyOwnerColor(TurtlePieceColor lobbyOwnerColor)
+{
+    m_lobbyOwnerColor = lobbyOwnerColor;
+    switch (m_lobbyOwnerColor)
+    {
+    case TurtlePieceColor::Black:
+    {
+        m_blackPlayerLobbyOwnerLabel->setVisible(true);
+        m_redPlayerLobbyOwnerLabel->setVisible(false);
+        m_blackPlayerKickButton->setEnabled(false);
+        m_blackPlayerKickButton->setVisible(false);
+        if (Parameters::getPlayerName() == m_blackPlayerName && !m_redPlayerName.empty())
+        {
+            m_redPlayerKickButton->setEnabled(true);
+            m_redPlayerKickButton->setVisible(true);
+        }
+        else
+        {
+            m_redPlayerKickButton->setEnabled(false);
+            m_redPlayerKickButton->setVisible(false);
+        }
+        break;
+    }
+    case TurtlePieceColor::Red:
+    {
+        m_blackPlayerLobbyOwnerLabel->setVisible(false);
+        m_redPlayerLobbyOwnerLabel->setVisible(true);
+        if (Parameters::getPlayerName() == m_redPlayerName && !m_blackPlayerName.empty())
+        {
+            m_blackPlayerKickButton->setEnabled(true);
+            m_blackPlayerKickButton->setVisible(true);
+        }
+        else
+        {
+            m_blackPlayerKickButton->setEnabled(false);
+            m_blackPlayerKickButton->setVisible(false);
+        }
+        m_redPlayerKickButton->setEnabled(false);
+        m_redPlayerKickButton->setVisible(false);
+        break;
+    }
+    case TurtlePieceColor::None:
+    {
+        // This should not happen
+        m_blackPlayerLobbyOwnerLabel->setVisible(false);
+        m_redPlayerLobbyOwnerLabel->setVisible(false);
+        m_blackPlayerKickButton->setEnabled(false);
+        m_blackPlayerKickButton->setVisible(false);
+        m_redPlayerKickButton->setEnabled(false);
+        m_redPlayerKickButton->setVisible(false);
+        break;
+    }
     }
 }
 
@@ -293,6 +424,20 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
             m_redReadyInLobbyCheckBox->setCheckState(ready ? Qt::Checked : Qt::Unchecked);
         }
     }
+}
+
+void InLobbyFrame::handleBlackKickButton()
+{
+    m_playerWindow->kickPlayer(m_blackPlayerName);
+    m_blackPlayerKickButton->setEnabled(false);
+    m_blackPlayerKickButton->setVisible(false);
+}
+
+void InLobbyFrame::handleRedKickButton()
+{
+    m_playerWindow->kickPlayer(m_redPlayerName);
+    m_redPlayerKickButton->setEnabled(false);
+    m_redPlayerKickButton->setVisible(false);
 }
 
 void InLobbyFrame::handleLeaveLobbyButton()

@@ -147,6 +147,7 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
                 m_checkersGameLobbies[fullName] = checkersGameLobby;
                 checkersGameLobby->addPlayer(request->player_name, m_playerPublicKeys[request->player_name],
                                              static_cast<TurtlePieceColor>(request->desired_player_color));
+                checkersGameLobby->setLobbyOwner(request->player_name);
                 response->created = true;
                 response->error_msg = "";
                 response->lobby_name = lobbyName;

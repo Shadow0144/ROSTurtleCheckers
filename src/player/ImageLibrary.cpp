@@ -16,6 +16,8 @@ void ImageLibrary::createLibraryInstance()
         (ament_index_cpp::get_package_share_directory("turtle_checkers") + "/img/").c_str();
 
     s_libraryInstance->m_lockImage.load(imagesPath + "lock.png");
+    s_libraryInstance->m_lobbyOwnerImage.load(imagesPath + "lobby_owner.png");
+    s_libraryInstance->m_kickImage.load(imagesPath + "kick.png");
 
     QVector<QString> turtlesImageNames;
     /*turtlesImageNames.append("ardent.png");
@@ -56,7 +58,7 @@ void ImageLibrary::createLibraryInstance()
         dImg.load(imagesPath + turtlesImageNames[i] + "_dead.png");
         s_libraryInstance->m_deadImages.append(dImg);
     }
-    
+
     s_libraryInstance->m_winnerImage.load(imagesPath + "winner.png");
     s_libraryInstance->m_loserImage.load(imagesPath + "loser.png");
     s_libraryInstance->m_drawImage.load(imagesPath + "draw.png");
@@ -68,8 +70,28 @@ QImage ImageLibrary::getLockImage()
     {
         createLibraryInstance();
     }
-    
+
     return s_libraryInstance->m_lockImage;
+}
+
+QImage ImageLibrary::getLobbyOwnerImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_lobbyOwnerImage;
+}
+
+QImage ImageLibrary::getKickImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_kickImage;
 }
 
 QImage ImageLibrary::getTurtleImage(TurtlePieceColor turtleColor)
