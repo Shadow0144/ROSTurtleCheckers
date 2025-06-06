@@ -12,10 +12,12 @@
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QVector>
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
@@ -53,6 +55,8 @@ private:
     void handleBlackReadyButtonToggled(int state);
     void handleRedReadyButtonToggled(int state);
 
+    void handleTimerIndexChanged(int index);
+
     CheckersPlayerWindow *m_playerWindow;
 
     QCheckBox *m_blackReadyInLobbyCheckBox;
@@ -68,11 +72,14 @@ private:
     QPushButton *m_blackPlayerKickButton;
     QPushButton *m_redPlayerKickButton;
 
+    QComboBox *m_timerComboBox;
+
     std::string m_blackPlayerName;
     std::string m_redPlayerName;
     TurtlePieceColor m_lobbyOwnerColor;
     bool m_blackPlayerReady;
     bool m_redPlayerReady;
+    std::chrono::seconds m_timer;
 };
 
 typedef std::unique_ptr<InLobbyFrame> InLobbyFrameUniPtr;

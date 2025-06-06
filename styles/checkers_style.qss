@@ -23,5 +23,17 @@ QRadioButton::indicator:checked { background-color: aqua; }
 QRadioButton:disabled { color: gray; } 
 QRadioButton::indicator:disabled { color: gray; }
 
+QComboBox { 
+    background-color: black;
+    color: white; 
+    selection-background-color: aqua;
+    selection-color: black;
+}
+QComboBox:disabled { color: gray; } 
+
+QComboBox QAbstractItemView {
+    border: 1px solid white;
+}
+
 QScrollArea#LobbyListScrollArea { border: 1px solid white; }
 QWidget[lobby="true"] { border: 1px solid white; }

@@ -16,6 +16,7 @@
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QIcon>
 #include <QPixmap>
 #include <QSpacerItem>
@@ -45,6 +46,7 @@ InLobbyFrame::InLobbyFrame(
     m_redPlayerName = "";
     m_blackPlayerReady = false;
     m_redPlayerReady = false;
+    m_timer = std::chrono::seconds(0);
 
     auto inLobbyLayout = new QVBoxLayout(this);
     inLobbyLayout->setAlignment(Qt::AlignCenter);
@@ -169,6 +171,23 @@ InLobbyFrame::InLobbyFrame(
 
     inLobbyLayout->addLayout(redPlayerLayout);
 
+    auto timerLayout = new QHBoxLayout();
+
+    auto timerLabel = new QLabel("Timer");
+    timerLayout->addWidget(timerLabel);
+
+    m_timerComboBox = new QComboBox();
+    m_timerComboBox->addItem("No timer");
+    m_timerComboBox->addItem("5 minutes");
+    m_timerComboBox->addItem("10 minutes");
+    m_timerComboBox->setEnabled(false);
+    m_timerComboBox->setCurrentIndex(0);
+    connect(m_timerComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &InLobbyFrame::handleTimerIndexChanged);
+    timerLayout->addWidget(m_timerComboBox);
+
+    inLobbyLayout->addLayout(timerLayout);
+
     auto inLobbyButtonLayout = new QHBoxLayout();
 
     std::string leaveLobbyInLobbyString = "Leave Lobby";
@@ -203,6 +222,7 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
     m_redPlayerName = redPlayerName;
     m_blackPlayerReady = blackPlayerReady;
     m_redPlayerReady = redPlayerReady;
+    m_timerComboBox->setCurrentIndex(0);
 
     auto playerName = Parameters::getPlayerName();
     if (playerName == blackPlayerName)
@@ -405,6 +425,15 @@ void InLobbyFrame::setLobbyOwnerColor(TurtlePieceColor lobbyOwnerColor)
         break;
     }
     }
+    if ((m_lobbyOwnerColor == TurtlePieceColor::Black && Parameters::getPlayerName() == m_blackPlayerName) ||
+        (m_lobbyOwnerColor == TurtlePieceColor::Red && Parameters::getPlayerName() == m_redPlayerName))
+    {
+        m_timerComboBox->setEnabled(true);
+    }
+    else
+    {
+        m_timerComboBox->setEnabled(false);
+    }
 }
 
 void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
@@ -461,5 +490,32 @@ void InLobbyFrame::handleRedReadyButtonToggled(int state)
     if (Parameters::getPlayerColor() == TurtlePieceColor::Red)
     {
         m_playerWindow->setReady((state == static_cast<int>(Qt::CheckState::Checked)));
+    }
+}
+
+void InLobbyFrame::handleTimerIndexChanged(int index)
+{
+    switch (index)
+    {
+    case 0:
+    {
+        m_timer = std::chrono::seconds(0);
+        break;
+    }
+    case 1:
+    {
+        m_timer = std::chrono::minutes(5);
+        break;
+    }
+    case 2:
+    {
+        m_timer = std::chrono::minutes(10);
+        break;
+    }
+    default:
+    {
+        m_timer = std::chrono::seconds(0);
+        break;
+    }
     }
 }
