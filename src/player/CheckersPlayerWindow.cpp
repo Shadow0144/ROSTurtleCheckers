@@ -222,6 +222,14 @@ void CheckersPlayerWindow::setReady(bool ready)
     }
 }
 
+void CheckersPlayerWindow::setTimer(uint64_t timerSeconds)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->setTimer(timerSeconds);
+    }
+}
+
 void CheckersPlayerWindow::loggedIn(const std::string &playerName)
 {
     Parameters::setPlayerName(playerName);
@@ -250,7 +258,8 @@ void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
                                             const std::string &redPlayerName,
                                             TurtlePieceColor lobbyOwnerColor,
                                             bool blackPlayerReady,
-                                            bool redPlayerReady)
+                                            bool redPlayerReady,
+                                            uint64_t timerSeconds)
 {
     Parameters::setLobbyName(lobbyName);
     Parameters::setLobbyId(lobbyId);
@@ -258,7 +267,8 @@ void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
                                  redPlayerName,
                                  lobbyOwnerColor,
                                  blackPlayerReady,
-                                 redPlayerReady);
+                                 redPlayerReady,
+                                 timerSeconds);
     moveToInLobbyFrame();
 }
 
@@ -275,6 +285,11 @@ void CheckersPlayerWindow::playerLeftLobby(const std::string &playerName)
 void CheckersPlayerWindow::setPlayerReady(const std::string &playerName, bool ready)
 {
     m_inLobbyFrame->setPlayerReady(playerName, ready);
+}
+
+void CheckersPlayerWindow::updateTimer(uint64_t timerSeconds)
+{
+    m_inLobbyFrame->setTimer(timerSeconds);
 }
 
 void CheckersPlayerWindow::requestedPieceMoveAccepted(bool moveAccepted)

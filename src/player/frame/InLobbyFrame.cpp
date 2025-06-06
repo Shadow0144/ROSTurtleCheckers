@@ -138,12 +138,6 @@ InLobbyFrame::InLobbyFrame(
             &InLobbyFrame::handleRedReadyButtonToggled);
     redPlayerLayout->addWidget(m_redReadyInLobbyCheckBox);
 
-    m_redReadyInLobbyCheckBox = new QCheckBox(readyInLobbyString.c_str());
-    m_redReadyInLobbyCheckBox->setEnabled(false);
-    connect(m_redReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
-            &InLobbyFrame::handleRedReadyButtonToggled);
-    redPlayerLayout->addWidget(m_redReadyInLobbyCheckBox);
-
     auto redTurtleIconLabel = new QLabel();
     auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
     auto scaledRedTurtleIcon = redTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
@@ -216,12 +210,14 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
                                 const std::string &redPlayerName,
                                 TurtlePieceColor lobbyOwnerColor,
                                 bool blackPlayerReady,
-                                bool redPlayerReady)
+                                bool redPlayerReady,
+                                uint64_t timerSeconds)
 {
     m_blackPlayerName = blackPlayerName;
     m_redPlayerName = redPlayerName;
     m_blackPlayerReady = blackPlayerReady;
     m_redPlayerReady = redPlayerReady;
+    m_timerComboBox->setEnabled(false);
     m_timerComboBox->setCurrentIndex(0);
 
     auto playerName = Parameters::getPlayerName();
@@ -297,6 +293,7 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
     }
 
     setLobbyOwnerColor(lobbyOwnerColor);
+    setTimer(timerSeconds);
 }
 
 void InLobbyFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)
@@ -455,6 +452,30 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
     }
 }
 
+void InLobbyFrame::setTimer(uint64_t timerSeconds)
+{
+    std::chrono::seconds timer(timerSeconds);
+    if (m_timer != timer)
+    {
+        int index = 0;
+        if (timer == std::chrono::seconds(0))
+        {
+            index = 0;
+        }
+        else if (timer == std::chrono::minutes(5))
+        {
+            index = 1;
+        }
+        else if (timer == std::chrono::minutes(10))
+        {
+            index = 2;
+        }
+        // else - Do nothing
+        m_timerComboBox->setCurrentIndex(index);
+        update();
+    }
+}
+
 void InLobbyFrame::handleBlackKickButton()
 {
     m_playerWindow->kickPlayer(m_blackPlayerName);
@@ -495,27 +516,36 @@ void InLobbyFrame::handleRedReadyButtonToggled(int state)
 
 void InLobbyFrame::handleTimerIndexChanged(int index)
 {
+    std::chrono::seconds timer;
     switch (index)
     {
     case 0:
     {
-        m_timer = std::chrono::seconds(0);
+        timer = std::chrono::seconds(0);
         break;
     }
     case 1:
     {
-        m_timer = std::chrono::minutes(5);
+        timer = std::chrono::minutes(5);
         break;
     }
     case 2:
     {
-        m_timer = std::chrono::minutes(10);
+        timer = std::chrono::minutes(10);
         break;
     }
     default:
     {
-        m_timer = std::chrono::seconds(0);
+        timer = std::chrono::seconds(0);
         break;
     }
+    }
+    if (timer != m_timer)
+    {
+        m_timer = timer;
+        if (m_timerComboBox->isEnabled())
+        {
+            m_playerWindow->setTimer(m_timer.count());
+        }
     }
 }

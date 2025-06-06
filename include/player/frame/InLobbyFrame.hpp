@@ -39,12 +39,14 @@ public:
                       const std::string &redPlayerName,
                       TurtlePieceColor lobbyOwnerColor,
                       bool blackPlayerReady,
-                      bool redPlayerReady);
+                      bool redPlayerReady,
+                      uint64_t timerSeconds);
     void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
     void playerLeftLobby(const std::string &playerName);
     void updateLobbyOwner(const std::string &lobbyOwnerPlayerName);
     void setLobbyOwnerColor(TurtlePieceColor lobbyOwnerColor);
     void setPlayerReady(const std::string &playerName, bool ready);
+    void setTimer(uint64_t timerSeconds);
 
 private:
     void handleBlackKickButton();

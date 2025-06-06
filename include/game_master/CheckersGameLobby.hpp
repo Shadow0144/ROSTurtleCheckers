@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -20,8 +21,10 @@
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
+#include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
 #include "game_master/MasterBoard.hpp"
 
@@ -57,6 +60,8 @@ public:
     void setPlayerReady(const std::string &playerName, bool ready);
     bool getAreAllPlayersReady() const;
 
+    uint64_t getTimerSeconds() const;
+
     bool passwordMatches(uint32_t lobbyPasswordHash) const;
     bool hasPassword() const;
 
@@ -76,6 +81,7 @@ private:
     void kickPlayerCallback(const turtle_checkers_interfaces::msg::KickPlayer::SharedPtr message);
     void offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message);
     void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
+    void timerChangedCallback(const turtle_checkers_interfaces::msg::TimerChanged::SharedPtr message);
 
     bool isPieceValidForTurn(int requestedPieceTileIndex) const;
 
@@ -94,11 +100,13 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::TimerChanged>::SharedPtr m_timerChangedSubscription;
 
     std::string m_lobbyName;
     std::string m_lobbyId;
@@ -108,6 +116,7 @@ private:
     std::string m_redPlayerName;
     bool m_redPlayerReady;
     bool m_isBlackTurn;
+    std::chrono::seconds m_timer;
 
     std::string m_playerOfferingDraw;
 

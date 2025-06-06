@@ -11,9 +11,12 @@
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
+#include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
@@ -225,6 +228,20 @@ struct std::hash<turtle_checkers_interfaces::msg::PlayerReady>
 };
 
 template <>
+struct std::hash<turtle_checkers_interfaces::msg::TimerChanged>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::TimerChanged &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.timer_seconds));
+        return combinedHash;
+    }
+};
+
+template <>
 struct std::hash<turtle_checkers_interfaces::msg::UpdateBoard>
 {
     size_t operator()(const turtle_checkers_interfaces::msg::UpdateBoard &message) const noexcept
@@ -251,6 +268,19 @@ struct std::hash<turtle_checkers_interfaces::msg::UpdateLobbyOwner>
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_owner_player_name));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::UpdateTimer>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::UpdateTimer &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.timer_seconds));
         return combinedHash;
     }
 };
@@ -340,6 +370,7 @@ struct std::hash<turtle_checkers_interfaces::srv::JoinLobby::Response::SharedPtr
         hashCombine(combinedHash, std::hash<std::string>{}(response->red_player_name));
         hashCombine(combinedHash, std::hash<bool>{}(response->black_player_ready));
         hashCombine(combinedHash, std::hash<bool>{}(response->red_player_ready));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->timer_seconds));
         hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
         return combinedHash;
     }

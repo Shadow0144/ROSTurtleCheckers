@@ -57,6 +57,7 @@ public:
     void leaveLobby();
 
     void setReady(bool ready);
+    void setTimer(uint64_t timerSeconds);
 
     void loggedIn(const std::string &playerName);
     void failedLogIn(const std::string &errorMessage);
@@ -69,13 +70,15 @@ public:
                           const std::string &redPlayerName,
                           TurtlePieceColor lobbyOwnerColor,
                           bool blackPlayerReady,
-                          bool redPlayerReady);
+                          bool redPlayerReady,
+                          uint64_t timerSeconds);
 
     void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
     void playerLeftLobby(const std::string &playerName);
     void updateLobbyOwner(const std::string &playerName);
     void kickPlayer(const std::string &playerName);
     void setPlayerReady(const std::string &playerName, bool ready);
+    void updateTimer(uint64_t timerSeconds);
 
     void requestedPieceMoveAccepted(bool moveAccepted);
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);

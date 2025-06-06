@@ -23,8 +23,10 @@
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
+#include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
 #include <QApplication>
 #include <QTimer>
@@ -66,6 +68,7 @@ public:
     void leaveLobby();
     void kickPlayer(const std::string &playerName);
     void setReady(bool ready);
+    void setTimer(uint64_t timerSeconds);
 
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
@@ -100,6 +103,7 @@ private:
     void playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message);
     void playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message);
     void updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message);
+    void updateTimerCallback(const turtle_checkers_interfaces::msg::UpdateTimer::SharedPtr message);
 
     void parameterEventCallback(const rcl_interfaces::msg::ParameterEvent::ConstSharedPtr event);
 
@@ -129,6 +133,7 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerSubscription;
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerPublisher;
@@ -136,6 +141,7 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadyPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::TimerChanged>::SharedPtr m_timerChangedPublisher;
 
     uint64_t m_privateKey;
     uint64_t m_publicKey;

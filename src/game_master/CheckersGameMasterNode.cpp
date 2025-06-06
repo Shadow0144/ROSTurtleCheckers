@@ -227,6 +227,7 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
                         response->red_player_name = checkersGameLobby->getRedPlayerName();
                         response->black_player_ready = checkersGameLobby->getBlackPlayerReady();
                         response->red_player_ready = checkersGameLobby->getRedPlayerReady();
+                        response->timer_seconds = checkersGameLobby->getTimerSeconds();
                     }
                     else
                     {

@@ -3,9 +3,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
@@ -17,8 +17,10 @@
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
+#include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
 #include <ctime>
 #include <memory>
@@ -86,6 +88,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReadied", 10);
     m_updateLobbyOwnerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateLobbyOwner>(
         m_lobbyName + "/id" + m_lobbyId + "/UpdateLobbyOwner", 10);
+    m_updateTimerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateTimer>(
+        m_lobbyName + "/id" + m_lobbyId + "/UpdateTimer", 10);
 
     m_forfitSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::Forfit>(
         m_lobbyName + "/id" + m_lobbyId + "/Forfit", 10, std::bind(&CheckersGameLobby::forfitCallback, this, std::placeholders::_1));
@@ -95,6 +99,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
         m_lobbyName + "/id" + m_lobbyId + "/OfferDraw", 10, std::bind(&CheckersGameLobby::offerDrawCallback, this, std::placeholders::_1));
     m_playerReadySubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::PlayerReady>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
+    m_timerChangedSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::TimerChanged>(
+        m_lobbyName + "/id" + m_lobbyId + "/TimerChanged", 10, std::bind(&CheckersGameLobby::timerChangedCallback, this, std::placeholders::_1));
 
     RCLCPP_INFO(m_nodeHandle->get_logger(), "Creating checkers game lobby!");
 }
@@ -277,6 +283,11 @@ void CheckersGameLobby::setPlayerReady(const std::string &playerName, bool ready
 bool CheckersGameLobby::getAreAllPlayersReady() const
 {
     return (m_blackPlayerReady && m_redPlayerReady);
+}
+
+uint64_t CheckersGameLobby::getTimerSeconds() const
+{
+    return m_timer.count();
 }
 
 bool CheckersGameLobby::passwordMatches(uint32_t lobbyPasswordHash) const
@@ -519,3 +530,19 @@ void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::ms
         RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting game!");
     }
 }
+void CheckersGameLobby::timerChangedCallback(const turtle_checkers_interfaces::msg::TimerChanged::SharedPtr message)
+{
+    m_timer = std::chrono::seconds(message->timer_seconds);
+
+    // Announce the change to the other player as well
+    auto updateTimerMessage = turtle_checkers_interfaces::msg::UpdateTimer();
+    updateTimerMessage.lobby_name = message->lobby_name;
+    updateTimerMessage.lobby_id = message->lobby_id;
+    updateTimerMessage.timer_seconds = message->timer_seconds;
+    updateTimerMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::UpdateTimer>{}(updateTimerMessage),
+        m_publicKey, m_privateKey);
+    m_updateTimerPublisher->publish(updateTimerMessage);
+}
+
+// TODO: Add checks for checksums
