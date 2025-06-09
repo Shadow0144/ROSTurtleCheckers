@@ -57,6 +57,7 @@ add_executable(checkers_player_node
   src/player/TurtlePieceRender.cpp
   src/player/TurtlePieceRenderFactory.cpp
   src/player/TurtleGraveyard.cpp
+  src/player/ChatBox.cpp
   src/player/HUD.cpp
   src/player/CheckersBoardRender.cpp
   src/player/frame/CreateAccountFrame.cpp
