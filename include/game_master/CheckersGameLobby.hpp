@@ -84,6 +84,9 @@ private:
     void timerChangedCallback(const turtle_checkers_interfaces::msg::TimerChanged::SharedPtr message);
 
     bool isPieceValidForTurn(int requestedPieceTileIndex) const;
+    
+    uint64_t getPlayerPublicKey(const std::string &playerName) const;
+    uint64_t getPlayerPublicKey(int tileIndex) const;
 
     rclcpp::Node::SharedPtr m_nodeHandle;
 
@@ -126,6 +129,7 @@ private:
     uint64_t m_privateKey;
     uint64_t m_blackPlayerPublicKey;
     uint64_t m_redPlayerPublicKey;
+    std::unordered_map<TurtlePieceColor, uint64_t> m_playerPublicKeysByColor;
 
     uint64_t m_lobbyPasswordHash;
 };

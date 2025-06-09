@@ -219,8 +219,7 @@ void CheckersPlayerNode::createAccount(
     uint64_t hashedPlayerPassword = RSAKeyGenerator::hashString(playerPassword);
     uint64_t encryptedHashedPlayerPassword = RSAKeyGenerator::encrypt(hashedPlayerPassword, m_gameMasterPublicKey);
     request->encrypted_hashed_player_password = encryptedHashedPlayerPassword;
-    uint64_t encryptedPlayerPublicKey = RSAKeyGenerator::encrypt(m_publicKey, m_gameMasterPublicKey);
-    request->encrypted_player_public_key = encryptedPlayerPublicKey;
+    request->player_public_key = m_publicKey;
     // No signature
     m_createAccountClient->async_send_request(request,
                                               std::bind(&CheckersPlayerNode::createAccountResponse,
@@ -236,8 +235,7 @@ void CheckersPlayerNode::logInAccount(
     uint64_t hashedPlayerPassword = RSAKeyGenerator::hashString(playerPassword);
     uint64_t encryptedHashedPlayerPassword = RSAKeyGenerator::encrypt(hashedPlayerPassword, m_gameMasterPublicKey);
     request->encrypted_hashed_player_password = encryptedHashedPlayerPassword;
-    uint64_t encryptedPlayerPublicKey = RSAKeyGenerator::encrypt(m_publicKey, m_gameMasterPublicKey);
-    request->encrypted_player_public_key = encryptedPlayerPublicKey;
+    request->player_public_key = m_publicKey;
     // No signature
     m_logInAccountClient->async_send_request(request,
                                              std::bind(&CheckersPlayerNode::logInAccountResponse,
@@ -786,7 +784,8 @@ void CheckersPlayerNode::requestPieceMove(size_t sourceTileIndex, size_t destina
         std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Request::SharedPtr>{}(request),
         m_publicKey, m_privateKey);
     m_requestPieceMoveClient->async_send_request(request,
-                                                 std::bind(&CheckersPlayerNode::requestPieceMoveResponse, this, std::placeholders::_1));
+                                                 std::bind(&CheckersPlayerNode::requestPieceMoveResponse,
+                                                           this, std::placeholders::_1));
 
     m_checkersPlayerWindow->update();
 }
@@ -801,7 +800,8 @@ void CheckersPlayerNode::requestReachableTiles(size_t selectedPieceTileIndex)
         std::hash<turtle_checkers_interfaces::srv::RequestReachableTiles::Request::SharedPtr>{}(request),
         m_publicKey, m_privateKey);
     m_requestReachableTilesClient->async_send_request(request,
-                                                      std::bind(&CheckersPlayerNode::requestReachableTilesResponse, this, std::placeholders::_1));
+                                                      std::bind(&CheckersPlayerNode::requestReachableTilesResponse,
+                                                                this, std::placeholders::_1));
 
     m_checkersPlayerWindow->update();
 }

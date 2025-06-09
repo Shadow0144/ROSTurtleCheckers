@@ -89,7 +89,7 @@ void CheckersGameMasterNode::createAccountRequest(const std::shared_ptr<turtle_c
         std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr>{}(response),
         m_publicKey, m_privateKey);
 
-    m_playerPublicKeys[request->player_name] = RSAKeyGenerator::unencrypt(request->encrypted_player_public_key, m_privateKey, m_publicKey);
+    m_playerPublicKeys[request->player_name] = request->player_public_key;
 }
 
 void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::LogInAccount::Request> request,
@@ -109,7 +109,7 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
         response->logged_in = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPlayerPassword);
         response->error_msg = m_databaseHandler->getErrorMessage();
 
-        m_playerPublicKeys[request->player_name] = RSAKeyGenerator::unencrypt(request->encrypted_player_public_key, m_privateKey, m_publicKey);
+        m_playerPublicKeys[request->player_name] = request->player_public_key;
     }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
