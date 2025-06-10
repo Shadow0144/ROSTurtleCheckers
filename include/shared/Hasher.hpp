@@ -114,8 +114,10 @@ struct std::hash<turtle_checkers_interfaces::msg::GameStart>
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
         hashCombine(combinedHash, std::hash<std::string>{}(message.black_player_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.red_player_name));
-        hashCombine(combinedHash, std::hash<size_t>{}(message.game_state));
-        hashCombine(combinedHash, std::hash<std::vector<size_t>>{}(message.movable_tile_indices));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.black_time_remaining_seconds));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.red_time_remaining_seconds));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.game_state));
+        hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(message.movable_tile_indices));
         return combinedHash;
     }
 };
@@ -249,6 +251,8 @@ struct std::hash<turtle_checkers_interfaces::msg::UpdateBoard>
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.black_time_remaining_seconds));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.red_time_remaining_seconds));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.source_tile_index));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.destination_tile_index));
         hashCombine(combinedHash, std::hash<bool>{}(message.king_piece));

@@ -14,6 +14,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QTimer>
 
 #include <memory>
 #include <string>
@@ -36,16 +37,19 @@ public:
 		CheckersPlayerWindow *parentWindow);
 	~GameFrame();
 
-	void showEvent(QShowEvent* event) override;
+	void showEvent(QShowEvent *event) override;
+	void hideEvent(QHideEvent *event) override;
 
 	void connectedToGame();
 
 	void requestedPieceMoveAccepted(bool moveAccepted);
 	void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
 	void declaredWinner(Winner winner);
-	void gameStarted(GameState gameState, const std::vector<size_t> &movableTileIndices);
+	void gameStarted(GameState gameState, const std::vector<size_t> &movableTileIndices,
+					 size_t blackTimeRemainSec, size_t redTimeRemainSec);
 	void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
-					  int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices);
+					  int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices,
+					  size_t blackTimeRemainSec, size_t redTimeRemainSec);
 	void drawDeclined();
 	void drawOffered();
 
@@ -93,6 +97,8 @@ private:
 	HUDPtr m_hud;
 
 	bool m_showingDialog;
+
+    QTimer *m_redrawTimer;
 };
 
 typedef std::unique_ptr<GameFrame> GameFrameUniPtr;

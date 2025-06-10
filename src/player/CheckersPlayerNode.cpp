@@ -650,7 +650,9 @@ void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg
 
     GameState gameState = static_cast<GameState>(message->game_state);
     const auto &movableTileIndices = message->movable_tile_indices;
-    m_checkersPlayerWindow->gameStarted(gameState, movableTileIndices);
+    auto blackTimeRemainSec = message->black_time_remaining_seconds;
+    auto redTimeRemainSec = message->red_time_remaining_seconds;
+    m_checkersPlayerWindow->gameStarted(gameState, movableTileIndices, blackTimeRemainSec, redTimeRemainSec);
 
     m_checkersPlayerWindow->update();
 }
@@ -730,9 +732,12 @@ void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::m
     auto slainPieceTileIndex = message->slain_piece_tile_index;
     auto kingPiece = message->king_piece;
     const auto &movableTileIndices = message->movable_tile_indices;
+    auto blackTimeRemainSec = message->black_time_remaining_seconds;
+    auto redTimeRemainSec = message->red_time_remaining_seconds;
 
     m_checkersPlayerWindow->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
-                                         slainPieceTileIndex, kingPiece, movableTileIndices);
+                                         slainPieceTileIndex, kingPiece, movableTileIndices,
+                                         blackTimeRemainSec, redTimeRemainSec);
 
     m_checkersPlayerWindow->update();
 }

@@ -167,7 +167,7 @@ InLobbyFrame::InLobbyFrame(
 
     auto timerLayout = new QHBoxLayout();
 
-    auto timerLabel = new QLabel("Timer");
+    auto timerLabel = new QLabel("Timer:");
     timerLayout->addWidget(timerLabel);
 
     m_timerComboBox = new QComboBox();

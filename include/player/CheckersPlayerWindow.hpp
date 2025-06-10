@@ -84,9 +84,11 @@ public:
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
     void declaredWinner(Winner winner);
     void gameStarted(GameState gameState,
-                     const std::vector<size_t> &movableTileIndices);
+                     const std::vector<size_t> &movableTileIndices,
+                     size_t blackTimeRemainSec, size_t redTimeRemainSec);
     void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
-                      int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices);
+                      int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices,
+                      size_t blackTimeRemainSec, size_t redTimeRemainSec);
 
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);

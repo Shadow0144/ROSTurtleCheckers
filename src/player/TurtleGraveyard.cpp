@@ -11,8 +11,8 @@ TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePiece
 {
     if (owningPlayerColor == viewingPlayerColor)
     {
-        m_left = WINDOW_WIDTH - TILE_WIDTH - TILE_WIDTH;
-        m_nextPosition = QPointF(WINDOW_WIDTH - TILE_HALF_WIDTH - TILE_WIDTH, WINDOW_HEIGHT - TILE_HALF_HEIGHT - BUTTON_DOCK_HEIGHT);
+        m_left = GRAVEYARD_WIDTH + BOARD_WIDTH;
+        m_nextPosition = QPointF(m_left - TILE_HALF_WIDTH - TILE_WIDTH + GRAVEYARD_WIDTH, WINDOW_HEIGHT - TILE_HALF_HEIGHT - BUTTON_DOCK_HEIGHT);
         m_initialRowPosition = m_nextPosition;
         m_positionRowIncrement = QPointF(0, -TILE_HEIGHT);
         m_positionColIncrement = QPointF(TILE_WIDTH, 0);

@@ -2,7 +2,9 @@
 
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <unordered_map>
 
 #include "rclcpp/rclcpp.hpp"
@@ -37,6 +39,7 @@ public:
                       const std::string &lobbyName,
                       const std::string &lobbyId,
                       uint64_t lobbyPasswordHash);
+    ~CheckersGameLobby();
 
     const std::string &getLobbyName() const;
     const std::string &getLobbyId() const;
@@ -65,8 +68,6 @@ public:
     bool passwordMatches(uint32_t lobbyPasswordHash) const;
     bool hasPassword() const;
 
-    void setIsBlackTurn(bool isBlackTurn);
-    bool getIsBlackTurn() const;
     void togglePlayerTurn();
 
 private:
@@ -84,9 +85,11 @@ private:
     void timerChangedCallback(const turtle_checkers_interfaces::msg::TimerChanged::SharedPtr message);
 
     bool isPieceValidForTurn(int requestedPieceTileIndex) const;
-    
+
     uint64_t getPlayerPublicKey(const std::string &playerName) const;
     uint64_t getPlayerPublicKey(int tileIndex) const;
+
+    void checkTimers();
 
     rclcpp::Node::SharedPtr m_nodeHandle;
 
@@ -118,8 +121,15 @@ private:
     bool m_blackPlayerReady;
     std::string m_redPlayerName;
     bool m_redPlayerReady;
-    bool m_isBlackTurn;
+    GameState m_gameState;
     std::chrono::seconds m_timer;
+    std::chrono::seconds m_blackTimeRemaining;
+    std::chrono::seconds m_redTimeRemaining;
+    std::chrono::time_point<std::chrono::system_clock> m_startTurnTimestamp;
+
+    std::mutex m_timerMutex;
+    std::thread m_timerThread;
+    bool m_timerThreadRunning;
 
     std::string m_playerOfferingDraw;
 

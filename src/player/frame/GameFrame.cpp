@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QLabel>
+#include <QTimer>
 
 #include <cstdlib>
 #include <ctime>
@@ -31,6 +32,10 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	setMouseTracking(true);
 
+	m_redrawTimer = new QTimer(this);
+	connect(m_redrawTimer, &QTimer::timeout, this, [this]()
+			{ this->update(); });
+
 	m_gameState = GameState::Connecting;
 	m_winner = Winner::None;
 
@@ -45,7 +50,9 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	auto buttonLayout = new QHBoxLayout(this);
 	buttonLayout->setAlignment(Qt::AlignCenter);
 	buttonLayout->setContentsMargins(GRAVEYARD_WIDTH,
-									 HUD_HEIGHT + BOARD_HEIGHT, GRAVEYARD_WIDTH, 0);
+									 HUD_HEIGHT + BOARD_HEIGHT,
+									 GRAVEYARD_WIDTH + CHAT_WIDTH,
+									 0);
 
 	m_offerDrawButton = new QPushButton(this);
 	m_offerDrawButton->setText("Offer Draw");
@@ -158,6 +165,15 @@ GameFrame::~GameFrame()
 void GameFrame::showEvent(QShowEvent *event)
 {
 	(void)event; // NO LINT
+
+	m_redrawTimer->start(1000);
+}
+
+void GameFrame::hideEvent(QHideEvent *event)
+{
+	(void)event; // NO LINT
+
+	m_redrawTimer->stop();
 }
 
 void GameFrame::connectedToGame()
@@ -233,10 +249,13 @@ void GameFrame::declaredWinner(Winner winner)
 	update();
 }
 
-void GameFrame::gameStarted(GameState gameState, const std::vector<size_t> &movableTileIndices)
+void GameFrame::gameStarted(GameState gameState, const std::vector<size_t> &movableTileIndices,
+							size_t blackTimeRemainSec, size_t redTimeRemainSec)
 {
 	m_gameState = gameState;
 	m_hud->setGameState(m_gameState);
+	m_hud->setTimeRemaining(blackTimeRemainSec, redTimeRemainSec);
+	m_hud->enableTimers(blackTimeRemainSec > 0u || redTimeRemainSec > 0u);
 
 	if (isOwnTurn())
 	{
@@ -247,10 +266,13 @@ void GameFrame::gameStarted(GameState gameState, const std::vector<size_t> &mova
 }
 
 void GameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
-									 int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices)
+							 int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices,
+							 size_t blackTimeRemainSec, size_t redTimeRemainSec)
 {
 	m_board->clearSelections();
 	m_board->clearMovedTiles();
+
+	m_hud->setTimeRemaining(blackTimeRemainSec, redTimeRemainSec);
 
 	m_board->moveTurtlePiece(sourceTileIndex, destinationTileIndex);
 
@@ -258,7 +280,7 @@ void GameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex
 	if (slainPieceTileIndex > -1)
 	{
 		m_board->slayTurtle(slainPieceTileIndex);
-		if (m_gameState != nextGameState) // If the game state switches on this update, the last turn finished
+		// if (m_gameState != nextGameState) // If the game state switches on this update, the last turn finished
 		{
 			m_board->moveTurtlePiecesToGraveyard(m_blackPlayerGraveyard, m_redPlayerGraveyard);
 		}

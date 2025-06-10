@@ -22,8 +22,13 @@
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
-#include <ctime>
+#include <chrono>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <ctime>
 #include <random>
 
 #include "game_master/MasterBoard.hpp"
@@ -51,7 +56,7 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
 
     std::srand(std::time({}));
 
-    m_isBlackTurn = true;
+    m_gameState = GameState::Connected;
 
     m_lobbyOwnerPlayerName = "";
 
@@ -60,6 +65,11 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
 
     m_blackPlayerReady = false;
     m_redPlayerReady = false;
+
+    m_timer = std::chrono::seconds(0u);
+    m_blackTimeRemaining = std::chrono::seconds(0u);
+    m_redTimeRemaining = std::chrono::seconds(0u);
+    m_timerThreadRunning = false;
 
     m_blackPlayerPublicKey = 0u;
     m_redPlayerPublicKey = 0u;
@@ -109,6 +119,15 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
         m_lobbyName + "/id" + m_lobbyId + "/TimerChanged", 10, std::bind(&CheckersGameLobby::timerChangedCallback, this, std::placeholders::_1));
 
     RCLCPP_INFO(m_nodeHandle->get_logger(), "Creating checkers game lobby!");
+}
+
+CheckersGameLobby::~CheckersGameLobby()
+{
+    m_timerThreadRunning = false;
+    if (m_timerThread.joinable())
+    {
+        m_timerThread.join();
+    }
 }
 
 const std::string &CheckersGameLobby::getLobbyName() const
@@ -308,25 +327,15 @@ bool CheckersGameLobby::hasPassword() const
     return (m_lobbyPasswordHash > 0u);
 }
 
-void CheckersGameLobby::setIsBlackTurn(bool isBlackTurn)
-{
-    m_isBlackTurn = isBlackTurn;
-}
-
-bool CheckersGameLobby::getIsBlackTurn() const
-{
-    return m_isBlackTurn;
-}
-
 void CheckersGameLobby::togglePlayerTurn()
 {
-    m_isBlackTurn = !m_isBlackTurn;
+    m_gameState = (m_gameState == GameState::BlackMove) ? GameState::RedMove : GameState::BlackMove;
 }
 
 bool CheckersGameLobby::isPieceValidForTurn(int requestedPieceTileIndex) const
 {
     return (m_board->getPieceColorAtTileIndex(requestedPieceTileIndex) ==
-            ((m_isBlackTurn) ? TurtlePieceColor::Black : TurtlePieceColor::Red));
+            ((m_gameState == GameState::BlackMove) ? TurtlePieceColor::Black : TurtlePieceColor::Red));
 }
 
 uint64_t CheckersGameLobby::getPlayerPublicKey(const std::string &playerName) const
@@ -361,6 +370,8 @@ void CheckersGameLobby::requestReachableTilesRequest(const std::shared_ptr<turtl
 void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
                                                 std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response)
 {
+    std::lock_guard<std::mutex> lock(m_timerMutex);
+
     if (!RSAKeyGenerator::checksumSignatureMatches(
             std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Request::SharedPtr>{}(request),
             getPlayerPublicKey(request->source_tile_index), request->checksum_sig))
@@ -378,9 +389,23 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
     response->move_accepted = moveAccepted;
     if (moveAccepted)
     {
+        auto timePassed = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now() - m_startTurnTimestamp);
+        if (m_gameState == GameState::BlackMove)
+        {
+            m_blackTimeRemaining = (timePassed < m_blackTimeRemaining) ? (m_blackTimeRemaining - timePassed) : std::chrono::seconds(0u);
+        }
+        else if (m_gameState == GameState::RedMove)
+        {
+            m_redTimeRemaining = (timePassed < m_redTimeRemaining) ? (m_redTimeRemaining - timePassed) : std::chrono::seconds(0u);
+        }
+        m_startTurnTimestamp = std::chrono::system_clock::now();
+
         auto message = turtle_checkers_interfaces::msg::UpdateBoard();
         message.lobby_name = request->lobby_name;
         message.lobby_id = request->lobby_id;
+        message.black_time_remaining_seconds = m_blackTimeRemaining.count();
+        message.red_time_remaining_seconds = m_redTimeRemaining.count();
         bool mustContinueJump = false;
         auto jumpedPieceTileIndex = m_board->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
         if (jumpedPieceTileIndex > -1)
@@ -411,7 +436,7 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
 
         // Check which players (if any) cannot move, which ends the game
         std::vector<size_t> movableTileIndices;
-        m_board->checkPlayersCanMove(m_isBlackTurn, movableTileIndices);
+        m_board->checkPlayersCanMove((m_gameState == GameState::BlackMove), movableTileIndices);
         if (mustContinueJump) // If mid-jump, only the current piece can move
         {
             message.movable_tile_indices = {request->destination_tile_index};
@@ -425,6 +450,8 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
         auto winner = m_board->getWinner();
         if (winner != Winner::None)
         {
+            m_timerThreadRunning = false;
+            m_gameState = GameState::GameFinished;
             message.game_state = 4; // Game over
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
             winnerMessage.lobby_name = m_lobbyName;
@@ -435,11 +462,11 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
                 m_publicKey, m_privateKey);
             m_declareWinnerPublisher->publish(winnerMessage);
         }
-        else if (getIsBlackTurn())
+        else if (m_gameState == GameState::BlackMove)
         {
             message.game_state = 2; // Black to move
         }
-        else
+        else if (m_gameState == GameState::RedMove)
         {
             message.game_state = 3; // Red to move
         }
@@ -458,6 +485,8 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
 
 void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message)
 {
+    std::lock_guard<std::mutex> lock(m_timerMutex);
+
     if (!RSAKeyGenerator::checksumSignatureMatches(
             std::hash<turtle_checkers_interfaces::msg::Forfit>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
@@ -480,6 +509,8 @@ void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Fo
         return;
     }
 
+    m_timerThreadRunning = false;
+    m_gameState = GameState::GameFinished;
     auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
     winnerMessage.lobby_name = m_lobbyName;
     winnerMessage.lobby_id = m_lobbyId;
@@ -500,6 +531,8 @@ void CheckersGameLobby::kickPlayerCallback(const turtle_checkers_interfaces::msg
 
 void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message)
 {
+    std::lock_guard<std::mutex> lock(m_timerMutex);
+
     if (!RSAKeyGenerator::checksumSignatureMatches(
             std::hash<turtle_checkers_interfaces::msg::OfferDraw>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
@@ -523,6 +556,8 @@ void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg:
         if (!m_playerOfferingDraw.empty() && m_playerOfferingDraw != message->player_name)
         {
             // Both have accepted, create a draw
+            m_timerThreadRunning = false;
+            m_gameState = GameState::GameFinished;
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
             winnerMessage.lobby_name = m_lobbyName;
             winnerMessage.lobby_id = m_lobbyId;
@@ -552,6 +587,8 @@ void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg:
 
 void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message)
 {
+    std::lock_guard<std::mutex> lock(m_timerMutex);
+
     if (!RSAKeyGenerator::checksumSignatureMatches(
             std::hash<turtle_checkers_interfaces::msg::PlayerReady>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
@@ -575,13 +612,26 @@ void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::ms
 
     if (getAreAllPlayersReady())
     {
+        m_startTurnTimestamp = std::chrono::system_clock::now();
+        if (m_timer.count() > 0u)
+        {
+            if (m_timerThread.joinable())
+            {
+                m_timerThread.join();
+            }
+            m_timerThreadRunning = true;
+            m_timerThread = std::thread(&CheckersGameLobby::checkTimers, this);
+        }
+        m_gameState = GameState::BlackMove;
         auto startMessage = turtle_checkers_interfaces::msg::GameStart();
         startMessage.lobby_name = message->lobby_name;
         startMessage.lobby_id = message->lobby_id;
         startMessage.game_state = 2; // Black to move
         startMessage.black_player_name = m_blackPlayerName;
         startMessage.red_player_name = m_redPlayerName;
-        m_board->checkPlayersCanMove(m_isBlackTurn, startMessage.movable_tile_indices);
+        startMessage.black_time_remaining_seconds = m_blackTimeRemaining.count();
+        startMessage.red_time_remaining_seconds = m_redTimeRemaining.count();
+        m_board->checkPlayersCanMove((m_gameState == GameState::BlackMove), startMessage.movable_tile_indices);
         startMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
             std::hash<turtle_checkers_interfaces::msg::GameStart>{}(startMessage),
             m_publicKey, m_privateKey);
@@ -591,6 +641,8 @@ void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::ms
 }
 void CheckersGameLobby::timerChangedCallback(const turtle_checkers_interfaces::msg::TimerChanged::SharedPtr message)
 {
+    std::lock_guard<std::mutex> lock(m_timerMutex);
+
     if (!RSAKeyGenerator::checksumSignatureMatches(
             std::hash<turtle_checkers_interfaces::msg::TimerChanged>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
@@ -600,6 +652,8 @@ void CheckersGameLobby::timerChangedCallback(const turtle_checkers_interfaces::m
     }
 
     m_timer = std::chrono::seconds(message->timer_seconds);
+    m_blackTimeRemaining = m_timer;
+    m_redTimeRemaining = m_timer;
 
     // Announce the change to the other player as well
     auto updateTimerMessage = turtle_checkers_interfaces::msg::UpdateTimer();
@@ -612,4 +666,42 @@ void CheckersGameLobby::timerChangedCallback(const turtle_checkers_interfaces::m
     m_updateTimerPublisher->publish(updateTimerMessage);
 }
 
-// TODO: Add checks for checksums
+void CheckersGameLobby::checkTimers()
+{
+    // This is run on a separate thread
+    while (m_timerThreadRunning)
+    {
+        std::lock_guard<std::mutex> lock(m_timerMutex);
+
+        auto timePassed = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now() - m_startTurnTimestamp);
+        if (m_gameState == GameState::BlackMove && timePassed > m_blackTimeRemaining)
+        {
+            // Black has run out of time
+            m_timerThreadRunning = false;
+            m_gameState = GameState::GameFinished;
+            auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+            winnerMessage.lobby_name = m_lobbyName;
+            winnerMessage.lobby_id = m_lobbyId;
+            winnerMessage.winner = static_cast<size_t>(Winner::Red);
+            winnerMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+                std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
+                m_publicKey, m_privateKey);
+            m_declareWinnerPublisher->publish(winnerMessage);
+        }
+        else if (m_gameState == GameState::RedMove && timePassed > m_redTimeRemaining)
+        {
+            // Red has run out of time
+            m_timerThreadRunning = false;
+            m_gameState = GameState::GameFinished;
+            auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+            winnerMessage.lobby_name = m_lobbyName;
+            winnerMessage.lobby_id = m_lobbyId;
+            winnerMessage.winner = static_cast<size_t>(Winner::Black);
+            winnerMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+                std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
+                m_publicKey, m_privateKey);
+            m_declareWinnerPublisher->publish(winnerMessage);
+        }
+    }
+}

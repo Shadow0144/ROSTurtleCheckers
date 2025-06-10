@@ -308,10 +308,11 @@ void CheckersPlayerWindow::declaredWinner(Winner winner)
 }
 
 void CheckersPlayerWindow::gameStarted(GameState gameState,
-                                       const std::vector<size_t> &movableTileIndices)
+                                       const std::vector<size_t> &movableTileIndices,
+                                       size_t blackTimeRemainSec, size_t redTimeRemainSec)
 {
     m_gameFrame->connectedToGame();
-    m_gameFrame->gameStarted(gameState, movableTileIndices);
+    m_gameFrame->gameStarted(gameState, movableTileIndices, blackTimeRemainSec, redTimeRemainSec);
 
     moveToGameFrame();
 
@@ -320,10 +321,12 @@ void CheckersPlayerWindow::gameStarted(GameState gameState,
 
 void CheckersPlayerWindow::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex,
                                         GameState gameState, int slainPieceTileIndex, bool kingPiece,
-                                        const std::vector<size_t> &movableTileIndices)
+                                        const std::vector<size_t> &movableTileIndices,
+                                        size_t blackTimeRemainSec, size_t redTimeRemainSec)
 {
     m_gameFrame->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
-                              slainPieceTileIndex, kingPiece, movableTileIndices);
+                              slainPieceTileIndex, kingPiece, movableTileIndices,
+                              blackTimeRemainSec, redTimeRemainSec);
 }
 
 void CheckersPlayerWindow::requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex)
