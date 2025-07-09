@@ -6,20 +6,11 @@
 
 #include <QFrame>
 #include <QLineEdit>
-#include <QImage>
-#include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
-#include <QButtonGroup>
-#include <QCheckBox>
-#include <QPainter>
-#include <QPaintEvent>
-#include <QVector>
-#include <QStackedLayout>
+#include <QString>
 
 #include <memory>
-#include <string>
-#include <vector>
 
 #include "shared/CheckersConsts.hpp"
 

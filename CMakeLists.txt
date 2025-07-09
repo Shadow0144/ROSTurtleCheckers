@@ -30,6 +30,8 @@ endif()
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
 qt5_wrap_cpp(CheckersGameWindow_MOCS
+  include/player/TitleWidget.hpp
+  include/player/LobbyDetailsWidget.hpp
   include/player/TileRender.hpp
   include/player/TurtlePieceRender.hpp
   include/player/CheckersBoardRender.hpp
@@ -60,6 +62,8 @@ add_executable(checkers_player_node
   src/player/ChatBox.cpp
   src/player/HUD.cpp
   src/player/CheckersBoardRender.cpp
+  src/player/TitleWidget.cpp
+  src/player/LobbyDetailsWidget.cpp
   src/player/frame/CreateAccountFrame.cpp
   src/player/frame/CreateLobbyFrame.cpp
   src/player/frame/GameFrame.cpp

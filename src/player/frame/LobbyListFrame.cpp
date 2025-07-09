@@ -1,39 +1,28 @@
 #include "player/frame/LobbyListFrame.hpp"
 
 #include <QFrame>
-#include <QMouseEvent>
-#include <QPaintEvent>
-#include <QPointF>
-#include <QStackedLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QLabel>
-#include <QString>
-#include <QRegularExpression>
-#include <QRegularExpressionValidator>
 #include <QPushButton>
 #include <QRadioButton>
-#include <QButtonGroup>
-#include <QCheckBox>
 #include <QIcon>
 #include <QPixmap>
 #include <QSpacerItem>
-#include <QStyle>
 #include <QSizePolicy>
 
 #include <cstdlib>
-#include <ctime>
-#include <functional>
 #include <memory>
 #include <string>
-#include <chrono>
 #include <vector>
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
+#include "player/TitleWidget.hpp"
 #include "player/CheckersPlayerWindow.hpp"
+#include "player/LobbyDetailsWidget.hpp"
 #include "player/ImageLibrary.hpp"
 
 LobbyListFrame::LobbyListFrame(
@@ -46,11 +35,8 @@ LobbyListFrame::LobbyListFrame(
     auto joinLobbyLayout = new QVBoxLayout(this);
     joinLobbyLayout->setAlignment(Qt::AlignCenter);
 
-    auto joinLobbyTitleLabel = new QLabel("Turtle Checkers");
-    auto titleFont = joinLobbyTitleLabel->font();
-    titleFont.setPointSize(TITLE_FONT_SIZE);
-    joinLobbyTitleLabel->setFont(titleFont);
-    joinLobbyLayout->addWidget(joinLobbyTitleLabel);
+    auto titleWidget = new TitleWidget();
+    joinLobbyLayout->addWidget(titleWidget);
 
     auto lobbiesLabel = new QLabel("Lobbies:");
     joinLobbyLayout->addWidget(lobbiesLabel);
@@ -92,12 +78,14 @@ LobbyListFrame::LobbyListFrame(
 
     std::string refreshjoinLobbyString = "Refresh";
     auto refreshJoinLobbyButton = new QPushButton(refreshjoinLobbyString.c_str());
+    refreshJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(refreshJoinLobbyButton, &QPushButton::released, this,
             &LobbyListFrame::handleRefreshJoinLobbyButton);
     joinLobbyButtonLayout->addWidget(refreshJoinLobbyButton);
 
     std::string canceljoinLobbyString = "Cancel";
     auto cancelJoinLobbyButton = new QPushButton(canceljoinLobbyString.c_str());
+    cancelJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(cancelJoinLobbyButton, &QPushButton::released, this,
             &LobbyListFrame::handleCancelJoinLobbyButton);
     joinLobbyButtonLayout->addWidget(cancelJoinLobbyButton);
@@ -111,7 +99,7 @@ LobbyListFrame::~LobbyListFrame()
 
 void LobbyListFrame::showEvent(QShowEvent *event)
 {
-	(void)event; // NO LINT
+    (void)event; // NO LINT
 
     if (m_lobbyListLayoutWidget)
     {
@@ -208,81 +196,15 @@ void LobbyListFrame::buildLobbyList()
     }
     for (size_t i = 0u; i < numLobbies; i++)
     {
-        auto lobbyLayoutWidget = new QWidget();
-        lobbyLayoutWidget->setProperty("lobby", true);
-        lobbyLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        // Update the style
-        lobbyLayoutWidget->style()->unpolish(lobbyLayoutWidget);
-        lobbyLayoutWidget->style()->polish(lobbyLayoutWidget);
-        lobbyLayoutWidget->update();
-
-        auto lobbyLayout = new QHBoxLayout(lobbyLayoutWidget);
-
-        auto lobbyNameLayout = new QHBoxLayout();
-
-        auto lobbyNameLabel = new QLabel(m_lobbyNames[i].c_str());
-        lobbyNameLayout->addWidget(lobbyNameLabel);
-
-        std::string lobbyIdWithHash = "#" + m_lobbyIds[i];
-        auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
-        lobbyNameLayout->addWidget(lobbyIdLabel);
-
-        lobbyLayout->addLayout(lobbyNameLayout);
-
-        auto blackTurtleIconLabel = new QLabel();
-        auto blackTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black));
-        auto scaledBlackTurtleIcon = blackTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
-                                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
-        lobbyLayout->addWidget(blackTurtleIconLabel);
-
-        std::string openString = "Open";
-        bool blackPlayerJoined = !m_blackPlayerNames[i].empty();
-        bool redPlayerJoined = !m_redPlayerNames[i].empty();
-
-        auto blackPlayerNameLabel = new QLabel(blackPlayerJoined ? m_blackPlayerNames[i].c_str() : openString.c_str());
-        blackPlayerNameLabel->setEnabled(blackPlayerJoined);
-        lobbyLayout->addWidget(blackPlayerNameLabel);
-
-        auto redTurtleIconLabel = new QLabel();
-        auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
-        auto scaledRedTurtleIcon = redTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
-                                                        Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
-        lobbyLayout->addWidget(redTurtleIconLabel);
-
-        auto redPlayerNameLabel = new QLabel(redPlayerJoined ? m_redPlayerNames[i].c_str() : openString.c_str());
-        redPlayerNameLabel->setEnabled(redPlayerJoined);
-        lobbyLayout->addWidget(redPlayerNameLabel);
-
-        auto lockIconLabel = new QLabel();
-        auto lockIcon = QPixmap::fromImage(ImageLibrary::getLockImage());
-        auto scaledLockIcon = lockIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
-                                              Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        lockIconLabel->setPixmap(scaledLockIcon);
-        auto lockIconLabelSizePolicy = lockIconLabel->sizePolicy();
-        lockIconLabelSizePolicy.setRetainSizeWhenHidden(true);
-        lockIconLabel->setSizePolicy(lockIconLabelSizePolicy);
-        lockIconLabel->setVisible(m_hasPasswords[i]);
-        lobbyLayout->addWidget(lockIconLabel);
-
-        std::string joinLobbyString = "Join";
-        auto joinLobbyButton = new QPushButton(joinLobbyString.c_str());
-        if (!blackPlayerJoined || !redPlayerJoined)
-        {
-            joinLobbyButton->setEnabled(true);
-        }
-        else
-        {
-            // Lobby is full
-            joinLobbyButton->setEnabled(false);
-        }
-        connect(joinLobbyButton, &QPushButton::released, this,
-                [i, this]()
-                { this->handleCommitJoinLobbyButton(i); });
-        lobbyLayout->addWidget(joinLobbyButton);
-
-        lobbyListLayout->addWidget(lobbyLayoutWidget);
+        // Add a lobby details widget
+        lobbyListLayout->addWidget(new LobbyDetailsWidget(this,
+                                                          m_lobbyNames[i],
+                                                          m_lobbyIds[i],
+                                                          m_blackPlayerNames[i],
+                                                          m_redPlayerNames[i],
+                                                          m_hasPasswords[i],
+                                                          [i, this]()
+                                                          { this->handleCommitJoinLobbyButton(i); }));
     }
 
     auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);

@@ -1,39 +1,23 @@
 #include "player/frame/InLobbyFrame.hpp"
 
 #include <QFrame>
-#include <QMouseEvent>
-#include <QPaintEvent>
-#include <QPointF>
-#include <QStackedLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QScrollArea>
 #include <QLabel>
-#include <QString>
-#include <QRegularExpression>
-#include <QRegularExpressionValidator>
 #include <QPushButton>
-#include <QRadioButton>
-#include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
-#include <QIcon>
 #include <QPixmap>
-#include <QSpacerItem>
-#include <QStyle>
-#include <QSizePolicy>
 
 #include <cstdlib>
 #include <ctime>
-#include <functional>
 #include <memory>
 #include <string>
-#include <chrono>
-#include <vector>
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
+#include "player/TitleWidget.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
 
@@ -51,11 +35,8 @@ InLobbyFrame::InLobbyFrame(
     auto inLobbyLayout = new QVBoxLayout(this);
     inLobbyLayout->setAlignment(Qt::AlignCenter);
 
-    auto inLobbyTitleLabel = new QLabel("Turtle Checkers");
-    auto titleFont = inLobbyTitleLabel->font();
-    titleFont.setPointSize(TITLE_FONT_SIZE);
-    inLobbyTitleLabel->setFont(titleFont);
-    inLobbyLayout->addWidget(inLobbyTitleLabel);
+    auto titleWidget = new TitleWidget();
+    inLobbyLayout->addWidget(titleWidget);
 
     auto lobbyNameLayout = new QHBoxLayout();
 
@@ -186,6 +167,7 @@ InLobbyFrame::InLobbyFrame(
 
     std::string leaveLobbyInLobbyString = "Leave Lobby";
     auto leaveLobbyInLobbyButton = new QPushButton(leaveLobbyInLobbyString.c_str());
+    leaveLobbyInLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(leaveLobbyInLobbyButton, &QPushButton::released, this,
             &InLobbyFrame::handleLeaveLobbyButton);
     inLobbyButtonLayout->addWidget(leaveLobbyInLobbyButton);

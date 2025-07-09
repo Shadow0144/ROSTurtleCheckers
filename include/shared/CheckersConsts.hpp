@@ -62,7 +62,11 @@ constexpr int TILE_HEIGHT = 55;
 constexpr float TILE_HALF_WIDTH = 0.5f * TILE_WIDTH;
 constexpr float TILE_HALF_HEIGHT = 0.5f * TILE_HEIGHT;
 
-constexpr int TITLE_FONT_SIZE = 24;
+constexpr int TITLE_FONT_SIZE = 36;
+constexpr int TITLE_ICON_HEIGHT_WIDTH = 50;
+
+constexpr int MENU_LINE_EDIT_WIDTH = 550;
+constexpr int MENU_BUTTON_WIDTH = 150;
 
 constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;

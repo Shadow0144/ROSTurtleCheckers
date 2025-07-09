@@ -1,37 +1,18 @@
 #include "player/frame/MainMenuFrame.hpp"
 
 #include <QFrame>
-#include <QMouseEvent>
-#include <QPaintEvent>
-#include <QPointF>
-#include <QStackedLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QScrollArea>
 #include <QLabel>
-#include <QString>
-#include <QRegularExpression>
-#include <QRegularExpressionValidator>
 #include <QPushButton>
-#include <QRadioButton>
-#include <QButtonGroup>
-#include <QCheckBox>
-#include <QIcon>
-#include <QPixmap>
-#include <QSpacerItem>
-#include <QStyle>
-#include <QSizePolicy>
 
 #include <cstdlib>
-#include <ctime>
-#include <functional>
 #include <memory>
 #include <string>
-#include <chrono>
-#include <vector>
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/TitleWidget.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
 #include "player/Parameters.hpp"
@@ -45,11 +26,8 @@ MainMenuFrame::MainMenuFrame(
     auto mainLayout = new QVBoxLayout(this);
     mainLayout->setAlignment(Qt::AlignCenter);
 
-    auto titleLabel = new QLabel("Turtle Checkers");
-    auto titleFont = titleLabel->font();
-    titleFont.setPointSize(TITLE_FONT_SIZE);
-    titleLabel->setFont(titleFont);
-    mainLayout->addWidget(titleLabel);
+    auto titleWidget = new TitleWidget();
+    mainLayout->addWidget(titleWidget);
 
     auto playerNameLayout = new QHBoxLayout();
 
@@ -61,6 +39,7 @@ MainMenuFrame::MainMenuFrame(
 
     std::string logOutAccountString = "Log Out";
     auto logOutAccountButton = new QPushButton(logOutAccountString.c_str());
+    logOutAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(logOutAccountButton, &QPushButton::released, this, &MainMenuFrame::handleLogOutAccountButton);
     playerNameLayout->addWidget(logOutAccountButton);
 
@@ -70,16 +49,19 @@ MainMenuFrame::MainMenuFrame(
 
     std::string createLobbyString = "Create Lobby";
     m_createLobbyButton = new QPushButton(createLobbyString.c_str());
+    m_createLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_createLobbyButton, &QPushButton::released, this, &MainMenuFrame::handleCreateLobbyButton);
     buttonLayout->addWidget(m_createLobbyButton);
 
     std::string joinLobbyString = "Join Lobby";
     m_joinLobbyButton = new QPushButton(joinLobbyString.c_str());
+    m_joinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_joinLobbyButton, &QPushButton::released, this, &MainMenuFrame::handleJoinLobbyButton);
     buttonLayout->addWidget(m_joinLobbyButton);
 
     std::string quitString = "Quit";
     auto quitButton = new QPushButton(quitString.c_str());
+    quitButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(quitButton, &QPushButton::released, this, &MainMenuFrame::handleQuitButton);
     buttonLayout->addWidget(quitButton);
 

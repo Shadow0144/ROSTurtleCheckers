@@ -5,6 +5,8 @@ QLabel:disabled { color: dimGray; }
 QLabel[error="true"] { color: red; }
 
 QPushButton { color: white; border: 1px solid white; padding: 5px 10px; }
+QPushButton:hover { color: cyan; border: 1px solid cyan; }
+QPushButton:focus { }
 QPushButton:disabled { color: dimGray; border: 1px solid dimGray; }
 
 QLineEdit[valid="false"] { color: white; border: 1px solid red; }

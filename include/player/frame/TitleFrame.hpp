@@ -5,21 +5,11 @@
 // #endif
 
 #include <QFrame>
-#include <QLineEdit>
-#include <QImage>
+#include <QString>
 #include <QLabel>
 #include <QPushButton>
-#include <QRadioButton>
-#include <QButtonGroup>
-#include <QCheckBox>
-#include <QPainter>
-#include <QPaintEvent>
-#include <QVector>
-#include <QStackedLayout>
 
 #include <memory>
-#include <string>
-#include <vector>
 
 #include "shared/CheckersConsts.hpp"
 
@@ -31,6 +21,8 @@ class TitleFrame : public QFrame
 public:
 	TitleFrame(CheckersPlayerWindow *parentWindow);
 	~TitleFrame();
+	
+	void showEvent(QShowEvent* event) override;
 
 	void setConnectedToServer(bool connected);
 
@@ -46,8 +38,9 @@ private:
 	QPushButton *m_createAccountButton;
 	QPushButton *m_logInAccountButton;
 
-	QLabel *m_connectingToServerLabel;
-	QLabel *m_connectedToServerLabel;
+	QLabel *m_serverConnectionStatusLabel;
+	const QString m_connectingString = "Connecting to server...";
+	const QString m_connectedString = "Connected to server!";
 };
 
 typedef std::unique_ptr<TitleFrame> TitleFrameUniPtr;

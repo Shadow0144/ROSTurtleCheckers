@@ -1,38 +1,22 @@
 #include "player/frame/LobbyPasswordFrame.hpp"
 
 #include <QFrame>
-#include <QMouseEvent>
-#include <QPaintEvent>
-#include <QPointF>
-#include <QStackedLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QScrollArea>
 #include <QLabel>
 #include <QString>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QPushButton>
-#include <QRadioButton>
-#include <QButtonGroup>
-#include <QCheckBox>
-#include <QIcon>
-#include <QPixmap>
-#include <QSpacerItem>
-#include <QStyle>
-#include <QSizePolicy>
 
 #include <cstdlib>
-#include <ctime>
-#include <functional>
 #include <memory>
 #include <string>
-#include <chrono>
-#include <vector>
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
+#include "player/TitleWidget.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
 
@@ -45,11 +29,8 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     auto enterLobbyPasswordLayout = new QVBoxLayout(this);
     enterLobbyPasswordLayout->setAlignment(Qt::AlignCenter);
 
-    auto enterLobbyPasswordTitleLabel = new QLabel("Turtle Checkers");
-    auto titleFont = enterLobbyPasswordTitleLabel->font();
-    titleFont.setPointSize(TITLE_FONT_SIZE);
-    enterLobbyPasswordTitleLabel->setFont(titleFont);
-    enterLobbyPasswordLayout->addWidget(enterLobbyPasswordTitleLabel);
+    auto titleWidget = new TitleWidget();
+    enterLobbyPasswordLayout->addWidget(titleWidget);
 
     auto lobbyNameLayout = new QHBoxLayout();
 
@@ -65,6 +46,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     enterLobbyPasswordLayout->addWidget(lobbyPasswordLabel);
 
     m_lobbyPasswordLineEdit = new QLineEdit();
+    m_lobbyPasswordLineEdit->setFixedWidth(MENU_LINE_EDIT_WIDTH);
     std::string lobbyPasswordRegex = "^[a-zA-Z0-9a-zA-Z0-9\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_LOBBY_PASS) + "}$";
     auto lobbyPasswordValidator = new QRegularExpressionValidator(QRegularExpression(lobbyPasswordRegex.c_str()));
     m_lobbyPasswordLineEdit->setValidator(lobbyPasswordValidator);
@@ -85,6 +67,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
 
     std::string confirmPasswordString = "Join Lobby";
     m_confirmPasswordButton = new QPushButton(confirmPasswordString.c_str());
+    m_confirmPasswordButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_confirmPasswordButton->setEnabled(false);
     connect(m_confirmPasswordButton, &QPushButton::released, this,
             &LobbyPasswordFrame::handleConfirmPasswordButton);
@@ -92,6 +75,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
 
     std::string cancelJoinLobbyString = "Cancel";
     auto cancelJoinLobbyButton = new QPushButton(cancelJoinLobbyString.c_str());
+    cancelJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(cancelJoinLobbyButton, &QPushButton::released, this,
             &LobbyPasswordFrame::handleCancelButton);
     enterLobbyPasswordButtonLayout->addWidget(cancelJoinLobbyButton);

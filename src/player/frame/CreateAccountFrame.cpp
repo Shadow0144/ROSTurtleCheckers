@@ -1,37 +1,21 @@
 #include "player/frame/CreateAccountFrame.hpp"
 
 #include <QFrame>
-#include <QMouseEvent>
-#include <QPaintEvent>
-#include <QPointF>
-#include <QStackedLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QScrollArea>
 #include <QLabel>
 #include <QString>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QPushButton>
-#include <QRadioButton>
-#include <QButtonGroup>
-#include <QCheckBox>
-#include <QIcon>
-#include <QPixmap>
-#include <QSpacerItem>
-#include <QStyle>
-#include <QSizePolicy>
 
 #include <cstdlib>
-#include <ctime>
-#include <functional>
 #include <memory>
 #include <string>
-#include <chrono>
-#include <vector>
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/TitleWidget.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
 
@@ -47,16 +31,14 @@ CreateAccountFrame::CreateAccountFrame(
     auto createAccountLayout = new QVBoxLayout(this);
     createAccountLayout->setAlignment(Qt::AlignCenter);
 
-    auto createAccountTitleLabel = new QLabel("Turtle Checkers");
-    auto titleFont = createAccountTitleLabel->font();
-    titleFont.setPointSize(TITLE_FONT_SIZE);
-    createAccountTitleLabel->setFont(titleFont);
-    createAccountLayout->addWidget(createAccountTitleLabel);
+    auto titleWidget = new TitleWidget();
+    createAccountLayout->addWidget(titleWidget);
 
     auto playerNameLabel = new QLabel("Player name");
     createAccountLayout->addWidget(playerNameLabel);
 
     m_playerNameLineEdit = new QLineEdit();
+    m_playerNameLineEdit->setFixedWidth(MENU_LINE_EDIT_WIDTH);
     std::string playerNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_PLAYER_NAME) + "}$";
     auto playerNameValidator = new QRegularExpressionValidator(QRegularExpression(playerNameRegex.c_str()));
     m_playerNameLineEdit->setValidator(playerNameValidator);
@@ -68,6 +50,7 @@ CreateAccountFrame::CreateAccountFrame(
     createAccountLayout->addWidget(playerPasswordLabel);
 
     m_passwordLineEdit = new QLineEdit();
+    m_passwordLineEdit->setFixedWidth(MENU_LINE_EDIT_WIDTH);
     std::string playerPasswordRegex = "^[a-zA-Z0-9a-zA-Z0-9\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_PLAYER_PASS) + "}$";
     auto playerPasswordValidator = new QRegularExpressionValidator(QRegularExpression(playerPasswordRegex.c_str()));
     m_passwordLineEdit->setValidator(playerPasswordValidator);
@@ -99,6 +82,7 @@ CreateAccountFrame::CreateAccountFrame(
 
     std::string createAccountString = "Create Account";
     m_createAccountButton = new QPushButton(createAccountString.c_str());
+    m_createAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_createAccountButton->setEnabled(false);
     connect(m_createAccountButton, &QPushButton::released, this,
             &CreateAccountFrame::handleCreateAccountButton);
@@ -106,6 +90,7 @@ CreateAccountFrame::CreateAccountFrame(
 
     std::string cancelString = "Cancel";
     auto cancelButton = new QPushButton(cancelString.c_str());
+    cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(cancelButton, &QPushButton::released, this,
             &CreateAccountFrame::handleCancelButton);
     createAccountButtonLayout->addWidget(cancelButton);

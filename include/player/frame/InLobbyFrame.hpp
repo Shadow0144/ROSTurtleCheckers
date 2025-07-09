@@ -5,22 +5,13 @@
 // #endif
 
 #include <QFrame>
-#include <QLineEdit>
-#include <QImage>
 #include <QLabel>
 #include <QPushButton>
-#include <QRadioButton>
-#include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
-#include <QPainter>
-#include <QPaintEvent>
-#include <QVector>
 
-#include <chrono>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "shared/CheckersConsts.hpp"
 
