@@ -31,10 +31,10 @@ MainMenuFrame::MainMenuFrame(
 
     auto playerNameLayout = new QHBoxLayout();
 
-    auto playerNameLabel = new QLabel("Player name: ");
-    playerNameLayout->addWidget(playerNameLabel);
-
     m_playerNameLabel = new QLabel("");
+    auto playerNameFont = m_playerNameLabel->font();
+    playerNameFont.setPointSize(PLAYER_NAME_FONT_SIZE);
+    m_playerNameLabel->setFont(playerNameFont);
     playerNameLayout->addWidget(m_playerNameLabel);
 
     std::string logOutAccountString = "Log Out";

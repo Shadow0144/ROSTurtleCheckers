@@ -65,6 +65,8 @@ constexpr float TILE_HALF_HEIGHT = 0.5f * TILE_HEIGHT;
 constexpr int TITLE_FONT_SIZE = 36;
 constexpr int TITLE_ICON_HEIGHT_WIDTH = 50;
 
+constexpr int PLAYER_NAME_FONT_SIZE = 16;
+
 constexpr int MENU_LINE_EDIT_WIDTH = 550;
 constexpr int MENU_BUTTON_WIDTH = 150;
 
@@ -110,8 +112,8 @@ constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
 constexpr int ICON_HEIGHT_WIDTH = 20;
 
-constexpr int LOBBY_SCROLL_W = 350;
-constexpr int LOBBY_SCROLL_H = 150;
+constexpr int LOBBY_SCROLL_W = 450;
+constexpr int LOBBY_SCROLL_H = 300;
 
 constexpr int BG_RGB[3] = {0u, 0u, 0u};
 constexpr int TEXT_RGB[3] = {255u, 255u, 255u};

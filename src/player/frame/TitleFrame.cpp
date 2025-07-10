@@ -21,42 +21,51 @@ TitleFrame::TitleFrame(
     m_playerWindow = parentWindow;
 
     m_connectedToServer = false;
-
-    auto titleMainLayout = new QVBoxLayout(this);
-    titleMainLayout->setAlignment(Qt::AlignCenter);
+    
+    auto mainLayout = new QVBoxLayout(this);
+    mainLayout->setAlignment(Qt::AlignCenter);
 
     auto titleWidget = new TitleWidget();
-    titleMainLayout->addWidget(titleWidget);
+    titleWidget->setContentsMargins(0, 20, 0, 20);
+    mainLayout->addWidget(titleWidget);
+
+    auto contentWidget = new QWidget();
+    auto contentLayout = new QVBoxLayout();
+    contentWidget->setLayout(contentLayout);
+    contentLayout->setAlignment(Qt::AlignHCenter | Qt::AlignBottom);
+    mainLayout->addWidget(contentWidget);
 
     m_serverConnectionStatusLabel = new QLabel(m_connectingString);
     m_serverConnectionStatusLabel->setAlignment(Qt::AlignCenter);
-    m_serverConnectionStatusLabel->setStyleSheet("padding: 10px;");
-    titleMainLayout->addWidget(m_serverConnectionStatusLabel);
-
-    auto buttonLayout = new QHBoxLayout();
-    buttonLayout->setAlignment(Qt::AlignCenter);
+    m_serverConnectionStatusLabel->setContentsMargins(0, 10, 0, 0);
+    contentLayout->addWidget(m_serverConnectionStatusLabel);
+    
+    auto menuButtonWidget = new QWidget();
+    menuButtonWidget->setContentsMargins(0, 10, 0, 10);
+    auto menuButtonLayout = new QHBoxLayout();
+    menuButtonWidget->setLayout(menuButtonLayout);
+    menuButtonLayout->setAlignment(Qt::AlignCenter);
+    mainLayout->addWidget(menuButtonWidget);
 
     std::string createAccountString = "Create Account";
     m_createAccountButton = new QPushButton(createAccountString.c_str());
     m_createAccountButton->setEnabled(false);
     m_createAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_createAccountButton, &QPushButton::released, this, &TitleFrame::handleCreateAccountButton);
-    buttonLayout->addWidget(m_createAccountButton);
+    menuButtonLayout->addWidget(m_createAccountButton);
 
     std::string logInAccountString = "Log In";
     m_logInAccountButton = new QPushButton(logInAccountString.c_str());
     m_logInAccountButton->setEnabled(false);
     m_logInAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_logInAccountButton, &QPushButton::released, this, &TitleFrame::handleLogInAccountButton);
-    buttonLayout->addWidget(m_logInAccountButton);
+    menuButtonLayout->addWidget(m_logInAccountButton);
 
     std::string quitString = "Quit";
     auto quitButton = new QPushButton(quitString.c_str());
     quitButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(quitButton, &QPushButton::released, this, &TitleFrame::handleQuitButton);
-    buttonLayout->addWidget(quitButton);
-
-    titleMainLayout->addLayout(buttonLayout);
+    menuButtonLayout->addWidget(quitButton);
 }
 
 TitleFrame::~TitleFrame()

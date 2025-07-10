@@ -1,5 +1,6 @@
 #include "player/frame/LobbyListFrame.hpp"
 
+#include <QWidget>
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -32,16 +33,20 @@ LobbyListFrame::LobbyListFrame(
     m_playerWindow = parentWindow;
     m_playerDesiredColor = TurtlePieceColor::None;
 
-    auto joinLobbyLayout = new QVBoxLayout(this);
-    joinLobbyLayout->setAlignment(Qt::AlignCenter);
+    auto mainLayout = new QVBoxLayout(this);
+    mainLayout->setAlignment(Qt::AlignCenter);
 
     auto titleWidget = new TitleWidget();
-    joinLobbyLayout->addWidget(titleWidget);
+    mainLayout->addWidget(titleWidget);
 
-    auto lobbiesLabel = new QLabel("Lobbies:");
-    joinLobbyLayout->addWidget(lobbiesLabel);
+    auto contentWidget = new QWidget();
+    auto contentLayout = new QVBoxLayout();
+    contentWidget->setLayout(contentLayout);
+    contentLayout->addStretch();
+    contentLayout->setAlignment(Qt::AlignHCenter);
 
     m_lobbyListScrollArea = new QScrollArea();
+    m_lobbyListScrollArea->setWidgetResizable(true);
     m_lobbyListScrollArea->setFixedSize(LOBBY_SCROLL_W, LOBBY_SCROLL_H);
     m_lobbyListScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     m_lobbyListScrollArea->setObjectName("LobbyListScrollArea");
@@ -49,7 +54,7 @@ LobbyListFrame::LobbyListFrame(
     m_lobbyListLayoutWidget = nullptr;
     buildLobbyList();
 
-    joinLobbyLayout->addWidget(m_lobbyListScrollArea);
+    contentLayout->addWidget(m_lobbyListScrollArea);
 
     auto joinLobbyDesiredColorLayout = new QHBoxLayout();
     joinLobbyDesiredColorLayout->setAlignment(Qt::AlignCenter);
@@ -72,25 +77,31 @@ LobbyListFrame::LobbyListFrame(
     joinLobbyDesiredColorLayout->addWidget(m_randomRadioButton);
     joinLobbyDesiredColorLayout->addWidget(m_redRadioButton);
 
-    joinLobbyLayout->addLayout(joinLobbyDesiredColorLayout);
+    contentLayout->addLayout(joinLobbyDesiredColorLayout);
 
-    auto joinLobbyButtonLayout = new QHBoxLayout();
+    mainLayout->addWidget(contentWidget);
+
+    auto menuButtonWidget = new QWidget();
+    menuButtonWidget->setContentsMargins(0, 5, 0, 5);
+    auto menuButtonLayout = new QHBoxLayout();
+    menuButtonWidget->setLayout(menuButtonLayout);
+    menuButtonLayout->setAlignment(Qt::AlignCenter);
 
     std::string refreshjoinLobbyString = "Refresh";
     auto refreshJoinLobbyButton = new QPushButton(refreshjoinLobbyString.c_str());
     refreshJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(refreshJoinLobbyButton, &QPushButton::released, this,
             &LobbyListFrame::handleRefreshJoinLobbyButton);
-    joinLobbyButtonLayout->addWidget(refreshJoinLobbyButton);
+    menuButtonLayout->addWidget(refreshJoinLobbyButton);
 
     std::string canceljoinLobbyString = "Cancel";
     auto cancelJoinLobbyButton = new QPushButton(canceljoinLobbyString.c_str());
     cancelJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(cancelJoinLobbyButton, &QPushButton::released, this,
             &LobbyListFrame::handleCancelJoinLobbyButton);
-    joinLobbyButtonLayout->addWidget(cancelJoinLobbyButton);
+    menuButtonLayout->addWidget(cancelJoinLobbyButton);
 
-    joinLobbyLayout->addLayout(joinLobbyButtonLayout);
+    mainLayout->addWidget(menuButtonWidget);
 }
 
 LobbyListFrame::~LobbyListFrame()
