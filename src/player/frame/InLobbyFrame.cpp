@@ -62,6 +62,8 @@ InLobbyFrame::InLobbyFrame(
 
     std::string readyInLobbyString = "Ready";
 
+    std::string openString = "Open";
+
     // Black player layout
 
     QWidget *blackPlayerWidget = new QWidget();
@@ -93,12 +95,8 @@ InLobbyFrame::InLobbyFrame(
     blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
     blackPlayerLayout->addWidget(blackTurtleIconLabel);
 
-    std::string openString = "Open";
-    bool blackPlayerJoined = !m_blackPlayerName.empty();
-    bool redPlayerJoined = !m_redPlayerName.empty();
-
-    m_blackPlayerNameLabel = new QLabel(blackPlayerJoined ? m_blackPlayerName.c_str() : openString.c_str());
-    m_blackPlayerNameLabel->setEnabled(blackPlayerJoined);
+    m_blackPlayerNameLabel = new QLabel(openString.c_str());
+    m_blackPlayerNameLabel->setEnabled(false);
     blackPlayerLayout->addWidget(m_blackPlayerNameLabel);
 
     m_blackPlayerKickButton = new QPushButton();
@@ -148,8 +146,8 @@ InLobbyFrame::InLobbyFrame(
     redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
     redPlayerLayout->addWidget(redTurtleIconLabel);
 
-    m_redPlayerNameLabel = new QLabel(redPlayerJoined ? m_redPlayerName.c_str() : openString.c_str());
-    m_redPlayerNameLabel->setEnabled(redPlayerJoined);
+    m_redPlayerNameLabel = new QLabel(openString.c_str());
+    m_redPlayerNameLabel->setEnabled(false);
     redPlayerLayout->addWidget(m_redPlayerNameLabel);
 
     m_redPlayerKickButton = new QPushButton();
@@ -273,7 +271,9 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
     bool redPlayerJoined = !m_redPlayerName.empty();
 
     m_blackPlayerNameLabel->setText(blackPlayerJoined ? m_blackPlayerName.c_str() : openString.c_str());
+    m_blackPlayerNameLabel->setEnabled(blackPlayerJoined);
     m_redPlayerNameLabel->setText(redPlayerJoined ? m_redPlayerName.c_str() : openString.c_str());
+    m_redPlayerNameLabel->setEnabled(redPlayerJoined);
 
     auto playerColor = Parameters::getPlayerColor();
     if (playerColor == TurtlePieceColor::Black)

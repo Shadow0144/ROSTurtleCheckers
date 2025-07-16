@@ -16,10 +16,14 @@ QLineEdit[valid="true"] { color: white; border: 1px solid aqua; }
 QLineEdit[in_use="false"] { color: white; border: 1px solid gray; }
 QLineEdit[in_use="true"] { color: white; border: 1px solid aqua; }
 
-QCheckBox { color: white; border: 1px solid white; padding: 5px 10px; }
-QCheckBox:disabled { color: gray; border: 1px solid black; } 
-QCheckBox:checked { color: lime; border: 1px solid lime; }
-QCheckBox:disabled:checked { color: green; border: 1px solid green; }
+QCheckBox { color: white; padding: 5px 10px; }
+QCheckBox:disabled { color: gray; } 
+QCheckBox:checked { color: lime; }
+QCheckBox:disabled:checked { color: green; }
+QCheckBox::indicator:unchecked { background-color: transparent; border: 1px solid white; }
+QCheckBox::indicator:checked { background-color: lime; border: 1px solid lime; }
+QCheckBox::indicator:disabled:unchecked { background-color: transparent; border: 1px solid gray; }
+QCheckBox::indicator:disabled:checked { background-color: green; border: 1px solid green; }
 
 QRadioButton { color: white; padding: 5px 10px; }
 QRadioButton::indicator { border-radius: 6px; color: white; border: 2px solid white; }
