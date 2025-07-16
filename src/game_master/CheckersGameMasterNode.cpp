@@ -109,7 +109,10 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
         response->logged_in = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPlayerPassword);
         response->error_msg = m_databaseHandler->getErrorMessage();
 
-        m_playerPublicKeys[request->player_name] = request->player_public_key;
+        if (response->logged_in) // If logging in succeeded, add to the list
+        {
+            m_playerPublicKeys[request->player_name] = request->player_public_key;
+        }
     }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
