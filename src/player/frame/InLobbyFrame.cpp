@@ -39,11 +39,16 @@ InLobbyFrame::InLobbyFrame(
 
     auto inLobbyLayout = new QVBoxLayout(this);
     inLobbyLayout->setAlignment(Qt::AlignCenter);
+    inLobbyLayout->setContentsMargins(IN_LOBBY_LAYOUT_MARGINS,
+                                      IN_LOBBY_LAYOUT_MARGINS,
+                                      IN_LOBBY_LAYOUT_MARGINS,
+                                      IN_LOBBY_LAYOUT_MARGINS);
 
     auto titleWidget = new TitleWidget();
     inLobbyLayout->addWidget(titleWidget);
 
     auto lobbyNameLayout = new QHBoxLayout();
+    lobbyNameLayout->setAlignment(Qt::AlignLeft);
 
     m_lobbyNameLabel = new QLabel("");
     auto lobbyNameFont = m_lobbyNameLabel->font();
@@ -55,7 +60,6 @@ InLobbyFrame::InLobbyFrame(
     auto lobbyIdFont = m_lobbyIdLabel->font();
     lobbyIdFont.setPointSize(LOBBY_NAME_FONT_SIZE);
     m_lobbyIdLabel->setFont(lobbyIdFont);
-    m_lobbyIdLabel->setAlignment(Qt::AlignRight);
     lobbyNameLayout->addWidget(m_lobbyIdLabel);
 
     inLobbyLayout->addLayout(lobbyNameLayout);
@@ -70,6 +74,7 @@ InLobbyFrame::InLobbyFrame(
     auto blackPlayerLayout = new QHBoxLayout();
     blackPlayerWidget->setLayout(blackPlayerLayout);
     blackPlayerWidget->setProperty("framed", true);
+    blackPlayerLayout->setAlignment(Qt::AlignLeft);
 
     m_blackPlayerLobbyOwnerLabel = new QLabel();
     auto blackPlayerLobbyOwnerIcon = QPixmap::fromImage(ImageLibrary::getLobbyOwnerImage());
@@ -97,6 +102,7 @@ InLobbyFrame::InLobbyFrame(
 
     m_blackPlayerNameLabel = new QLabel(openString.c_str());
     m_blackPlayerNameLabel->setEnabled(false);
+    m_blackPlayerNameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     blackPlayerLayout->addWidget(m_blackPlayerNameLabel);
 
     m_blackPlayerKickButton = new QPushButton();
@@ -148,6 +154,7 @@ InLobbyFrame::InLobbyFrame(
 
     m_redPlayerNameLabel = new QLabel(openString.c_str());
     m_redPlayerNameLabel->setEnabled(false);
+    m_redPlayerNameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     redPlayerLayout->addWidget(m_redPlayerNameLabel);
 
     m_redPlayerKickButton = new QPushButton();
@@ -168,7 +175,7 @@ InLobbyFrame::InLobbyFrame(
 
     auto timerLayout = new QHBoxLayout();
 
-    auto timerLabel = new QLabel("Timer:");
+    auto timerLabel = new QLabel("Match timer:");
     timerLayout->addWidget(timerLabel);
 
     m_timerComboBox = new QComboBox();

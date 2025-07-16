@@ -72,6 +72,13 @@ constexpr int LOBBY_NAME_FONT_SIZE = 16;
 constexpr int MENU_LINE_EDIT_WIDTH = 550;
 constexpr int MENU_BUTTON_WIDTH = 150;
 
+constexpr int LOBBY_SCROLL_W = 700;
+constexpr int LOBBY_SCROLL_H = 300;
+constexpr int LOBBY_LIST_LOBBY_NAME_WIDTH = 150;
+constexpr int LOBBY_LIST_PLAYER_NAME_WIDTH = 150;
+
+constexpr int IN_LOBBY_LAYOUT_MARGINS = 25;
+
 constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;
 constexpr int HUD_TEXT_Y_OFFSET = 5;
@@ -113,9 +120,6 @@ constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 65;
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
 constexpr int ICON_HEIGHT_WIDTH = 20;
-
-constexpr int LOBBY_SCROLL_W = 450;
-constexpr int LOBBY_SCROLL_H = 300;
 
 constexpr int BG_RGB[3] = {0u, 0u, 0u};
 constexpr int TEXT_RGB[3] = {255u, 255u, 255u};

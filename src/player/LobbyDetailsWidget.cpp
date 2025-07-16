@@ -35,6 +35,8 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
 
     std::string lobbyIdWithHash = "#" + lobbyId;
     auto lobbyIdLabel = new QLabel(lobbyIdWithHash.c_str());
+    lobbyIdLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    lobbyIdLabel->setFixedWidth(LOBBY_LIST_LOBBY_NAME_WIDTH);
     lobbyNameLayout->addWidget(lobbyIdLabel);
 
     lobbyLayout->addLayout(lobbyNameLayout);
@@ -52,6 +54,8 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
 
     auto blackPlayerNameLabel = new QLabel(blackPlayerJoined ? blackPlayerName.c_str() : openString.c_str());
     blackPlayerNameLabel->setEnabled(blackPlayerJoined);
+    blackPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    blackPlayerNameLabel->setFixedWidth(LOBBY_LIST_PLAYER_NAME_WIDTH);
     lobbyLayout->addWidget(blackPlayerNameLabel);
 
     auto redTurtleIconLabel = new QLabel();
@@ -63,6 +67,8 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
 
     auto redPlayerNameLabel = new QLabel(redPlayerJoined ? redPlayerName.c_str() : openString.c_str());
     redPlayerNameLabel->setEnabled(redPlayerJoined);
+    redPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    redPlayerNameLabel->setFixedWidth(LOBBY_LIST_PLAYER_NAME_WIDTH);
     lobbyLayout->addWidget(redPlayerNameLabel);
 
     auto lockIconLabel = new QLabel();
