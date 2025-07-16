@@ -128,6 +128,10 @@ CheckersGameLobby::~CheckersGameLobby()
     {
         m_timerThread.join();
     }
+    if (m_gameStartTimerThread.joinable())
+    {
+        m_gameStartTimerThread.join();
+    }
 }
 
 const std::string &CheckersGameLobby::getLobbyName() const
@@ -612,33 +616,19 @@ void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::ms
 
     if (getAreAllPlayersReady())
     {
-        m_startTurnTimestamp = std::chrono::system_clock::now();
-        if (m_timer.count() > 0u)
+        // Start the countdown to start the game
+        RCLCPP_INFO(m_nodeHandle->get_logger(), "Players are ready! Begin countdown!");
+        if (m_gameStartTimerThread.joinable())
         {
-            if (m_timerThread.joinable())
-            {
-                m_timerThread.join();
-            }
-            m_timerThreadRunning = true;
-            m_timerThread = std::thread(&CheckersGameLobby::checkTimers, this);
+            m_gameStartTimerThread.join();
         }
-        m_gameState = GameState::BlackMove;
-        auto startMessage = turtle_checkers_interfaces::msg::GameStart();
-        startMessage.lobby_name = message->lobby_name;
-        startMessage.lobby_id = message->lobby_id;
-        startMessage.game_state = 2; // Black to move
-        startMessage.black_player_name = m_blackPlayerName;
-        startMessage.red_player_name = m_redPlayerName;
-        startMessage.black_time_remaining_seconds = m_blackTimeRemaining.count();
-        startMessage.red_time_remaining_seconds = m_redTimeRemaining.count();
-        m_board->checkPlayersCanMove((m_gameState == GameState::BlackMove), startMessage.movable_tile_indices);
-        startMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-            std::hash<turtle_checkers_interfaces::msg::GameStart>{}(startMessage),
-            m_publicKey, m_privateKey);
-        m_gameStartPublisher->publish(startMessage);
-        RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting game!");
+        m_gameStartTimerThread = std::thread([this]()
+                                             {
+            std::this_thread::sleep_for(MAX_SECONDS_BEFORE_START);
+            startGame(); });
     }
 }
+
 void CheckersGameLobby::timerChangedCallback(const turtle_checkers_interfaces::msg::TimerChanged::SharedPtr message)
 {
     std::lock_guard<std::mutex> lock(m_timerMutex);
@@ -704,4 +694,33 @@ void CheckersGameLobby::checkTimers()
             m_declareWinnerPublisher->publish(winnerMessage);
         }
     }
+}
+
+void CheckersGameLobby::startGame()
+{
+    m_startTurnTimestamp = std::chrono::system_clock::now();
+    if (m_timer.count() > 0u)
+    {
+        if (m_timerThread.joinable())
+        {
+            m_timerThread.join();
+        }
+        m_timerThreadRunning = true;
+        m_timerThread = std::thread(&CheckersGameLobby::checkTimers, this);
+    }
+    m_gameState = GameState::BlackMove;
+    auto startMessage = turtle_checkers_interfaces::msg::GameStart();
+    startMessage.lobby_name = m_lobbyName;
+    startMessage.lobby_id = m_lobbyId;
+    startMessage.game_state = 2; // Black to move
+    startMessage.black_player_name = m_blackPlayerName;
+    startMessage.red_player_name = m_redPlayerName;
+    startMessage.black_time_remaining_seconds = m_blackTimeRemaining.count();
+    startMessage.red_time_remaining_seconds = m_redTimeRemaining.count();
+    m_board->checkPlayersCanMove((m_gameState == GameState::BlackMove), startMessage.movable_tile_indices);
+    startMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::GameStart>{}(startMessage),
+        m_publicKey, m_privateKey);
+    m_gameStartPublisher->publish(startMessage);
+    RCLCPP_INFO(m_nodeHandle->get_logger(), "Starting game!");
 }

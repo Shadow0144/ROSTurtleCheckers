@@ -9,9 +9,11 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QTimer>
 
 #include <memory>
 #include <string>
+#include <chrono>
 
 #include "shared/CheckersConsts.hpp"
 
@@ -25,6 +27,7 @@ public:
     ~InLobbyFrame();
 
     void showEvent(QShowEvent *event) override;
+	void hideEvent(QHideEvent *event) override;
 
     void setLobbyInfo(const std::string &blackPlayerName,
                       const std::string &redPlayerName,
@@ -50,6 +53,8 @@ private:
 
     void handleTimerIndexChanged(int index);
 
+    void updateGameStartTimer();
+
     CheckersPlayerWindow *m_playerWindow;
 
     QCheckBox *m_blackReadyInLobbyCheckBox;
@@ -61,6 +66,11 @@ private:
     QLabel *m_redPlayerLobbyOwnerLabel;
     QLabel *m_blackPlayerNameLabel;
     QLabel *m_redPlayerNameLabel;
+    QLabel *m_gameStartTimerLabel;
+
+    std::chrono::seconds m_secondsBeforeStart;
+    const std::chrono::seconds MAX_SECONDS_BEFORE_START{3u};
+    QTimer *m_gameStartTimer;
 
     QPushButton *m_blackPlayerKickButton;
     QPushButton *m_redPlayerKickButton;

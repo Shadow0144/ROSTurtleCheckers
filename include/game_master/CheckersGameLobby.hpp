@@ -91,6 +91,8 @@ private:
 
     void checkTimers();
 
+    void startGame();
+
     rclcpp::Node::SharedPtr m_nodeHandle;
 
     rclcpp::Service<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesService;
@@ -126,6 +128,11 @@ private:
     std::chrono::seconds m_blackTimeRemaining;
     std::chrono::seconds m_redTimeRemaining;
     std::chrono::time_point<std::chrono::system_clock> m_startTurnTimestamp;
+    
+    const std::chrono::seconds MAX_SECONDS_BEFORE_START{3u};
+    std::mutex m_gameStartTimerMutex;
+    std::thread m_gameStartTimerThread;
+    bool m_gameStartTimerThreadRunning;
 
     std::mutex m_timerMutex;
     std::thread m_timerThread;

@@ -32,6 +32,11 @@ InLobbyFrame::InLobbyFrame(
     m_redPlayerReady = false;
     m_timer = std::chrono::seconds(0);
 
+    m_gameStartTimer = new QTimer(this);
+    m_gameStartTimer->setInterval(1000u); // 1000 ms (1 second)
+    connect(m_gameStartTimer, &QTimer::timeout, this, [this]()
+            { this->updateGameStartTimer(); });
+
     auto inLobbyLayout = new QVBoxLayout(this);
     inLobbyLayout->setAlignment(Qt::AlignCenter);
 
@@ -41,16 +46,28 @@ InLobbyFrame::InLobbyFrame(
     auto lobbyNameLayout = new QHBoxLayout();
 
     m_lobbyNameLabel = new QLabel("");
+    auto lobbyNameFont = m_lobbyNameLabel->font();
+    lobbyNameFont.setPointSize(LOBBY_NAME_FONT_SIZE);
+    m_lobbyNameLabel->setFont(lobbyNameFont);
     lobbyNameLayout->addWidget(m_lobbyNameLabel);
 
     m_lobbyIdLabel = new QLabel("");
+    auto lobbyIdFont = m_lobbyIdLabel->font();
+    lobbyIdFont.setPointSize(LOBBY_NAME_FONT_SIZE);
+    m_lobbyIdLabel->setFont(lobbyIdFont);
+    m_lobbyIdLabel->setAlignment(Qt::AlignRight);
     lobbyNameLayout->addWidget(m_lobbyIdLabel);
 
     inLobbyLayout->addLayout(lobbyNameLayout);
 
     std::string readyInLobbyString = "Ready";
 
+    // Black player layout
+
+    QWidget *blackPlayerWidget = new QWidget();
     auto blackPlayerLayout = new QHBoxLayout();
+    blackPlayerWidget->setLayout(blackPlayerLayout);
+    blackPlayerWidget->setProperty("framed", true);
 
     m_blackPlayerLobbyOwnerLabel = new QLabel();
     auto blackPlayerLobbyOwnerIcon = QPixmap::fromImage(ImageLibrary::getLobbyOwnerImage());
@@ -98,9 +115,14 @@ InLobbyFrame::InLobbyFrame(
             &InLobbyFrame::handleBlackKickButton);
     blackPlayerLayout->addWidget(m_blackPlayerKickButton);
 
-    inLobbyLayout->addLayout(blackPlayerLayout);
+    inLobbyLayout->addWidget(blackPlayerWidget);
 
+    // Red player layout
+
+    auto redPlayerWidget = new QWidget();
     auto redPlayerLayout = new QHBoxLayout();
+    redPlayerWidget->setLayout(redPlayerLayout);
+    redPlayerWidget->setProperty("framed", true);
 
     m_redPlayerLobbyOwnerLabel = new QLabel();
     auto redPlayerLobbyOwnerIcon = QPixmap::fromImage(ImageLibrary::getLobbyOwnerImage());
@@ -144,7 +166,7 @@ InLobbyFrame::InLobbyFrame(
             &InLobbyFrame::handleRedKickButton);
     redPlayerLayout->addWidget(m_redPlayerKickButton);
 
-    inLobbyLayout->addLayout(redPlayerLayout);
+    inLobbyLayout->addWidget(redPlayerWidget);
 
     auto timerLayout = new QHBoxLayout();
 
@@ -162,6 +184,12 @@ InLobbyFrame::InLobbyFrame(
     timerLayout->addWidget(m_timerComboBox);
 
     inLobbyLayout->addLayout(timerLayout);
+
+    m_gameStartTimerLabel = new QLabel();
+    m_gameStartTimerLabel->setProperty("highlight", true);
+    m_gameStartTimerLabel->setMargin(10);
+    m_gameStartTimerLabel->setText("The match will start when both players are ready!");
+    inLobbyLayout->addWidget(m_gameStartTimerLabel);
 
     auto inLobbyButtonLayout = new QHBoxLayout();
 
@@ -186,6 +214,30 @@ void InLobbyFrame::showEvent(QShowEvent *event)
     m_lobbyNameLabel->setText(Parameters::getLobbyName().c_str());
     std::string lobbyIdWithHash = "#" + Parameters::getLobbyId();
     m_lobbyIdLabel->setText(lobbyIdWithHash.c_str());
+}
+
+void InLobbyFrame::hideEvent(QHideEvent *event)
+{
+    (void)event; // NO LINT
+
+    m_gameStartTimer->stop();
+}
+
+void InLobbyFrame::updateGameStartTimer()
+{
+    if (m_blackPlayerReady && m_redPlayerReady)
+    {
+        if (m_secondsBeforeStart.count() > 0u)
+        {
+            m_secondsBeforeStart -= std::chrono::seconds(1u);
+        }
+        else
+        {
+            m_secondsBeforeStart = std::chrono::seconds(0u);
+        }
+        std::string gameStartTimerString = "The match will start in... " + std::to_string(m_secondsBeforeStart.count()) + "...";
+        m_gameStartTimerLabel->setText(QString::fromStdString(gameStartTimerString));
+    }
 }
 
 void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
@@ -431,6 +483,27 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
         {
             m_redReadyInLobbyCheckBox->setCheckState(ready ? Qt::Checked : Qt::Unchecked);
         }
+    }
+
+    if (m_blackPlayerReady && m_redPlayerReady)
+    {
+        // Disable the timer so no one can change it
+        m_timerComboBox->setEnabled(false);
+        m_secondsBeforeStart = MAX_SECONDS_BEFORE_START;
+        std::string gameStartTimerString = "The match will start in... " + std::to_string(m_secondsBeforeStart.count()) + "...";
+        m_gameStartTimerLabel->setText(QString::fromStdString(gameStartTimerString));
+        m_gameStartTimer->start();
+    }
+    else
+    {
+        // Reenable the timer if necessary
+        if ((m_lobbyOwnerColor == TurtlePieceColor::Black && Parameters::getPlayerName() == m_blackPlayerName) ||
+            (m_lobbyOwnerColor == TurtlePieceColor::Red && Parameters::getPlayerName() == m_redPlayerName))
+        {
+            m_timerComboBox->setEnabled(true);
+        }
+        m_gameStartTimerLabel->setText("The match will start when both players are ready!");
+        m_gameStartTimer->stop();
     }
 }
 
