@@ -1,7 +1,9 @@
 QWidget { background-color: black; }
+QWidget[framed="true"] { border: 2px solid gray; }
 
 QLabel { color: white; }
 QLabel:disabled { color: dimGray; }
+QLabel[highlight="true"] { color: aqua; }
 QLabel[error="true"] { color: red; }
 
 QPushButton { color: white; border: 1px solid white; padding: 5px 10px; }

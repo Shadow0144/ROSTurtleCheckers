@@ -67,6 +67,8 @@ constexpr int TITLE_ICON_HEIGHT_WIDTH = 50;
 
 constexpr int PLAYER_NAME_FONT_SIZE = 16;
 
+constexpr int LOBBY_NAME_FONT_SIZE = 16;
+
 constexpr int MENU_LINE_EDIT_WIDTH = 550;
 constexpr int MENU_BUTTON_WIDTH = 150;
 
