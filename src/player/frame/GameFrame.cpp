@@ -71,16 +71,19 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	auto offerDrawConfirmButton = new QPushButton(this);
 	offerDrawConfirmButton->setText("Offer Draw");
+    offerDrawConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(offerDrawConfirmButton, &QPushButton::released, this, &GameFrame::handleOfferDrawConfirmButton);
 	offerDrawConfirmLayout->addWidget(offerDrawConfirmButton);
 
 	auto offerDrawCancelButton = new QPushButton(this);
 	offerDrawCancelButton->setText("Cancel");
+    offerDrawCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(offerDrawCancelButton, &QPushButton::released, this, &GameFrame::handleOfferDrawCancelButton);
 	offerDrawConfirmLayout->addWidget(offerDrawCancelButton);
 
 	offerDrawConfirmLayout->invalidate();
 	offerDrawConfirmLayout->activate();
+	m_offerDrawConfirmLayoutWidget->adjustSize();
 	m_offerDrawConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
 										 BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
 	m_offerDrawConfirmLayoutWidget->hide();
@@ -96,6 +99,7 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	offeringDrawLayout->invalidate();
 	offeringDrawLayout->activate();
+	m_offeringDrawLayoutWidget->adjustSize();
 	m_offeringDrawLayoutWidget->move(BOARD_CENTER_X - (m_offeringDrawLayoutWidget->width() / 2),
 									 BOARD_CENTER_Y - (m_offeringDrawLayoutWidget->height() / 2));
 	m_offeringDrawLayoutWidget->hide();
@@ -107,16 +111,19 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	auto drawOfferedAcceptButton = new QPushButton(this);
 	drawOfferedAcceptButton->setText("Accept Draw");
+    drawOfferedAcceptButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(drawOfferedAcceptButton, &QPushButton::released, this, &GameFrame::handleOfferDrawConfirmButton);
 	drawOfferedLayout->addWidget(drawOfferedAcceptButton);
 
 	auto drawOfferedDeclineButton = new QPushButton(this);
 	drawOfferedDeclineButton->setText("Decline Draw");
+    drawOfferedDeclineButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(drawOfferedDeclineButton, &QPushButton::released, this, &GameFrame::handleDeclineDrawButton);
 	drawOfferedLayout->addWidget(drawOfferedDeclineButton);
 
 	drawOfferedLayout->invalidate();
 	drawOfferedLayout->activate();
+	m_drawOfferedLayoutWidget->adjustSize();
 	m_drawOfferedLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
 									BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
 	m_drawOfferedLayoutWidget->hide();
@@ -128,16 +135,19 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	auto forfitConfirmButton = new QPushButton(this);
 	forfitConfirmButton->setText("Forfit");
+    forfitConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(forfitConfirmButton, &QPushButton::released, this, &GameFrame::handleForfitConfirmButton);
 	forfitConfirmLayout->addWidget(forfitConfirmButton);
 
 	auto forfitCancelButton = new QPushButton(this);
 	forfitCancelButton->setText("Cancel");
+    forfitCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(forfitCancelButton, &QPushButton::released, this, &GameFrame::handleForfitCancelButton);
 	forfitConfirmLayout->addWidget(forfitCancelButton);
 
 	forfitConfirmLayout->invalidate();
 	forfitConfirmLayout->activate();
+	m_forfitConfirmLayoutWidget->adjustSize();
 	m_forfitConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
 									  BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
 	m_forfitConfirmLayoutWidget->hide();
@@ -149,11 +159,13 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	m_leaveGameButton = new QPushButton(this);
 	m_leaveGameButton->setText("Leave Game");
+    m_leaveGameButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(m_leaveGameButton, &QPushButton::released, this, &GameFrame::handleLeaveGameButton);
 	leaveGameLayout->addWidget(m_leaveGameButton);
 
 	leaveGameLayout->invalidate();
 	leaveGameLayout->activate();
+	m_leaveGameLayoutWidget->adjustSize();
 	m_leaveGameLayoutWidget->move(BOARD_CENTER_X - (m_leaveGameLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
 	m_leaveGameLayoutWidget->hide();
 }

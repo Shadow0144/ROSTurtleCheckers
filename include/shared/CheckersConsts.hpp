@@ -84,10 +84,10 @@ constexpr int HUD_TURTLE_ICON_Y_OFFSET = 1;
 constexpr int HUD_TURTLE_ICON_HEIGHT_WIDTH = 18;
 constexpr int HUD_BLACK_TIMER_TEXT_X_OFFSET = 250;
 constexpr int HUD_RED_TIMER_TEXT_X_OFFSET = 450;
-constexpr int VICTORY_TEXT_Y_OFFSET = -35;
+constexpr int VICTORY_TEXT_Y_OFFSET = -55;
 constexpr int VICTORY_TEXT_HEIGHT = 24;
 constexpr int VICTORY_TEXT_FONT_SIZE = 24;
-constexpr int VICTORY_IMAGE_Y_OFFSET = 35;
+constexpr int VICTORY_IMAGE_Y_OFFSET = 15;
 
 constexpr int GRAVEYARD_WIDTH = 2u * TILE_WIDTH;
 
@@ -106,7 +106,7 @@ constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
 constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);
 constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);
 
-constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 85;
+constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 65;
 
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
