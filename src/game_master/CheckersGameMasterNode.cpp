@@ -193,10 +193,11 @@ void CheckersGameMasterNode::getLobbyListRequest(const std::shared_ptr<turtle_ch
         response->has_passwords.push_back(pair.second->hasPassword());
         response->joined_black_player_names.push_back(pair.second->getBlackPlayerName());
         response->joined_red_player_names.push_back(pair.second->getRedPlayerName());
-        response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
-            std::hash<turtle_checkers_interfaces::srv::GetLobbyList::Response::SharedPtr>{}(response),
-            m_publicKey, m_privateKey);
     }
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::GetLobbyList::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
 }
 
 void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Request> request,
