@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QLineEdit>
 #include <QString>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>

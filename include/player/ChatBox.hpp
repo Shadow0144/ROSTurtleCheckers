@@ -1,8 +1,7 @@
 #pragma once
 
-#include <QPainter>
-#include <QPen>
-#include <QPointF>
+#include <QVBoxLayout>
+#include <QLineEdit>
 
 #include <chrono>
 #include <memory>
@@ -11,7 +10,7 @@
 
 #include "shared/CheckersConsts.hpp"
 
-class ChatBox
+class ChatBox : public QVBoxLayout
 {
 public:
     ChatBox();
@@ -21,9 +20,8 @@ public:
                  std::chrono::time_point<std::chrono::system_clock> timeStamp);
     void clear();
 
-    void paint(QPainter &painter) const;
-
 private:
+    QLineEdit *m_chatBoxLineEdit;
 };
 
 typedef std::shared_ptr<ChatBox> ChatBoxPtr;
