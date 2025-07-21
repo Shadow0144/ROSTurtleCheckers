@@ -26,6 +26,7 @@
 #include "player/TurtlePieceRender.hpp"
 #include "player/TurtleGraveyard.hpp"
 #include "player/HUD.hpp"
+#include "player/ChatBox.hpp"
 
 class CheckersPlayerWindow;
 
@@ -42,6 +43,12 @@ public:
 
 	void connectedToGame();
 
+	// Reply from server
+	void addChatMessage(const std::string &playerName,
+						TurtlePieceColor playerColor,
+						const std::string &chatMessage,
+						std::chrono::time_point<std::chrono::system_clock> timeStamp);
+
 	void requestedPieceMoveAccepted(bool moveAccepted);
 	void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
 	void declaredWinner(Winner winner);
@@ -52,6 +59,9 @@ public:
 					  size_t blackTimeRemainSec, size_t redTimeRemainSec);
 	void drawDeclined();
 	void drawOffered();
+
+	// Send to server
+	void sendChatMessage(const std::string &chatMessage);
 
 protected:
 	void mouseMoveEvent(QMouseEvent *event) override;
@@ -95,10 +105,11 @@ private:
 	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
 	TurtleGraveyardPtr m_redPlayerGraveyard;   // Red player's graveyard containing the slain black pieces
 	HUDPtr m_hud;
+	ChatBox *m_chatBox;
 
 	bool m_showingDialog;
 
-    QTimer *m_redrawTimer;
+	QTimer *m_redrawTimer;
 };
 
 typedef std::unique_ptr<GameFrame> GameFrameUniPtr;

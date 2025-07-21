@@ -6,6 +6,7 @@
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/srv/request_board_state.hpp"
+#include "turtle_checkers_interfaces/msg/chat_message.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
@@ -18,6 +19,7 @@
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
+#include "turtle_checkers_interfaces/msg/update_chat.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
@@ -102,11 +104,15 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
         m_lobbyName + "/id" + m_lobbyId + "/PlayerLeftLobby", 10);
     m_playerReadiedPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerReadied>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReadied", 10);
+    m_updateChatPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateChat>(
+        m_lobbyName + "/id" + m_lobbyId + "/UpdateChat", 10);
     m_updateLobbyOwnerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateLobbyOwner>(
         m_lobbyName + "/id" + m_lobbyId + "/UpdateLobbyOwner", 10);
     m_updateTimerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::UpdateTimer>(
         m_lobbyName + "/id" + m_lobbyId + "/UpdateTimer", 10);
 
+    m_chatMessageSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::ChatMessage>(
+        m_lobbyName + "/id" + m_lobbyId + "/ChatMessage", 10, std::bind(&CheckersGameLobby::chatMessageCallback, this, std::placeholders::_1));
     m_forfitSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::Forfit>(
         m_lobbyName + "/id" + m_lobbyId + "/Forfit", 10, std::bind(&CheckersGameLobby::forfitCallback, this, std::placeholders::_1));
     m_kickPlayerSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::KickPlayer>(
@@ -485,6 +491,31 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
         std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Response::SharedPtr>{}(response),
         m_publicKey, m_privateKey);
+}
+
+void CheckersGameLobby::chatMessageCallback(const turtle_checkers_interfaces::msg::ChatMessage::SharedPtr message)
+{
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::ChatMessage>{}(*message),
+            getPlayerPublicKey(message->player_name), message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    auto updateChatMessage = turtle_checkers_interfaces::msg::UpdateChat();
+    updateChatMessage.lobby_name = m_lobbyName;
+    updateChatMessage.lobby_id = m_lobbyId;
+    updateChatMessage.player_name = message->player_name;
+    updateChatMessage.player_color = message->player_color;
+    updateChatMessage.msg = message->msg;
+    updateChatMessage.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      std::chrono::system_clock::now().time_since_epoch())
+                                      .count();
+    updateChatMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::UpdateChat>{}(updateChatMessage),
+        m_publicKey, m_privateKey);
+    m_updateChatPublisher->publish(updateChatMessage);
 }
 
 void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message)

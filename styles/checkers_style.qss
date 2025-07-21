@@ -1,5 +1,6 @@
 QWidget { background-color: black; }
 QWidget[framed="true"] { border: 2px solid gray; }
+QWidget[lobby="true"] { border: 1px solid white; }
 
 QLabel { color: white; }
 QLabel:disabled { color: dimGray; }
@@ -11,6 +12,7 @@ QPushButton:hover { color: cyan; border: 1px solid cyan; }
 QPushButton:focus { }
 QPushButton:disabled { color: dimGray; border: 1px solid dimGray; }
 
+QLineEdit { color: white; border: 1px solid gray; }
 QLineEdit[valid="false"] { color: white; border: 1px solid red; }
 QLineEdit[valid="true"] { color: white; border: 1px solid aqua; }
 QLineEdit[in_use="false"] { color: white; border: 1px solid gray; }
@@ -43,5 +45,4 @@ QComboBox QAbstractItemView {
     border: 1px solid white;
 }
 
-QScrollArea#LobbyListScrollArea { border: 1px solid white; }
-QWidget[lobby="true"] { border: 1px solid white; }
+QScrollArea { border: 1px solid white; }

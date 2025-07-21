@@ -1,5 +1,6 @@
 #pragma once
 
+#include "turtle_checkers_interfaces/msg/chat_message.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
@@ -15,6 +16,7 @@
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_chat.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
@@ -47,6 +49,21 @@ struct std::hash<std::vector<T>>
         {
             hashCombine(combinedHash, std::hash<T>{}(elem));
         }
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::ChatMessage>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::ChatMessage &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.player_color));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.msg));
         return combinedHash;
     }
 };
@@ -259,6 +276,22 @@ struct std::hash<turtle_checkers_interfaces::msg::UpdateBoard>
         hashCombine(combinedHash, std::hash<int64_t>{}(message.slain_piece_tile_index));
         hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(message.movable_tile_indices));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.game_state));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::UpdateChat>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::UpdateChat &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.player_color));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.msg));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.timestamp));
         return combinedHash;
     }
 };

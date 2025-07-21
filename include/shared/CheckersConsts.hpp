@@ -77,7 +77,7 @@ constexpr int LOBBY_SCROLL_H = 300;
 constexpr int LOBBY_LIST_LOBBY_NAME_WIDTH = 150;
 constexpr int LOBBY_LIST_PLAYER_NAME_WIDTH = 150;
 
-constexpr int IN_LOBBY_LAYOUT_MARGINS = 25;
+constexpr int IN_LOBBY_LAYOUT_MARGINS = 50;
 
 constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;
@@ -100,16 +100,20 @@ constexpr int VICTORY_IMAGE_Y_OFFSET = 15;
 
 constexpr int GRAVEYARD_WIDTH = 2u * TILE_WIDTH;
 
-constexpr int CHAT_WIDTH = 200;
-
 constexpr int BOARD_LEFT = GRAVEYARD_WIDTH;
 constexpr int BOARD_TOP = HUD_HEIGHT;
 constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
 constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
 
+constexpr int CHAT_HEADER_FONT_SIZE = 10;
+constexpr int CHAT_BOX_X = (2 * GRAVEYARD_WIDTH) + BOARD_WIDTH;
+constexpr int CHAT_BOX_WIDTH = 200;
+constexpr int CHAT_WIDTH = 180;
+constexpr int CHAT_HEIGHT = 440;
+
 constexpr int BUTTON_DOCK_HEIGHT = 50;
 
-constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_WIDTH;
+constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_WIDTH;
 constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
 
 constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);

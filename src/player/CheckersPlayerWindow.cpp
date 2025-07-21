@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 
+#include <chrono>
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
@@ -317,6 +318,22 @@ void CheckersPlayerWindow::gameStarted(GameState gameState,
     moveToGameFrame();
 
     update();
+}
+
+void CheckersPlayerWindow::addChatMessage(const std::string &playerName,
+                                          TurtlePieceColor playerColor,
+                                          const std::string &chatMessage,
+                                          std::chrono::time_point<std::chrono::system_clock> timeStamp)
+{
+    m_gameFrame->addChatMessage(playerName, playerColor, chatMessage, timeStamp);
+}
+
+void CheckersPlayerWindow::sendChatMessage(const std::string &chatMessage)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->sendChatMessage(chatMessage);
+    }
 }
 
 void CheckersPlayerWindow::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex,

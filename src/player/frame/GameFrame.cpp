@@ -47,6 +47,9 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 	m_hud->setGameState(GameState::Connecting);
 
+	m_chatBox = new ChatBox(this, [this](const std::string &chatMessage)
+							{ this->sendChatMessage(chatMessage); });
+
 	auto buttonLayout = new QHBoxLayout(this);
 	buttonLayout->setAlignment(Qt::AlignCenter);
 	buttonLayout->setContentsMargins(GRAVEYARD_WIDTH,
@@ -71,13 +74,13 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	auto offerDrawConfirmButton = new QPushButton(this);
 	offerDrawConfirmButton->setText("Offer Draw");
-    offerDrawConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
+	offerDrawConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(offerDrawConfirmButton, &QPushButton::released, this, &GameFrame::handleOfferDrawConfirmButton);
 	offerDrawConfirmLayout->addWidget(offerDrawConfirmButton);
 
 	auto offerDrawCancelButton = new QPushButton(this);
 	offerDrawCancelButton->setText("Cancel");
-    offerDrawCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
+	offerDrawCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(offerDrawCancelButton, &QPushButton::released, this, &GameFrame::handleOfferDrawCancelButton);
 	offerDrawConfirmLayout->addWidget(offerDrawCancelButton);
 
@@ -111,13 +114,13 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	auto drawOfferedAcceptButton = new QPushButton(this);
 	drawOfferedAcceptButton->setText("Accept Draw");
-    drawOfferedAcceptButton->setFixedWidth(MENU_BUTTON_WIDTH);
+	drawOfferedAcceptButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(drawOfferedAcceptButton, &QPushButton::released, this, &GameFrame::handleOfferDrawConfirmButton);
 	drawOfferedLayout->addWidget(drawOfferedAcceptButton);
 
 	auto drawOfferedDeclineButton = new QPushButton(this);
 	drawOfferedDeclineButton->setText("Decline Draw");
-    drawOfferedDeclineButton->setFixedWidth(MENU_BUTTON_WIDTH);
+	drawOfferedDeclineButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(drawOfferedDeclineButton, &QPushButton::released, this, &GameFrame::handleDeclineDrawButton);
 	drawOfferedLayout->addWidget(drawOfferedDeclineButton);
 
@@ -135,13 +138,13 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	auto forfitConfirmButton = new QPushButton(this);
 	forfitConfirmButton->setText("Forfit");
-    forfitConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
+	forfitConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(forfitConfirmButton, &QPushButton::released, this, &GameFrame::handleForfitConfirmButton);
 	forfitConfirmLayout->addWidget(forfitConfirmButton);
 
 	auto forfitCancelButton = new QPushButton(this);
 	forfitCancelButton->setText("Cancel");
-    forfitCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
+	forfitCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(forfitCancelButton, &QPushButton::released, this, &GameFrame::handleForfitCancelButton);
 	forfitConfirmLayout->addWidget(forfitCancelButton);
 
@@ -159,7 +162,7 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	m_leaveGameButton = new QPushButton(this);
 	m_leaveGameButton->setText("Leave Game");
-    m_leaveGameButton->setFixedWidth(MENU_BUTTON_WIDTH);
+	m_leaveGameButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(m_leaveGameButton, &QPushButton::released, this, &GameFrame::handleLeaveGameButton);
 	leaveGameLayout->addWidget(m_leaveGameButton);
 
@@ -186,6 +189,7 @@ void GameFrame::hideEvent(QHideEvent *event)
 	(void)event; // NO LINT
 
 	m_redrawTimer->stop();
+	m_chatBox->clear();
 }
 
 void GameFrame::connectedToGame()
@@ -236,6 +240,19 @@ void GameFrame::requestedReachableTiles(const std::vector<size_t> &reachableTile
 	m_board->setReachableTiles(reachableTileIndices);
 
 	update();
+}
+
+void GameFrame::addChatMessage(const std::string &playerName,
+							   TurtlePieceColor playerColor,
+							   const std::string &chatMessage,
+							   std::chrono::time_point<std::chrono::system_clock> timeStamp)
+{
+	m_chatBox->addMessage(playerName, playerColor, chatMessage, timeStamp);
+}
+
+void GameFrame::sendChatMessage(const std::string &chatMessage)
+{
+	m_playerWindow->sendChatMessage(chatMessage);
 }
 
 void GameFrame::declaredWinner(Winner winner)

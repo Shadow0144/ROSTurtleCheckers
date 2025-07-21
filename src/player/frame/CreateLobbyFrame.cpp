@@ -93,6 +93,9 @@ CreateLobbyFrame::CreateLobbyFrame(
     m_createLobbyButton->setEnabled(false);
     connect(m_createLobbyButton, &QPushButton::released, this,
             &CreateLobbyFrame::handleCreateLobbyButton);
+    m_createLobbyButton->setDefault(true);
+    connect(m_lobbyNameLineEdit, &QLineEdit::returnPressed, m_createLobbyButton, &QPushButton::click);
+    connect(m_lobbyPasswordLineEdit, &QLineEdit::returnPressed, m_createLobbyButton, &QPushButton::click);
     createLobbyButtonLayout->addWidget(m_createLobbyButton);
 
     std::string cancelCreateLobbyString = "Cancel";

@@ -80,6 +80,12 @@ public:
     void setPlayerReady(const std::string &playerName, bool ready);
     void updateTimer(uint64_t timerSeconds);
 
+    void addChatMessage(const std::string &playerName,
+                        TurtlePieceColor playerColor,
+                        const std::string &chatMessage,
+                        std::chrono::time_point<std::chrono::system_clock> timeStamp);
+    void sendChatMessage(const std::string &chatMessage);
+
     void requestedPieceMoveAccepted(bool moveAccepted);
     void requestedReachableTiles(const std::vector<size_t> &reachableTileIndices);
     void declaredWinner(Winner winner);

@@ -86,6 +86,9 @@ CreateAccountFrame::CreateAccountFrame(
     m_createAccountButton->setEnabled(false);
     connect(m_createAccountButton, &QPushButton::released, this,
             &CreateAccountFrame::handleCreateAccountButton);
+    m_createAccountButton->setDefault(true);
+    connect(m_playerNameLineEdit, &QLineEdit::returnPressed, m_createAccountButton, &QPushButton::click);
+    connect(m_passwordLineEdit, &QLineEdit::returnPressed, m_createAccountButton, &QPushButton::click);
     createAccountButtonLayout->addWidget(m_createAccountButton);
 
     std::string cancelString = "Cancel";

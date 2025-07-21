@@ -495,7 +495,10 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
     if (m_blackPlayerReady && m_redPlayerReady)
     {
         // Disable the timer so no one can change it
+        // and disable booting unless someone unreadies
         m_timerComboBox->setEnabled(false);
+        m_blackPlayerKickButton->setEnabled(false);
+        m_redPlayerKickButton->setEnabled(false);
         m_secondsBeforeStart = MAX_SECONDS_BEFORE_START;
         std::string gameStartTimerString = "The match will start in... " + std::to_string(m_secondsBeforeStart.count()) + "...";
         m_gameStartTimerLabel->setText(QString::fromStdString(gameStartTimerString));
@@ -503,11 +506,13 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
     }
     else
     {
-        // Reenable the timer if necessary
+        // Reenable the timer and boot buttons if necessary
         if ((m_lobbyOwnerColor == TurtlePieceColor::Black && Parameters::getPlayerName() == m_blackPlayerName) ||
             (m_lobbyOwnerColor == TurtlePieceColor::Red && Parameters::getPlayerName() == m_redPlayerName))
         {
             m_timerComboBox->setEnabled(true);
+            m_blackPlayerKickButton->setEnabled(m_lobbyOwnerColor == TurtlePieceColor::Red);
+            m_redPlayerKickButton->setEnabled(m_lobbyOwnerColor == TurtlePieceColor::Black);
         }
         m_gameStartTimerLabel->setText("The match will start when both players are ready!");
         m_gameStartTimer->stop();

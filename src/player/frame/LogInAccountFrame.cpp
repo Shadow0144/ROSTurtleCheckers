@@ -76,6 +76,9 @@ LogInAccountFrame::LogInAccountFrame(
     m_logInAccountButton->setEnabled(false);
     connect(m_logInAccountButton, &QPushButton::released, this,
             &LogInAccountFrame::handleLogInAccountButton);
+    m_logInAccountButton->setDefault(true);
+    connect(m_playerNameLineEdit, &QLineEdit::returnPressed, m_logInAccountButton, &QPushButton::click);
+    connect(m_passwordLineEdit, &QLineEdit::returnPressed, m_logInAccountButton, &QPushButton::click);
     logInAccountButtonLayout->addWidget(m_logInAccountButton);
 
     std::string cancelString = "Cancel";

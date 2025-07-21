@@ -15,6 +15,7 @@
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/msg/chat_message.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
@@ -30,6 +31,7 @@
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_chat.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
@@ -157,11 +159,15 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/PlayerLeftLobby", 10, std::bind(&CheckersPlayerNode::playerLeftLobbyCallback, this, _1));
     m_playerReadiedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerReadied>(
         lobbyName + "/id" + lobbyId + "/PlayerReadied", 10, std::bind(&CheckersPlayerNode::playerReadiedCallback, this, _1));
+    m_updateChatSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateChat>(
+        lobbyName + "/id" + lobbyId + "/UpdateChat", 10, std::bind(&CheckersPlayerNode::updateChatCallback, this, _1));
     m_updateLobbyOwnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>(
         lobbyName + "/id" + lobbyId + "/UpdateLobbyOwner", 10, std::bind(&CheckersPlayerNode::updateLobbyOwnerCallback, this, _1));
     m_updateTimerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateTimer>(
         lobbyName + "/id" + lobbyId + "/UpdateTimer", 10, std::bind(&CheckersPlayerNode::updateTimerCallback, this, _1));
 
+    m_chatMessagePublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ChatMessage>(
+        lobbyName + "/id" + lobbyId + "/ChatMessage", 10);
     m_forfitPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Forfit>(
         lobbyName + "/id" + lobbyId + "/Forfit", 10);
     m_kickPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::KickPlayer>(
@@ -373,6 +379,21 @@ void CheckersPlayerNode::setTimer(uint64_t timerSeconds)
         std::hash<turtle_checkers_interfaces::msg::TimerChanged>{}(message),
         m_publicKey, m_privateKey);
     m_timerChangedPublisher->publish(message);
+}
+
+void CheckersPlayerNode::sendChatMessage(const std::string &chatMessage)
+{
+    // Send the chat message to the game master
+    auto message = turtle_checkers_interfaces::msg::ChatMessage();
+    message.lobby_name = Parameters::getLobbyName();
+    message.lobby_id = Parameters::getLobbyId();
+    message.player_name = Parameters::getPlayerName();
+    message.player_color = static_cast<uint64_t>(Parameters::getPlayerColor());
+    message.msg = chatMessage;
+    message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::ChatMessage>{}(message),
+        m_publicKey, m_privateKey);
+    m_chatMessagePublisher->publish(message);
 }
 
 void CheckersPlayerNode::connectToGameMasterResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedFuture future)
@@ -740,6 +761,27 @@ void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::m
                                          blackTimeRemainSec, redTimeRemainSec);
 
     m_checkersPlayerWindow->update();
+}
+
+void CheckersPlayerNode::updateChatCallback(const turtle_checkers_interfaces::msg::UpdateChat::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::UpdateChat>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    TurtlePieceColor playerColor = static_cast<TurtlePieceColor>(message->player_color);
+    std::chrono::time_point<std::chrono::system_clock> timeStamp{std::chrono::milliseconds(message->timestamp)};
+
+    m_checkersPlayerWindow->addChatMessage(message->player_name, playerColor, message->msg, timeStamp);
 }
 
 void CheckersPlayerNode::updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message)

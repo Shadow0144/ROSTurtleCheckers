@@ -71,6 +71,8 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     m_confirmPasswordButton->setEnabled(false);
     connect(m_confirmPasswordButton, &QPushButton::released, this,
             &LobbyPasswordFrame::handleConfirmPasswordButton);
+    connect(m_lobbyPasswordLineEdit, &QLineEdit::returnPressed, m_confirmPasswordButton, &QPushButton::click);
+    m_confirmPasswordButton->setDefault(true);
     enterLobbyPasswordButtonLayout->addWidget(m_confirmPasswordButton);
 
     std::string cancelJoinLobbyString = "Cancel";

@@ -10,6 +10,7 @@
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/msg/chat_message.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
@@ -25,6 +26,7 @@
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
+#include "turtle_checkers_interfaces/msg/update_chat.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
@@ -70,6 +72,7 @@ public:
     void setReady(bool ready);
     void setTimer(uint64_t timerSeconds);
 
+    void sendChatMessage(const std::string &chatMessage);
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
 
@@ -102,6 +105,7 @@ private:
     void playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message);
     void playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message);
     void playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message);
+    void updateChatCallback(const turtle_checkers_interfaces::msg::UpdateChat::SharedPtr message);
     void updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message);
     void updateTimerCallback(const turtle_checkers_interfaces::msg::UpdateTimer::SharedPtr message);
 
@@ -132,9 +136,11 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateChat>::SharedPtr m_updateChatSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerSubscription;
 
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::ChatMessage>::SharedPtr m_chatMessagePublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbyPublisher;
