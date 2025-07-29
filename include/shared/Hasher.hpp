@@ -28,6 +28,7 @@
 #include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
 #include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/resync_board.hpp"
 
 #include <memory>
 #include <string>
@@ -48,6 +49,21 @@ struct std::hash<std::vector<T>>
         for (const auto &elem : vec)
         {
             hashCombine(combinedHash, std::hash<T>{}(elem));
+        }
+        return combinedHash;
+    }
+};
+
+// Prevents ambiguity for special case of std::vector<bool>
+template <>
+struct std::hash<std::vector<bool>>
+{
+    size_t operator()(const std::vector<bool> &vec) const noexcept
+    {
+        size_t combinedHash = 0u;
+        for (const auto &elem : vec)
+        {
+            hashCombine(combinedHash, std::hash<bool>{}(elem));
         }
         return combinedHash;
     }
@@ -494,6 +510,26 @@ struct std::hash<turtle_checkers_interfaces::srv::RequestReachableTiles::Respons
     {
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(response->reachable_tile_indices));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::srv::ResyncBoard::Response::SharedPtr>
+{
+    size_t operator()(const turtle_checkers_interfaces::srv::ResyncBoard::Response::SharedPtr &response) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(response->lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(response->lobby_id));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->black_time_remaining_seconds));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->red_time_remaining_seconds));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->game_state));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->black_pieces_remaining));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->red_pieces_remaining));
+        hashCombine(combinedHash, std::hash<std::vector<std::string>>{}(response->turtle_piece_name_per_tile));
+        hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(response->turtle_piece_color_per_tile));
+        hashCombine(combinedHash, std::hash<std::vector<bool>>{}(response->turtle_piece_is_kinged_per_tile));
         return combinedHash;
     }
 };

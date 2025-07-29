@@ -48,6 +48,14 @@ private:
 
     // Game parameters
     bool m_mustJump = false; // If jumps available, a player must choose one over a regular move
+
+    friend struct std::hash<std::shared_ptr<MasterBoard>>;
 };
 
 typedef std::shared_ptr<MasterBoard> MasterBoardPtr;
+
+template <>
+struct std::hash<MasterBoardPtr>
+{
+    size_t operator()(const MasterBoardPtr &masterBoardPtr) const noexcept;
+};

@@ -47,6 +47,14 @@ protected:
     bool m_isSelected;
     bool m_isKinged;
     bool m_isDead;
+
+    friend struct std::hash<std::shared_ptr<TurtlePiece>>;
 };
 
 typedef std::shared_ptr<TurtlePiece> TurtlePiecePtr;
+
+template <>
+struct std::hash<TurtlePiecePtr>
+{
+    size_t operator()(const TurtlePiecePtr &turtlePiecePtr) const noexcept;
+};

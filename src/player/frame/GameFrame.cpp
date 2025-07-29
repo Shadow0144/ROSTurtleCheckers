@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/Hasher.hpp"
 #include "player/Parameters.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 
@@ -577,6 +578,34 @@ void GameFrame::handleLeaveGameButton()
 {
 	m_playerWindow->leaveLobby();
 	m_playerWindow->moveToMainMenuFrame();
+}
+
+uint64_t GameFrame::getBoardHash() const
+{
+	return std::hash<CheckersBoardRenderPtr>{}(m_board);
+}
+
+void GameFrame::resyncBoard(uint64_t blackTimeRemainingSeconds,
+							uint64_t redTimeRemainingSeconds,
+							uint64_t gameState,
+							uint64_t blackPiecesRemaining,
+							uint64_t redPiecesRemaining,
+							std::vector<std::string> turtlePieceNamePerTile,
+							std::vector<uint64_t> turtlePieceColorPerTile,
+							std::vector<bool> turtlePieceIsKingedPerTile)
+{
+	// Update the HUD
+	m_hud->setTimeRemaining(blackTimeRemainingSeconds, redTimeRemainingSeconds);
+	m_hud->setPiecesRemaining(blackPiecesRemaining, redPiecesRemaining);
+	m_gameState = static_cast<GameState>(gameState);
+	m_hud->setGameState(m_gameState);
+
+	// Update the board
+	m_board->resyncBoard(turtlePieceNamePerTile,
+						 turtlePieceColorPerTile,
+						 turtlePieceIsKingedPerTile,
+						 m_blackPlayerGraveyard,
+						 m_redPlayerGraveyard);
 }
 
 void GameFrame::paintEvent(QPaintEvent *event)

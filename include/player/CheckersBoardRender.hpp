@@ -30,6 +30,9 @@ public:
     void clearMovedTiles();
     void setMovablePieces(const std::vector<size_t> &movablePieceTileIndices);
     void setReachableTiles(const std::vector<size_t> &reachableTileIndices);
+
+    void clearTurtlePieces();
+
     void moveTurtlePiece(size_t sourceTileIndex, size_t destinationTileIndex);
 
     void slayTurtle(size_t slainPieceTileIndex);
@@ -38,6 +41,12 @@ public:
 
     void kingPiece(size_t kingPieceTileIndex);
 
+    void resyncBoard(std::vector<std::string> turtlePieceNamePerTile,
+                     std::vector<uint64_t> turtlePieceColorPerTile,
+                     std::vector<bool> turtlePieceIsKingedPerTile,
+                     TurtleGraveyardPtr &blackPlayerGraveyard,
+                     TurtleGraveyardPtr &redPlayerGraveyard);
+
     bool getIsMoveSelected();
     int getSelectedPieceTileIndex();
     int getSourceTileIndex();
@@ -45,9 +54,9 @@ public:
 
     size_t getBlackTurtlesRemaining();
     size_t getRedTurtlesRemaining();
-    
-	void handleMouseMove(QMouseEvent *event);
-	void handleMouseClick(QMouseEvent *event);
+
+    void handleMouseMove(QMouseEvent *event);
+    void handleMouseClick(QMouseEvent *event);
 
     void paint(QPainter &painter);
 
@@ -60,12 +69,20 @@ private:
     size_t m_blackTurtlesRemaining;
     size_t m_redTurtlesRemaining;
 
-	int m_selectedPieceTileIndex;
-	int m_sourceTileIndex;
-	int m_destinationTileIndex;
-	bool m_moveSelected;
+    int m_selectedPieceTileIndex;
+    int m_sourceTileIndex;
+    int m_destinationTileIndex;
+    bool m_moveSelected;
 
     int m_highlightedTileIndex = -1; // No tile is highlighted
+
+    friend struct std::hash<std::shared_ptr<CheckersBoardRender>>;
 };
 
 typedef std::shared_ptr<CheckersBoardRender> CheckersBoardRenderPtr;
+
+template <>
+struct std::hash<CheckersBoardRenderPtr>
+{
+    size_t operator()(const CheckersBoardRenderPtr &checkersBoardRenderPtr) const noexcept;
+};

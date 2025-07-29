@@ -1,6 +1,7 @@
 #include "shared/TurtlePiece.hpp"
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/Hasher.hpp"
 
 TurtlePiece::TurtlePiece(
     const std::string &name,
@@ -97,4 +98,13 @@ void TurtlePiece::setIsDead(bool isDead)
 void TurtlePiece::toggleIsDead()
 {
   m_isDead = !m_isDead;
+}
+
+size_t std::hash<TurtlePiecePtr>::operator()(const TurtlePiecePtr &turtlePiecePtr) const noexcept
+{
+  size_t combinedHash = 0u;
+  hashCombine(combinedHash, std::hash<std::string>{}(turtlePiecePtr->m_name));
+  hashCombine(combinedHash, std::hash<uint64_t>{}(static_cast<uint64_t>(turtlePiecePtr->m_color)));
+  hashCombine(combinedHash, std::hash<bool>{}(static_cast<uint64_t>(turtlePiecePtr->m_isKinged)));
+  return combinedHash;
 }

@@ -63,6 +63,16 @@ public:
 	// Send to server
 	void sendChatMessage(const std::string &chatMessage);
 
+	uint64_t getBoardHash() const;
+	void resyncBoard(uint64_t blackTimeRemainingSeconds,
+				uint64_t redTimeRemainingSeconds,
+				uint64_t gameState,
+				uint64_t blackPiecesRemaining,
+				uint64_t redPiecesRemaining,
+				std::vector<std::string> turtlePieceNamePerTile,
+				std::vector<uint64_t> turtlePieceColorPerTile,
+				std::vector<bool> turtlePieceIsKingedPerTile);
+
 protected:
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;

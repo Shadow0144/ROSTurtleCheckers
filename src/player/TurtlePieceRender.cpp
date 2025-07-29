@@ -1,5 +1,6 @@
 #include "player/TurtlePieceRender.hpp"
 
+#include "shared/Hasher.hpp"
 #include "player/ImageLibrary.hpp"
 
 TurtlePieceRender::TurtlePieceRender(
@@ -58,4 +59,12 @@ void TurtlePieceRender::paint(QPainter &painter)
     {
         painter.drawImage(m_centerPosition, m_deadRotatedImage);
     }
+}
+
+size_t std::hash<TurtlePieceRenderPtr>::operator()(const TurtlePieceRenderPtr &turtlePieceRenderPtr) const noexcept
+{
+    size_t combinedHash = 0u;
+    hashCombine(combinedHash, std::hash<std::string>{}(turtlePieceRenderPtr->m_name));
+    hashCombine(combinedHash, std::hash<uint64_t>{}(static_cast<uint64_t>(turtlePieceRenderPtr->m_color)));
+    return combinedHash;
 }

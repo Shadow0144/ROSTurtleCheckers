@@ -33,6 +33,14 @@ private:
     float m_top;
     float m_right;
     float m_bottom;
+
+    friend struct std::hash<std::shared_ptr<TileRender>>;
 };
 
 typedef std::shared_ptr<TileRender> TileRenderPtr;
+
+template <>
+struct std::hash<TileRenderPtr>
+{
+    size_t operator()(const TileRenderPtr &tileRenderPtr) const noexcept;
+};

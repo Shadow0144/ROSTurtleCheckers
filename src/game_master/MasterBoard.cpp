@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/Hasher.hpp"
 #include "game_master/TileFactory.hpp"
 #include "game_master/TurtlePieceFactory.hpp"
 
@@ -304,4 +305,15 @@ void MasterBoard::checkPlayersCanMove(bool isBlackTurn, std::vector<size_t> &mov
     {
         m_winner = Winner::Black;
     }
+}
+
+size_t std::hash<MasterBoardPtr>::operator()(const MasterBoardPtr &masterBoardPtr) const noexcept
+{
+    // This must match the player/CheckersBoardRender hash
+    size_t combinedHash = 0u;
+    hashCombine(combinedHash, std::hash<size_t>{}(masterBoardPtr->m_blackPiecesRemaining));
+    hashCombine(combinedHash, std::hash<size_t>{}(masterBoardPtr->m_redPiecesRemaining));
+    hashCombine(combinedHash, std::hash<std::vector<TilePtr>>{}(masterBoardPtr->m_tiles));
+    hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(masterBoardPtr->m_jumpedPieceTileIndices));
+    return combinedHash;
 }

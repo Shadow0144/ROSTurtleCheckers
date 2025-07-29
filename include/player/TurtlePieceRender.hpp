@@ -33,6 +33,14 @@ private:
     QImage m_highlightRotatedImage;
     QImage m_selectRotatedImage;
     QImage m_deadRotatedImage;
+
+    friend struct std::hash<std::shared_ptr<TurtlePieceRender>>;
 };
 
 typedef std::shared_ptr<TurtlePieceRender> TurtlePieceRenderPtr;
+
+template <>
+struct std::hash<TurtlePieceRenderPtr>
+{
+    size_t operator()(const TurtlePieceRenderPtr &turtlePieceRenderPtr) const noexcept;
+};

@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/Hasher.hpp"
 #include "player/TileRenderFactory.hpp"
 #include "player/TurtlePieceRenderFactory.hpp"
 
@@ -86,6 +87,14 @@ void CheckersBoardRender::setReachableTiles(const std::vector<size_t> &reachable
     }
 }
 
+void CheckersBoardRender::clearTurtlePieces()
+{
+    for (auto tileRender : m_tileRenders)
+    {
+        tileRender->clearTurtlePiece();
+    }
+}
+
 void CheckersBoardRender::moveTurtlePiece(size_t sourceTileIndex, size_t destinationTileIndex)
 {
     if (sourceTileIndex < NUM_PLAYABLE_TILES &&
@@ -96,6 +105,7 @@ void CheckersBoardRender::moveTurtlePiece(size_t sourceTileIndex, size_t destina
         m_tileRenders[destinationTileIndex]->setIsTileLastMovedTo(true);
     }
 }
+
 void CheckersBoardRender::slayTurtle(size_t slainPieceTileIndex)
 {
     if (slainPieceTileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
@@ -138,6 +148,66 @@ void CheckersBoardRender::moveTurtlePiecesToGraveyard(
 void CheckersBoardRender::kingPiece(size_t kingPieceTileIndex)
 {
     m_tileRenders[kingPieceTileIndex]->setIsTurtlePieceKinged(true);
+}
+
+void CheckersBoardRender::resyncBoard(std::vector<std::string> turtlePieceNamePerTile,
+                                      std::vector<uint64_t> turtlePieceColorPerTile,
+                                      std::vector<bool> turtlePieceIsKingedPerTile,
+                                      TurtleGraveyardPtr &blackPlayerGraveyard,
+                                      TurtleGraveyardPtr &redPlayerGraveyard)
+{
+    const auto tileCount = m_tileRenders.size();
+    if (turtlePieceNamePerTile.size() != tileCount ||
+        turtlePieceColorPerTile.size() != tileCount ||
+        turtlePieceIsKingedPerTile.size() != tileCount)
+    {
+        std::cerr << "Resync failed: Malformed vectors" << std::endl;
+        return;
+    }
+
+    clearTurtlePieces();
+    redPlayerGraveyard->clear();
+    blackPlayerGraveyard->clear();
+
+    // Find a home (or grave) for every turtle piece
+    const size_t pieceCount = m_turtlePieceRenders.size();
+    for (size_t p = 0u; p < pieceCount; p++)
+    {
+        bool alive = false;
+        for (size_t t = 0u; t < tileCount; t++)
+        {
+            if (turtlePieceNamePerTile[t] == m_turtlePieceRenders[p]->getName())
+            {
+                // We've found its home
+                m_tileRenders[t]->setTurtlePiece(m_turtlePieceRenders[p]);
+                m_tileRenders[t]->setIsTurtlePieceKinged(turtlePieceIsKingedPerTile[t]);
+                alive = true;
+                break;
+            }
+        }
+        if (!alive)
+        {
+            // The piece wasn't found on any tile, so it must belong to a graveyard
+            switch (m_turtlePieceRenders[p]->getColor())
+            {
+            case TurtlePieceColor::Black:
+            {
+                redPlayerGraveyard->addTurtlePiece(m_turtlePieceRenders[p]);
+            }
+            break;
+            case TurtlePieceColor::Red:
+            {
+                blackPlayerGraveyard->addTurtlePiece(m_turtlePieceRenders[p]);
+            }
+            break;
+            case TurtlePieceColor::None:
+            {
+                // Do nothing
+            }
+            break;
+            }
+        }
+    }
 }
 
 size_t CheckersBoardRender::getBlackTurtlesRemaining()
@@ -288,4 +358,15 @@ void CheckersBoardRender::paint(QPainter &painter)
     {
         tileRender->paint(painter);
     }
+}
+
+size_t std::hash<CheckersBoardRenderPtr>::operator()(const CheckersBoardRenderPtr &checkersBoardRenderPtr) const noexcept
+{
+    // This must match the game_master/MasterBoard hash
+    size_t combinedHash = 0u;
+    hashCombine(combinedHash, std::hash<size_t>{}(checkersBoardRenderPtr->m_blackTurtlesRemaining));
+    hashCombine(combinedHash, std::hash<size_t>{}(checkersBoardRenderPtr->m_redTurtlesRemaining));
+    hashCombine(combinedHash, std::hash<std::vector<TileRenderPtr>>{}(checkersBoardRenderPtr->m_tileRenders));
+    hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(checkersBoardRenderPtr->m_tileIndicesOfSlainTurtles));
+    return combinedHash;
 }

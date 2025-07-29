@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/Hasher.hpp"
 
 TileRender::TileRender(int row, int col, const QPointF &centerPosition)
     : Tile(row, col),
@@ -100,4 +101,22 @@ void TileRender::paint(QPainter &painter) const
     {
         std::static_pointer_cast<TurtlePieceRender>(m_containedTurtle)->paint(painter);
     }
+}
+
+size_t std::hash<TileRenderPtr>::operator()(const TileRenderPtr &tileRenderPtr) const noexcept
+{
+    size_t combinedHash = 0u;
+    hashCombine(combinedHash, std::hash<int>{}(tileRenderPtr->m_row));
+    hashCombine(combinedHash, std::hash<int>{}(tileRenderPtr->m_col));
+    if (tileRenderPtr->m_containedTurtle)
+    {
+        hashCombine(combinedHash, std::hash<TurtlePiecePtr>{}(tileRenderPtr->m_containedTurtle));
+    }
+    else // No piece in tile, use default values
+    {
+        hashCombine(combinedHash, std::hash<std::string>{}(""));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(static_cast<uint64_t>(TurtlePieceColor::None)));
+        hashCombine(combinedHash, std::hash<bool>{}(static_cast<uint64_t>(false)));
+    }
+    return combinedHash;
 }

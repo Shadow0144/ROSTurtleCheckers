@@ -7,14 +7,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include "ament_index_cpp/get_package_share_directory.hpp" // For getting the styles directory
 
-#include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
-#include "turtle_checkers_interfaces/srv/create_account.hpp"
-#include "turtle_checkers_interfaces/srv/create_lobby.hpp"
-#include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
-#include "turtle_checkers_interfaces/srv/join_lobby.hpp"
-#include "turtle_checkers_interfaces/srv/log_in_account.hpp"
-#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
-#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
 #include "turtle_checkers_interfaces/msg/chat_message.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
@@ -34,6 +26,15 @@
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
+#include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
+#include "turtle_checkers_interfaces/srv/create_account.hpp"
+#include "turtle_checkers_interfaces/srv/create_lobby.hpp"
+#include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
+#include "turtle_checkers_interfaces/srv/join_lobby.hpp"
+#include "turtle_checkers_interfaces/srv/log_in_account.hpp"
+#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/resync_board.hpp"
 
 #include <QApplication>
 #include <QFile>
@@ -137,11 +138,7 @@ int CheckersPlayerNode::exec()
 
 void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, const std::string &lobbyId)
 {
-    // Create the services, subscriptions, and publishers now that we have the full topic names
-    m_requestPieceMoveClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>(
-        lobbyName + "/id" + lobbyId + "/RequestPieceMove");
-    m_requestReachableTilesClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>(
-        lobbyName + "/id" + lobbyId + "/RequestReachableTiles");
+    // Create the subscriptions, publishers, and services now that we have the full topic names
 
     m_declareWinnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>(
         lobbyName + "/id" + lobbyId + "/DeclareWinner", 10, std::bind(&CheckersPlayerNode::declareWinnerCallback, this, _1));
@@ -178,6 +175,13 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/PlayerReady", 10);
     m_timerChangedPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::TimerChanged>(
         lobbyName + "/id" + lobbyId + "/TimerChanged", 10);
+
+    m_requestPieceMoveClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>(
+        lobbyName + "/id" + lobbyId + "/RequestPieceMove");
+    m_requestReachableTilesClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::RequestReachableTiles>(
+        lobbyName + "/id" + lobbyId + "/RequestReachableTiles");
+    m_resyncBoardClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::ResyncBoard>(
+        lobbyName + "/id" + lobbyId + "/ResyncBoard");
 }
 
 void CheckersPlayerNode::parameterEventCallback(
@@ -396,6 +400,247 @@ void CheckersPlayerNode::sendChatMessage(const std::string &chatMessage)
     m_chatMessagePublisher->publish(message);
 }
 
+void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return; // Wrong lobby
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    Winner winner = static_cast<Winner>(message->winner);
+    m_checkersPlayerWindow->declaredWinner(winner);
+
+    m_checkersPlayerWindow->update();
+}
+
+void CheckersPlayerNode::drawDeclinedCallback(const turtle_checkers_interfaces::msg::DrawDeclined::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::DrawDeclined>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->drawDeclined();
+}
+
+void CheckersPlayerNode::drawOfferedCallback(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::DrawOffered>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    if (Parameters::getPlayerName() == message->player_name)
+    {
+        // Do not respond to own offer for a draw
+        return;
+    }
+
+    m_checkersPlayerWindow->drawOffered();
+}
+
+void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::GameStart>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    GameState gameState = static_cast<GameState>(message->game_state);
+    const auto &movableTileIndices = message->movable_tile_indices;
+    auto blackTimeRemainSec = message->black_time_remaining_seconds;
+    auto redTimeRemainSec = message->red_time_remaining_seconds;
+    m_checkersPlayerWindow->gameStarted(gameState, movableTileIndices, blackTimeRemainSec, redTimeRemainSec);
+
+    m_checkersPlayerWindow->update();
+}
+
+void CheckersPlayerNode::playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::PlayerJoinedLobby>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->playerJoinedLobby(message->player_name, static_cast<TurtlePieceColor>(message->player_color));
+}
+
+void CheckersPlayerNode::playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->playerLeftLobby(message->player_name);
+}
+
+void CheckersPlayerNode::playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::PlayerReadied>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->setPlayerReady(message->player_name, message->ready);
+}
+
+void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::UpdateBoard>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    auto sourceTileIndex = message->source_tile_index;
+    auto destinationTileIndex = message->destination_tile_index;
+    auto gameState = static_cast<GameState>(message->game_state);
+    auto slainPieceTileIndex = message->slain_piece_tile_index;
+    auto kingPiece = message->king_piece;
+    const auto &movableTileIndices = message->movable_tile_indices;
+    auto blackTimeRemainSec = message->black_time_remaining_seconds;
+    auto redTimeRemainSec = message->red_time_remaining_seconds;
+
+    m_checkersPlayerWindow->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
+                                         slainPieceTileIndex, kingPiece, movableTileIndices,
+                                         blackTimeRemainSec, redTimeRemainSec);
+
+    m_checkersPlayerWindow->update();
+
+    // If after this update, the board hash does not match the server's version, request a full update
+    if (message->board_hash != m_checkersPlayerWindow->getBoardHash())
+    {
+        auto request = std::make_shared<turtle_checkers_interfaces::srv::ResyncBoard::Request>();
+        request->lobby_name = Parameters::getLobbyName();
+        request->lobby_id = Parameters::getLobbyId();
+        // No checksum required
+        m_resyncBoardClient->async_send_request(request,
+                                                std::bind(&CheckersPlayerNode::resyncBoardResponse,
+                                                          this, std::placeholders::_1));
+    }
+}
+
+void CheckersPlayerNode::updateChatCallback(const turtle_checkers_interfaces::msg::UpdateChat::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::UpdateChat>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    TurtlePieceColor playerColor = static_cast<TurtlePieceColor>(message->player_color);
+    std::chrono::time_point<std::chrono::system_clock> timeStamp{std::chrono::milliseconds(message->timestamp)};
+
+    m_checkersPlayerWindow->addChatMessage(message->player_name, playerColor, message->msg, timeStamp);
+}
+
+void CheckersPlayerNode::updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::UpdateLobbyOwner>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->updateLobbyOwner(message->lobby_owner_player_name);
+}
+
+void CheckersPlayerNode::updateTimerCallback(const turtle_checkers_interfaces::msg::UpdateTimer::SharedPtr message)
+{
+    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::UpdateTimer>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->updateTimer(message->timer_seconds);
+}
+
 void CheckersPlayerNode::connectToGameMasterResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedFuture future)
 {
     auto result = future.get();
@@ -591,233 +836,30 @@ void CheckersPlayerNode::requestReachableTilesResponse(rclcpp::Client<turtle_che
     m_checkersPlayerWindow->update();
 }
 
-void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message)
+void CheckersPlayerNode::resyncBoardResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ResyncBoard>::SharedFuture future)
 {
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return; // Wrong lobby
-    }
+    auto result = future.get();
 
     if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
+            std::hash<turtle_checkers_interfaces::srv::ResyncBoard::Response::SharedPtr>{}(result),
+            m_gameMasterPublicKey, result->checksum_sig))
     {
         std::cerr << "Checksum failed" << std::endl;
         return; // Checksum did not match with the public key
     }
 
-    Winner winner = static_cast<Winner>(message->winner);
-    m_checkersPlayerWindow->declaredWinner(winner);
+    std::clog << "Resyncing board" << std::endl;
+
+    m_checkersPlayerWindow->resyncBoard(result->black_time_remaining_seconds,
+                                        result->red_time_remaining_seconds,
+                                        result->game_state,
+                                        result->black_pieces_remaining,
+                                        result->red_pieces_remaining,
+                                        result->turtle_piece_name_per_tile,
+                                        result->turtle_piece_color_per_tile,
+                                        result->turtle_piece_is_kinged_per_tile);
 
     m_checkersPlayerWindow->update();
-}
-
-void CheckersPlayerNode::drawDeclinedCallback(const turtle_checkers_interfaces::msg::DrawDeclined::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::DrawDeclined>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    m_checkersPlayerWindow->drawDeclined();
-}
-
-void CheckersPlayerNode::drawOfferedCallback(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::DrawOffered>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    if (Parameters::getPlayerName() == message->player_name)
-    {
-        // Do not respond to own offer for a draw
-        return;
-    }
-
-    m_checkersPlayerWindow->drawOffered();
-}
-
-void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::GameStart>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    GameState gameState = static_cast<GameState>(message->game_state);
-    const auto &movableTileIndices = message->movable_tile_indices;
-    auto blackTimeRemainSec = message->black_time_remaining_seconds;
-    auto redTimeRemainSec = message->red_time_remaining_seconds;
-    m_checkersPlayerWindow->gameStarted(gameState, movableTileIndices, blackTimeRemainSec, redTimeRemainSec);
-
-    m_checkersPlayerWindow->update();
-}
-
-void CheckersPlayerNode::playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::PlayerJoinedLobby>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    m_checkersPlayerWindow->playerJoinedLobby(message->player_name, static_cast<TurtlePieceColor>(message->player_color));
-}
-
-void CheckersPlayerNode::playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    m_checkersPlayerWindow->playerLeftLobby(message->player_name);
-}
-
-void CheckersPlayerNode::playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::PlayerReadied>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    m_checkersPlayerWindow->setPlayerReady(message->player_name, message->ready);
-}
-
-void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::UpdateBoard>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    auto sourceTileIndex = message->source_tile_index;
-    auto destinationTileIndex = message->destination_tile_index;
-    auto gameState = static_cast<GameState>(message->game_state);
-    auto slainPieceTileIndex = message->slain_piece_tile_index;
-    auto kingPiece = message->king_piece;
-    const auto &movableTileIndices = message->movable_tile_indices;
-    auto blackTimeRemainSec = message->black_time_remaining_seconds;
-    auto redTimeRemainSec = message->red_time_remaining_seconds;
-
-    m_checkersPlayerWindow->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
-                                         slainPieceTileIndex, kingPiece, movableTileIndices,
-                                         blackTimeRemainSec, redTimeRemainSec);
-
-    m_checkersPlayerWindow->update();
-}
-
-void CheckersPlayerNode::updateChatCallback(const turtle_checkers_interfaces::msg::UpdateChat::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::UpdateChat>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    TurtlePieceColor playerColor = static_cast<TurtlePieceColor>(message->player_color);
-    std::chrono::time_point<std::chrono::system_clock> timeStamp{std::chrono::milliseconds(message->timestamp)};
-
-    m_checkersPlayerWindow->addChatMessage(message->player_name, playerColor, message->msg, timeStamp);
-}
-
-void CheckersPlayerNode::updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::UpdateLobbyOwner>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    m_checkersPlayerWindow->updateLobbyOwner(message->lobby_owner_player_name);
-}
-
-void CheckersPlayerNode::updateTimerCallback(const turtle_checkers_interfaces::msg::UpdateTimer::SharedPtr message)
-{
-    if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::UpdateTimer>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    m_checkersPlayerWindow->updateTimer(message->timer_seconds);
 }
 
 void CheckersPlayerNode::requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex)

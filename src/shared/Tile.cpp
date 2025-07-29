@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/Hasher.hpp"
 
 Tile::Tile(int row, int col)
     : m_row(row),
@@ -521,4 +522,22 @@ std::vector<uint64_t> Tile::getCurrentlyReachableTiles(const std::vector<TilePtr
     {
         return reachableTiles;
     }
+}
+
+size_t std::hash<TilePtr>::operator()(const TilePtr &tilePtr) const noexcept
+{
+    size_t combinedHash = 0u;
+    hashCombine(combinedHash, std::hash<int>{}(tilePtr->m_row));
+    hashCombine(combinedHash, std::hash<int>{}(tilePtr->m_col));
+    if (tilePtr->m_containedTurtle)
+    {
+        hashCombine(combinedHash, std::hash<TurtlePiecePtr>{}(tilePtr->m_containedTurtle));
+    }
+    else // No piece in tile, use default values
+    {
+        hashCombine(combinedHash, std::hash<std::string>{}(""));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(static_cast<uint64_t>(TurtlePieceColor::None)));
+        hashCombine(combinedHash, std::hash<bool>{}(static_cast<uint64_t>(false)));
+    }
+    return combinedHash;
 }

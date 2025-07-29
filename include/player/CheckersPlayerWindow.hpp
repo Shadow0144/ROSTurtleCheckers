@@ -95,6 +95,14 @@ public:
     void updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex, GameState gameState,
                       int slainPieceTileIndex, bool kingPiece, const std::vector<size_t> &movableTileIndices,
                       size_t blackTimeRemainSec, size_t redTimeRemainSec);
+    void resyncBoard(uint64_t blackTimeRemainingSeconds,
+                     uint64_t redTimeRemainingSeconds,
+                     uint64_t gameState,
+                     uint64_t blackPiecesRemaining,
+                     uint64_t redPiecesRemaining,
+                     std::vector<std::string> turtlePieceNamePerTile,
+                     std::vector<uint64_t> turtlePieceColorPerTile,
+                     std::vector<bool> turtlePieceIsKingedPerTile);
 
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
@@ -105,6 +113,8 @@ public:
 
     void drawDeclined();
     void drawOffered();
+
+    uint64_t getBoardHash() const;
 
 protected:
     void closeEvent(QCloseEvent *event) override;

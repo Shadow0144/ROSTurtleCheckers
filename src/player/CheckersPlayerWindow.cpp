@@ -264,6 +264,8 @@ void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
 {
     Parameters::setLobbyName(lobbyName);
     Parameters::setLobbyId(lobbyId);
+    m_gameFrame->clearChat();
+    m_inLobbyFrame->clearChat();
     m_inLobbyFrame->setLobbyInfo(blackPlayerName,
                                  redPlayerName,
                                  lobbyOwnerColor,
@@ -325,6 +327,7 @@ void CheckersPlayerWindow::addChatMessage(const std::string &playerName,
                                           const std::string &chatMessage,
                                           std::chrono::time_point<std::chrono::system_clock> timeStamp)
 {
+    m_inLobbyFrame->addChatMessage(playerName, playerColor, chatMessage, timeStamp);
     m_gameFrame->addChatMessage(playerName, playerColor, chatMessage, timeStamp);
 }
 
@@ -344,6 +347,25 @@ void CheckersPlayerWindow::updatedBoard(size_t sourceTileIndex, size_t destinati
     m_gameFrame->updatedBoard(sourceTileIndex, destinationTileIndex, gameState,
                               slainPieceTileIndex, kingPiece, movableTileIndices,
                               blackTimeRemainSec, redTimeRemainSec);
+}
+
+void CheckersPlayerWindow::resyncBoard(uint64_t blackTimeRemainingSeconds,
+                                       uint64_t redTimeRemainingSeconds,
+                                       uint64_t gameState,
+                                       uint64_t blackPiecesRemaining,
+                                       uint64_t redPiecesRemaining,
+                                       std::vector<std::string> turtlePieceNamePerTile,
+                                       std::vector<uint64_t> turtlePieceColorPerTile,
+                                       std::vector<bool> turtlePieceIsKingedPerTile)
+{
+    m_gameFrame->resyncBoard(blackTimeRemainingSeconds,
+                             redTimeRemainingSeconds,
+                             gameState,
+                             blackPiecesRemaining,
+                             redPiecesRemaining,
+                             turtlePieceNamePerTile,
+                             turtlePieceColorPerTile,
+                             turtlePieceIsKingedPerTile);
 }
 
 void CheckersPlayerWindow::requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex)
@@ -394,4 +416,9 @@ void CheckersPlayerWindow::drawDeclined()
 void CheckersPlayerWindow::drawOffered()
 {
     m_gameFrame->drawOffered();
+}
+
+uint64_t CheckersPlayerWindow::getBoardHash() const
+{
+    return m_gameFrame->getBoardHash();
 }

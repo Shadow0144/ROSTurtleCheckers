@@ -9,9 +9,6 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
-#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
-#include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/msg/chat_message.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
@@ -29,6 +26,10 @@
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
+#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/request_board_state.hpp"
+#include "turtle_checkers_interfaces/srv/resync_board.hpp"
 
 #include "game_master/MasterBoard.hpp"
 
@@ -73,19 +74,21 @@ public:
     void togglePlayerTurn();
 
 private:
-    void requestReachableTilesRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Request> request,
-                                      std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Response> response);
-    void requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
-                                 std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response);
-    void requestBoardStateRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Request> request,
-                                  std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Response> response);
-
     void chatMessageCallback(const turtle_checkers_interfaces::msg::ChatMessage::SharedPtr message);
     void forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message);
     void kickPlayerCallback(const turtle_checkers_interfaces::msg::KickPlayer::SharedPtr message);
     void offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message);
     void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
     void timerChangedCallback(const turtle_checkers_interfaces::msg::TimerChanged::SharedPtr message);
+
+    void requestReachableTilesRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Request> request,
+                                      std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Response> response);
+    void requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
+                                 std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response);
+    void requestBoardStateRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Request> request,
+                                  std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Response> response);
+    void resyncBoardRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ResyncBoard::Request> request,
+                                  std::shared_ptr<turtle_checkers_interfaces::srv::ResyncBoard::Response> response);
 
     bool isPieceValidForTurn(int requestedPieceTileIndex) const;
 
@@ -97,10 +100,6 @@ private:
     void startGame();
 
     rclcpp::Node::SharedPtr m_nodeHandle;
-
-    rclcpp::Service<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesService;
-    rclcpp::Service<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveService;
-    rclcpp::Service<turtle_checkers_interfaces::srv::RequestBoardState>::SharedPtr m_requestBoardStateService;
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::DrawDeclined>::SharedPtr m_drawDeclinedPublisher;
@@ -120,6 +119,11 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::TimerChanged>::SharedPtr m_timerChangedSubscription;
+
+    rclcpp::Service<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesService;
+    rclcpp::Service<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveService;
+    rclcpp::Service<turtle_checkers_interfaces::srv::RequestBoardState>::SharedPtr m_requestBoardStateService;
+    rclcpp::Service<turtle_checkers_interfaces::srv::ResyncBoard>::SharedPtr m_resyncBoardService;
 
     std::string m_lobbyName;
     std::string m_lobbyId;

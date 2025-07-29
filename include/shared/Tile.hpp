@@ -96,6 +96,14 @@ protected:
     bool m_isLastJumpedOver;
 
     TurtlePiecePtr m_containedTurtle;
+
+    friend struct std::hash<std::shared_ptr<Tile>>;
 };
 
 typedef std::shared_ptr<Tile> TilePtr;
+
+template <>
+struct std::hash<TilePtr>
+{
+    size_t operator()(const TilePtr &tilePtr) const noexcept;
+};

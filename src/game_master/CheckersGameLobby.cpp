@@ -3,9 +3,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
-#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
-#include "turtle_checkers_interfaces/srv/request_board_state.hpp"
 #include "turtle_checkers_interfaces/msg/chat_message.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
@@ -23,6 +20,10 @@
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
+#include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
+#include "turtle_checkers_interfaces/srv/request_reachable_tiles.hpp"
+#include "turtle_checkers_interfaces/srv/request_board_state.hpp"
+#include "turtle_checkers_interfaces/srv/resync_board.hpp"
 
 #include <chrono>
 #include <memory>
@@ -81,13 +82,6 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
 
     m_playerOfferingDraw = "";
 
-    m_requestReachableTilesService =
-        m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestReachableTiles>(
-            m_lobbyName + "/id" + m_lobbyId + "/RequestReachableTiles", std::bind(&CheckersGameLobby::requestReachableTilesRequest, this, std::placeholders::_1, std::placeholders::_2));
-    m_requestPieceMoveService =
-        m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestPieceMove>(
-            m_lobbyName + "/id" + m_lobbyId + "/RequestPieceMove", std::bind(&CheckersGameLobby::requestPieceMoveRequest, this, std::placeholders::_1, std::placeholders::_2));
-
     m_declareWinnerPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::DeclareWinner>(
         m_lobbyName + "/id" + m_lobbyId + "/DeclareWinner", 10);
     m_drawDeclinedPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::DrawDeclined>(
@@ -123,6 +117,16 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
         m_lobbyName + "/id" + m_lobbyId + "/PlayerReady", 10, std::bind(&CheckersGameLobby::playerReadyCallback, this, std::placeholders::_1));
     m_timerChangedSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::TimerChanged>(
         m_lobbyName + "/id" + m_lobbyId + "/TimerChanged", 10, std::bind(&CheckersGameLobby::timerChangedCallback, this, std::placeholders::_1));
+
+    m_requestReachableTilesService =
+        m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestReachableTiles>(
+            m_lobbyName + "/id" + m_lobbyId + "/RequestReachableTiles", std::bind(&CheckersGameLobby::requestReachableTilesRequest, this, std::placeholders::_1, std::placeholders::_2));
+    m_requestPieceMoveService =
+        m_nodeHandle->create_service<turtle_checkers_interfaces::srv::RequestPieceMove>(
+            m_lobbyName + "/id" + m_lobbyId + "/RequestPieceMove", std::bind(&CheckersGameLobby::requestPieceMoveRequest, this, std::placeholders::_1, std::placeholders::_2));
+    m_resyncBoardService =
+        m_nodeHandle->create_service<turtle_checkers_interfaces::srv::ResyncBoard>(
+            m_lobbyName + "/id" + m_lobbyId + "/ResyncBoard", std::bind(&CheckersGameLobby::resyncBoardRequest, this, std::placeholders::_1, std::placeholders::_2));
 
     RCLCPP_INFO(m_nodeHandle->get_logger(), "Creating checkers game lobby!");
 }
@@ -367,132 +371,6 @@ uint64_t CheckersGameLobby::getPlayerPublicKey(int tileIndex) const
     return m_playerPublicKeysByColor.at(m_board->getPieceColorAtTileIndex(tileIndex));
 }
 
-void CheckersGameLobby::requestReachableTilesRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Request> request,
-                                                     std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Response> response)
-{
-    response->reachable_tile_indices = m_board->requestReachableTiles(request->tile_index);
-
-    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
-        std::hash<turtle_checkers_interfaces::srv::RequestReachableTiles::Response::SharedPtr>{}(response),
-        m_publicKey, m_privateKey);
-}
-
-void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
-                                                std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response)
-{
-    std::lock_guard<std::mutex> lock(m_timerMutex);
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Request::SharedPtr>{}(request),
-            getPlayerPublicKey(request->source_tile_index), request->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    if (!isPieceValidForTurn(request->source_tile_index))
-    {
-        return;
-    }
-
-    bool moveAccepted = m_board->requestPieceMove(request->source_tile_index, request->destination_tile_index);
-    response->move_accepted = moveAccepted;
-    if (moveAccepted)
-    {
-        auto timePassed = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now() - m_startTurnTimestamp);
-        if (m_gameState == GameState::BlackMove)
-        {
-            m_blackTimeRemaining = (timePassed < m_blackTimeRemaining) ? (m_blackTimeRemaining - timePassed) : std::chrono::seconds(0u);
-        }
-        else if (m_gameState == GameState::RedMove)
-        {
-            m_redTimeRemaining = (timePassed < m_redTimeRemaining) ? (m_redTimeRemaining - timePassed) : std::chrono::seconds(0u);
-        }
-        m_startTurnTimestamp = std::chrono::system_clock::now();
-
-        auto message = turtle_checkers_interfaces::msg::UpdateBoard();
-        message.lobby_name = request->lobby_name;
-        message.lobby_id = request->lobby_id;
-        message.black_time_remaining_seconds = m_blackTimeRemaining.count();
-        message.red_time_remaining_seconds = m_redTimeRemaining.count();
-        bool mustContinueJump = false;
-        auto jumpedPieceTileIndex = m_board->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
-        if (jumpedPieceTileIndex > -1)
-        {
-            m_board->addTileToJumpedTileIndices(jumpedPieceTileIndex);
-            if (m_board->canJumpAgainFromTileIndex(request->destination_tile_index))
-            {
-                m_board->setMustJump(true);
-                mustContinueJump = true; // Must kill again
-            }
-            else
-            {
-                togglePlayerTurn();
-                m_board->setMustJump(false);
-                m_board->slayTurtlesAtJumpedTileIndices();
-            }
-        }
-        else
-        {
-            togglePlayerTurn();
-            m_board->setMustJump(false);
-            m_board->slayTurtlesAtJumpedTileIndices();
-        }
-        message.source_tile_index = request->source_tile_index;
-        message.destination_tile_index = request->destination_tile_index;
-        message.king_piece = m_board->wasPieceKinged(request->destination_tile_index);
-        message.slain_piece_tile_index = jumpedPieceTileIndex;
-
-        // Check which players (if any) cannot move, which ends the game
-        std::vector<size_t> movableTileIndices;
-        m_board->checkPlayersCanMove((m_gameState == GameState::BlackMove), movableTileIndices);
-        if (mustContinueJump) // If mid-jump, only the current piece can move
-        {
-            message.movable_tile_indices = {request->destination_tile_index};
-        }
-        else // Otherwise, any available piece
-        {
-            message.movable_tile_indices = movableTileIndices;
-        }
-
-        // Decide the next game state
-        auto winner = m_board->getWinner();
-        if (winner != Winner::None)
-        {
-            m_timerThreadRunning = false;
-            m_gameState = GameState::GameFinished;
-            message.game_state = 4; // Game over
-            auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
-            winnerMessage.lobby_name = m_lobbyName;
-            winnerMessage.lobby_id = m_lobbyId;
-            winnerMessage.winner = static_cast<size_t>(winner);
-            winnerMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-                std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
-                m_publicKey, m_privateKey);
-            m_declareWinnerPublisher->publish(winnerMessage);
-        }
-        else if (m_gameState == GameState::BlackMove)
-        {
-            message.game_state = 2; // Black to move
-        }
-        else if (m_gameState == GameState::RedMove)
-        {
-            message.game_state = 3; // Red to move
-        }
-
-        message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-            std::hash<turtle_checkers_interfaces::msg::UpdateBoard>{}(message),
-            m_publicKey, m_privateKey);
-
-        m_updateBoardPublisher->publish(message);
-    }
-
-    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
-        std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Response::SharedPtr>{}(response),
-        m_publicKey, m_privateKey);
-}
-
 void CheckersGameLobby::chatMessageCallback(const turtle_checkers_interfaces::msg::ChatMessage::SharedPtr message)
 {
     if (!RSAKeyGenerator::checksumSignatureMatches(
@@ -685,6 +563,147 @@ void CheckersGameLobby::timerChangedCallback(const turtle_checkers_interfaces::m
         std::hash<turtle_checkers_interfaces::msg::UpdateTimer>{}(updateTimerMessage),
         m_publicKey, m_privateKey);
     m_updateTimerPublisher->publish(updateTimerMessage);
+}
+void CheckersGameLobby::requestReachableTilesRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Request> request,
+                                                     std::shared_ptr<turtle_checkers_interfaces::srv::RequestReachableTiles::Response> response)
+{
+    response->reachable_tile_indices = m_board->requestReachableTiles(request->tile_index);
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::RequestReachableTiles::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
+}
+
+void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Request> request,
+                                                std::shared_ptr<turtle_checkers_interfaces::srv::RequestPieceMove::Response> response)
+{
+    std::lock_guard<std::mutex> lock(m_timerMutex);
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Request::SharedPtr>{}(request),
+            getPlayerPublicKey(request->source_tile_index), request->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    if (!isPieceValidForTurn(request->source_tile_index))
+    {
+        return;
+    }
+
+    bool moveAccepted = m_board->requestPieceMove(request->source_tile_index, request->destination_tile_index);
+    response->move_accepted = moveAccepted;
+    if (moveAccepted)
+    {
+        auto timePassed = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now() - m_startTurnTimestamp);
+        if (m_gameState == GameState::BlackMove)
+        {
+            m_blackTimeRemaining = (timePassed < m_blackTimeRemaining) ? (m_blackTimeRemaining - timePassed) : std::chrono::seconds(0u);
+        }
+        else if (m_gameState == GameState::RedMove)
+        {
+            m_redTimeRemaining = (timePassed < m_redTimeRemaining) ? (m_redTimeRemaining - timePassed) : std::chrono::seconds(0u);
+        }
+        m_startTurnTimestamp = std::chrono::system_clock::now();
+
+        auto message = turtle_checkers_interfaces::msg::UpdateBoard();
+        message.lobby_name = request->lobby_name;
+        message.lobby_id = request->lobby_id;
+        message.black_time_remaining_seconds = m_blackTimeRemaining.count();
+        message.red_time_remaining_seconds = m_redTimeRemaining.count();
+        bool mustContinueJump = false;
+        auto jumpedPieceTileIndex = m_board->getJumpedPieceTileIndex(request->source_tile_index, request->destination_tile_index);
+        if (jumpedPieceTileIndex > -1)
+        {
+            m_board->addTileToJumpedTileIndices(jumpedPieceTileIndex);
+            if (m_board->canJumpAgainFromTileIndex(request->destination_tile_index))
+            {
+                m_board->setMustJump(true);
+                mustContinueJump = true; // Must kill again
+            }
+            else
+            {
+                togglePlayerTurn();
+                m_board->setMustJump(false);
+                m_board->slayTurtlesAtJumpedTileIndices();
+            }
+        }
+        else
+        {
+            togglePlayerTurn();
+            m_board->setMustJump(false);
+            m_board->slayTurtlesAtJumpedTileIndices();
+        }
+        message.source_tile_index = request->source_tile_index;
+        message.destination_tile_index = request->destination_tile_index;
+        message.king_piece = m_board->wasPieceKinged(request->destination_tile_index);
+        message.slain_piece_tile_index = jumpedPieceTileIndex;
+
+        // Check which players (if any) cannot move, which ends the game
+        std::vector<size_t> movableTileIndices;
+        m_board->checkPlayersCanMove((m_gameState == GameState::BlackMove), movableTileIndices);
+        if (mustContinueJump) // If mid-jump, only the current piece can move
+        {
+            message.movable_tile_indices = {request->destination_tile_index};
+        }
+        else // Otherwise, any available piece
+        {
+            message.movable_tile_indices = movableTileIndices;
+        }
+
+        // Decide the next game state
+        auto winner = m_board->getWinner();
+        if (winner != Winner::None)
+        {
+            m_timerThreadRunning = false;
+            m_gameState = GameState::GameFinished;
+            message.game_state = 4; // Game over
+            auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
+            winnerMessage.lobby_name = m_lobbyName;
+            winnerMessage.lobby_id = m_lobbyId;
+            winnerMessage.winner = static_cast<size_t>(winner);
+            winnerMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+                std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
+                m_publicKey, m_privateKey);
+            m_declareWinnerPublisher->publish(winnerMessage);
+        }
+        else if (m_gameState == GameState::BlackMove)
+        {
+            message.game_state = 2; // Black to move
+        }
+        else if (m_gameState == GameState::RedMove)
+        {
+            message.game_state = 3; // Red to move
+        }
+
+        // Send a hash of the board to make sure the player has the same board state
+        // after updating and everything is still in sync
+        message.board_hash = std::hash<MasterBoardPtr>{}(m_board);
+
+        message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::msg::UpdateBoard>{}(message),
+            m_publicKey, m_privateKey);
+
+        m_updateBoardPublisher->publish(message);
+    }
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
+}
+
+void CheckersGameLobby::resyncBoardRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ResyncBoard::Request> request,
+                                           std::shared_ptr<turtle_checkers_interfaces::srv::ResyncBoard::Response> response)
+{
+    (void)request; // Unused parameter
+
+    // TODO: Fill in response
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::ResyncBoard::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
 }
 
 void CheckersGameLobby::checkTimers()
