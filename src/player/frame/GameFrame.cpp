@@ -48,14 +48,18 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 	m_hud->setGameState(GameState::Connecting);
 
-	m_chatBox = new ChatBox(this, [this](const std::string &chatMessage)
+	m_chatBox = new ChatBox(this,
+							CHAT_IN_GAME_WIDTH, CHAT_IN_GAME_HEIGHT,
+							[this](const std::string &chatMessage)
 							{ this->sendChatMessage(chatMessage); });
+	m_chatBox->setGeometry(CHAT_BOX_IN_GAME_X, CHAT_BOX_IN_GAME_Y,
+						   CHAT_BOX_IN_GAME_WIDTH, CHAT_BOX_IN_GAME_HEIGHT);
 
 	auto buttonLayout = new QHBoxLayout(this);
 	buttonLayout->setAlignment(Qt::AlignCenter);
 	buttonLayout->setContentsMargins(GRAVEYARD_WIDTH,
 									 HUD_HEIGHT + BOARD_HEIGHT,
-									 GRAVEYARD_WIDTH + CHAT_WIDTH,
+									 GRAVEYARD_WIDTH + CHAT_BOX_IN_GAME_WIDTH,
 									 0);
 
 	m_offerDrawButton = new QPushButton(this);
@@ -190,7 +194,6 @@ void GameFrame::hideEvent(QHideEvent *event)
 	(void)event; // NO LINT
 
 	m_redrawTimer->stop();
-	m_chatBox->clear();
 }
 
 void GameFrame::connectedToGame()
@@ -241,6 +244,11 @@ void GameFrame::requestedReachableTiles(const std::vector<size_t> &reachableTile
 	m_board->setReachableTiles(reachableTileIndices);
 
 	update();
+}
+
+void GameFrame::clearChat()
+{
+	m_chatBox->clear();
 }
 
 void GameFrame::addChatMessage(const std::string &playerName,

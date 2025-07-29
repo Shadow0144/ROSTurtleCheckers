@@ -9,6 +9,7 @@
 #include <QSpacerItem>
 #include <QPushButton>
 #include <QString>
+#include <QScrollBar>
 
 #include <chrono>
 #include <functional>
@@ -18,12 +19,11 @@
 #include "shared/CheckersConsts.hpp"
 
 ChatBox::ChatBox(QWidget *parent,
+                 int chatWidth, int chatHeight,
                  const std::function<void(const std::string &)> &sendMessageCallback)
     : QWidget(parent, Qt::WindowFlags())
 {
     m_sendMessageCallback = sendMessageCallback;
-
-    setGeometry(CHAT_BOX_X, 0u, CHAT_BOX_WIDTH, WINDOW_HEIGHT);
 
     auto chatBoxLayout = new QVBoxLayout(this);
     chatBoxLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -34,28 +34,30 @@ ChatBox::ChatBox(QWidget *parent,
     chatLabel->setFont(chatFont);
     chatBoxLayout->addWidget(chatLabel);
 
-    auto chatScrollArea = new QScrollArea();
-    chatScrollArea->setWidgetResizable(true);
-    chatScrollArea->setFixedSize(CHAT_WIDTH, CHAT_HEIGHT);
-    chatScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    chatScrollArea->setObjectName("ChatScrollArea");
-    chatBoxLayout->addWidget(chatScrollArea);
+    m_chatScrollArea = new QScrollArea();
+    m_chatScrollArea->setWidgetResizable(true);
+    m_chatScrollArea->setFixedSize(chatWidth, chatHeight);
+    m_chatScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    m_chatScrollArea->setObjectName("ChatScrollArea");
+    chatBoxLayout->addWidget(m_chatScrollArea);
 
-    auto chatLayoutWidget = new QWidget();
-    chatLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    auto chatLayout = new QVBoxLayout(chatLayoutWidget);
+    m_chatLayoutWidget = new QWidget();
+    auto chatLayout = new QVBoxLayout(m_chatLayoutWidget);
 
-    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);
+    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     chatLayout->addItem(spacer);
 
     m_chatContentLabel = new QLabel();
+    m_chatContentLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+    m_chatContentLabel->setWordWrap(true);
     chatLayout->addWidget(m_chatContentLabel);
 
-    chatScrollArea->setWidget(chatLayoutWidget);
+    m_chatScrollArea->setWidget(m_chatLayoutWidget);
 
     auto chatEntryLayout = new QHBoxLayout();
 
     m_chatEntryLineEdit = new QLineEdit();
+    m_chatEntryLineEdit->setMaxLength(MAX_CHARS_CHAT_BOX);
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
     auto sendButton = new QPushButton("Send");
@@ -90,12 +92,18 @@ void ChatBox::addMessage(const std::string &playerName,
     {
         colorString = "red";
     }
-    messageStringStream << "<br><span style='color:" << colorString << "'>"
+    if (!m_chatContentLabel->text().isEmpty())
+    {
+        messageStringStream << "<br>"; // Add a break only if there was a previous line
+    }
+    messageStringStream << "<span style='color:" << colorString << "'>"
                         << playerName
                         << " (" << std::put_time(&tm_now, "%H:%M:%S") << "):</span> "
                         << chatMessage;
     m_chatContentLabel->setText(m_chatContentLabel->text() +
                                 QString::fromStdString(messageStringStream.str()));
+    m_chatLayoutWidget->adjustSize();
+    m_chatScrollArea->verticalScrollBar()->setValue(m_chatScrollArea->verticalScrollBar()->maximum());
 }
 
 void ChatBox::clear()

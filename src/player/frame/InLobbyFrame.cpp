@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QPixmap>
+#include <QSpacerItem>
 
 #include <cstdlib>
 #include <ctime>
@@ -18,6 +19,7 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/TitleWidget.hpp"
+#include "player/ChatBox.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
 
@@ -61,6 +63,15 @@ InLobbyFrame::InLobbyFrame(
     lobbyIdFont.setPointSize(LOBBY_NAME_FONT_SIZE);
     m_lobbyIdLabel->setFont(lobbyIdFont);
     lobbyNameLayout->addWidget(m_lobbyIdLabel);
+
+    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lobbyNameLayout->addItem(spacer);
+
+    m_gameStartTimerLabel = new QLabel();
+    m_gameStartTimerLabel->setProperty("highlight", true);
+    m_gameStartTimerLabel->setMargin(10);
+    m_gameStartTimerLabel->setText("The match will start when both players are ready!");
+    lobbyNameLayout->addWidget(m_gameStartTimerLabel);
 
     inLobbyLayout->addLayout(lobbyNameLayout);
 
@@ -190,11 +201,10 @@ InLobbyFrame::InLobbyFrame(
 
     inLobbyLayout->addLayout(timerLayout);
 
-    m_gameStartTimerLabel = new QLabel();
-    m_gameStartTimerLabel->setProperty("highlight", true);
-    m_gameStartTimerLabel->setMargin(10);
-    m_gameStartTimerLabel->setText("The match will start when both players are ready!");
-    inLobbyLayout->addWidget(m_gameStartTimerLabel);
+    m_chatBox = new ChatBox(nullptr, CHAT_IN_LOBBY_WIDTH, CHAT_IN_LOBBY_HEIGHT,
+                            [this](const std::string &chatMessage)
+                            { this->sendChatMessage(chatMessage); });
+    inLobbyLayout->addWidget(m_chatBox);
 
     auto inLobbyButtonLayout = new QHBoxLayout();
 
@@ -541,6 +551,24 @@ void InLobbyFrame::setTimer(uint64_t timerSeconds)
         m_timerComboBox->setCurrentIndex(index);
         update();
     }
+}
+
+void InLobbyFrame::clearChat()
+{
+    m_chatBox->clear();
+}
+
+void InLobbyFrame::addChatMessage(const std::string &playerName,
+                                  TurtlePieceColor playerColor,
+                                  const std::string &chatMessage,
+                                  std::chrono::time_point<std::chrono::system_clock> timeStamp)
+{
+    m_chatBox->addMessage(playerName, playerColor, chatMessage, timeStamp);
+}
+
+void InLobbyFrame::sendChatMessage(const std::string &chatMessage)
+{
+    m_playerWindow->sendChatMessage(chatMessage);
 }
 
 void InLobbyFrame::handleBlackKickButton()

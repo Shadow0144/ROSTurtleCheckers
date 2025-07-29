@@ -16,6 +16,7 @@
 #include <chrono>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/ChatBox.hpp"
 
 class CheckersPlayerWindow;
 
@@ -27,7 +28,7 @@ public:
     ~InLobbyFrame();
 
     void showEvent(QShowEvent *event) override;
-	void hideEvent(QHideEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 
     void setLobbyInfo(const std::string &blackPlayerName,
                       const std::string &redPlayerName,
@@ -41,6 +42,17 @@ public:
     void setLobbyOwnerColor(TurtlePieceColor lobbyOwnerColor);
     void setPlayerReady(const std::string &playerName, bool ready);
     void setTimer(uint64_t timerSeconds);
+
+    void clearChat();
+
+    // Reply from server
+    void addChatMessage(const std::string &playerName,
+                        TurtlePieceColor playerColor,
+                        const std::string &chatMessage,
+                        std::chrono::time_point<std::chrono::system_clock> timeStamp);
+
+    // Send to server
+    void sendChatMessage(const std::string &chatMessage);
 
 private:
     void handleBlackKickButton();
@@ -76,6 +88,8 @@ private:
     QPushButton *m_redPlayerKickButton;
 
     QComboBox *m_timerComboBox;
+
+    ChatBox *m_chatBox;
 
     std::string m_blackPlayerName;
     std::string m_redPlayerName;

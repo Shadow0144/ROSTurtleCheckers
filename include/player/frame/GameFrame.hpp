@@ -59,6 +59,8 @@ public:
 					  size_t blackTimeRemainSec, size_t redTimeRemainSec);
 	void drawDeclined();
 	void drawOffered();
+	
+    void clearChat();
 
 	// Send to server
 	void sendChatMessage(const std::string &chatMessage);

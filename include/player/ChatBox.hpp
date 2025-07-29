@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QScrollArea>
 #include <QLabel>
 #include <QLineEdit>
 
@@ -16,6 +17,7 @@ class ChatBox : public QWidget
 {
 public:
     ChatBox(QWidget *parent,
+            int chatWidth, int chatHeight,
             const std::function<void(const std::string &)> &sendMessageCallback);
 
     void addMessage(const std::string &playerName,
@@ -29,6 +31,8 @@ private:
 
     std::function<void(const std::string &)> m_sendMessageCallback;
 
+    QScrollArea *m_chatScrollArea;
+    QWidget *m_chatLayoutWidget;
     QLabel *m_chatContentLabel;
     QLineEdit *m_chatEntryLineEdit;
 };

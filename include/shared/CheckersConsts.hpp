@@ -105,15 +105,23 @@ constexpr int BOARD_TOP = HUD_HEIGHT;
 constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
 constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
 
-constexpr int CHAT_HEADER_FONT_SIZE = 10;
-constexpr int CHAT_BOX_X = (2 * GRAVEYARD_WIDTH) + BOARD_WIDTH;
-constexpr int CHAT_BOX_WIDTH = 200;
-constexpr int CHAT_WIDTH = 180;
-constexpr int CHAT_HEIGHT = 440;
-
 constexpr int BUTTON_DOCK_HEIGHT = 50;
 
-constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_WIDTH;
+constexpr int CHAT_HEADER_FONT_SIZE = 10;
+constexpr int CHAT_BOX_IN_LOBBY_X = 0;
+constexpr int CHAT_BOX_IN_LOBBY_Y = 0;
+constexpr int CHAT_BOX_IN_LOBBY_WIDTH = 0;
+constexpr int CHAT_BOX_IN_LOBBY_HEIGHT = 0;
+constexpr int CHAT_BOX_IN_GAME_X = (2 * GRAVEYARD_WIDTH) + BOARD_WIDTH;
+constexpr int CHAT_BOX_IN_GAME_Y = 0;
+constexpr int CHAT_BOX_IN_GAME_WIDTH = 200;
+constexpr int CHAT_BOX_IN_GAME_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
+constexpr int CHAT_IN_LOBBY_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_IN_GAME_WIDTH - (2 * IN_LOBBY_LAYOUT_MARGINS) - 20;
+constexpr int CHAT_IN_LOBBY_HEIGHT = 50;
+constexpr int CHAT_IN_GAME_WIDTH = 180;
+constexpr int CHAT_IN_GAME_HEIGHT = 440;
+
+constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_IN_GAME_WIDTH;
 constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
 
 constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);
@@ -147,3 +155,4 @@ constexpr int MAX_CHARS_PLAYER_NAME = 24;
 constexpr int MAX_CHARS_PLAYER_PASS = 3;
 constexpr int MAX_CHARS_LOBBY_NAME = 24;
 constexpr int MAX_CHARS_LOBBY_PASS = 24;
+constexpr int MAX_CHARS_CHAT_BOX = 120;
