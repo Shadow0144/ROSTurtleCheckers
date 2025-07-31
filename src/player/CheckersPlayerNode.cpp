@@ -30,6 +30,7 @@
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
+#include "turtle_checkers_interfaces/srv/get_statistics.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
@@ -117,6 +118,9 @@ int CheckersPlayerNode::exec()
         "CreateAccount");
     m_logInAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::LogInAccount>(
         "LogInAccount");
+
+    m_getStatisticsClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::GetStatistics>(
+        "GetStatistics");
 
     m_createLobbyClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateLobby>(
         "CreateLobby");
@@ -261,6 +265,16 @@ void CheckersPlayerNode::logOutAccount()
         std::hash<turtle_checkers_interfaces::msg::LogOutAccount>{}(message),
         m_publicKey, m_privateKey);
     m_logOutAccountPublisher->publish(message);
+}
+
+void CheckersPlayerNode::requestStatistics(const std::string &playerName)
+{
+    auto request = std::make_shared<turtle_checkers_interfaces::srv::GetStatistics::Request>();
+    request->player_name = playerName;
+
+    m_getStatisticsClient->async_send_request(request,
+                                        std::bind(&CheckersPlayerNode::getStatisticsResponse,
+                                                  this, std::placeholders::_1));
 }
 
 void CheckersPlayerNode::createLobby(
@@ -733,6 +747,21 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
                                             result->has_passwords,
                                             result->joined_black_player_names,
                                             result->joined_red_player_names);
+}
+
+void CheckersPlayerNode::getStatisticsResponse(rclcpp::Client<turtle_checkers_interfaces::srv::GetStatistics>::SharedFuture future)
+{
+    auto result = future.get();
+
+    m_checkersPlayerWindow->displayStatistics(result->player_name,
+                                              result->lobby_name_ids,
+                                              result->black_player_names,
+                                              result->red_player_names,
+                                              result->winners,
+                                              result->matches_played,
+                                              result->matches_won,
+                                              result->matches_lost,
+                                              result->matches_drawed);
 }
 
 void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future)

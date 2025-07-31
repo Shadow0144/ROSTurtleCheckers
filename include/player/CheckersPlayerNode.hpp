@@ -25,6 +25,7 @@
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
+#include "turtle_checkers_interfaces/srv/get_statistics.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/request_piece_move.hpp"
@@ -57,6 +58,8 @@ public:
     void logInAccount(const std::string &playerName,
                       const std::string &playerPassword);
     void logOutAccount();
+
+    void requestStatistics(const std::string &playerName);
 
     void createLobby(const std::string &playerName,
                      const std::string &lobbyName,
@@ -105,6 +108,7 @@ private:
     void createAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedFuture future);
     void createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future);
     void getLobbyListResponse(rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedFuture future);
+    void getStatisticsResponse(rclcpp::Client<turtle_checkers_interfaces::srv::GetStatistics>::SharedFuture future);
     void joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future);
     void logInAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::LogInAccount>::SharedFuture future);
     void requestReachableTilesResponse(rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedFuture future);
@@ -147,6 +151,7 @@ private:
     rclcpp::Client<turtle_checkers_interfaces::srv::LogInAccount>::SharedPtr m_logInAccountClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::GetLobbyList>::SharedPtr m_getLobbyListClient;
+    rclcpp::Client<turtle_checkers_interfaces::srv::GetStatistics>::SharedPtr m_getStatisticsClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::RequestPieceMove>::SharedPtr m_requestPieceMoveClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::RequestReachableTiles>::SharedPtr m_requestReachableTilesClient;

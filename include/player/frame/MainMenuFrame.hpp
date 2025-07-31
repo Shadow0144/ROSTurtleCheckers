@@ -25,6 +25,7 @@ public:
 	void showEvent(QShowEvent *event) override;
 
 private:
+	void handleStatisticsButton();
 	void handleLogOutAccountButton();
 	void handleCreateLobbyButton();
 	void handleJoinLobbyButton();

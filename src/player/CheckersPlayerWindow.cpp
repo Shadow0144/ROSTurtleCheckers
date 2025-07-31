@@ -8,8 +8,27 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/CheckersPlayerNode.hpp"
-#include "player/frame/MainMenuFrame.hpp"
+#include "player/frame/CreateAccountFrame.hpp"
+#include "player/frame/CreateLobbyFrame.hpp"
 #include "player/frame/GameFrame.hpp"
+#include "player/frame/InLobbyFrame.hpp"
+#include "player/frame/LobbyListFrame.hpp"
+#include "player/frame/LobbyPasswordFrame.hpp"
+#include "player/frame/LogInAccountFrame.hpp"
+#include "player/frame/MainMenuFrame.hpp"
+#include "player/frame/StatisticsFrame.hpp"
+#include "player/frame/TitleFrame.hpp"
+
+static constexpr int CREATE_ACCOUNT_INDEX = 0;
+static constexpr int CREATE_LOBBY_INDEX = 1;
+static constexpr int GAME_INDEX = 2;
+static constexpr int IN_LOBBY_INDEX = 3;
+static constexpr int LOBBY_LIST_INDEX = 4;
+static constexpr int LOBBY_PASSWORD_INDEX = 5;
+static constexpr int LOG_IN_ACCOUNT_INDEX = 6;
+static constexpr int MAIN_MENU_INDEX = 7;
+static constexpr int STATISTICS_INDEX = 8;
+static constexpr int TITLE_INDEX = 9;
 
 CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &playerNode)
     : QMainWindow()
@@ -35,6 +54,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_lobbyPasswordFrame = new LobbyPasswordFrame(this);
     m_logInAccountFrame = new LogInAccountFrame(this);
     m_mainMenuFrame = new MainMenuFrame(this);
+    m_statisticsFrame = new StatisticsFrame(this);
     m_titleFrame = new TitleFrame(this);
 
     m_windowLayout->insertWidget(CREATE_ACCOUNT_INDEX, m_createAccountFrame);
@@ -45,6 +65,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_windowLayout->insertWidget(LOBBY_PASSWORD_INDEX, m_lobbyPasswordFrame);
     m_windowLayout->insertWidget(LOG_IN_ACCOUNT_INDEX, m_logInAccountFrame);
     m_windowLayout->insertWidget(MAIN_MENU_INDEX, m_mainMenuFrame);
+    m_windowLayout->insertWidget(STATISTICS_INDEX, m_statisticsFrame);
     m_windowLayout->insertWidget(TITLE_INDEX, m_titleFrame);
 
     m_windowLayout->setCurrentIndex(TITLE_INDEX);
@@ -90,6 +111,11 @@ void CheckersPlayerWindow::moveToLogInAccountFrame()
 void CheckersPlayerWindow::moveToMainMenuFrame()
 {
     m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
+}
+
+void CheckersPlayerWindow::moveToStatisticsFrame()
+{
+    m_windowLayout->setCurrentIndex(STATISTICS_INDEX);
 }
 
 void CheckersPlayerWindow::moveToCreateLobbyFrame()
@@ -141,6 +167,28 @@ void CheckersPlayerWindow::logOutAccount()
     }
     Parameters::setPlayerName(""); // Clear out the player name
     moveToTitleFrame();
+}
+
+void CheckersPlayerWindow::requestStatistics(const std::string &playerName)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->requestStatistics(playerName);
+    }
+}
+
+void CheckersPlayerWindow::displayStatistics(const std::string &playerName,
+                                             const std::vector<std::string> &lobbyNameIds,
+                                             const std::vector<std::string> &blackPlayerNames,
+                                             const std::vector<std::string> &redPlayerNames,
+                                             const std::vector<uint64_t> &winners,
+                                             uint64_t matchesPlayed,
+                                             uint64_t matchesWon,
+                                             uint64_t matchesLost,
+                                             uint64_t matchesDrawed)
+{
+    m_statisticsFrame->displayStatistics(playerName, lobbyNameIds, blackPlayerNames, redPlayerNames,
+                                         winners, matchesPlayed, matchesWon, matchesLost, matchesDrawed);
 }
 
 void CheckersPlayerWindow::createLobby(const std::string &lobbyPassword)

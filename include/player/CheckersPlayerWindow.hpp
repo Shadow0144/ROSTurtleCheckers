@@ -19,6 +19,7 @@
 #include "player/frame/LobbyPasswordFrame.hpp"
 #include "player/frame/LogInAccountFrame.hpp"
 #include "player/frame/MainMenuFrame.hpp"
+#include "player/frame/StatisticsFrame.hpp"
 #include "player/frame/TitleFrame.hpp"
 
 class CheckersPlayerNode;
@@ -35,6 +36,7 @@ public:
     void moveToCreateAccountFrame();
     void moveToLogInAccountFrame();
     void moveToMainMenuFrame();
+    void moveToStatisticsFrame();
     void moveToCreateLobbyFrame();
     void moveToLobbyListFrame();
     void moveToLobbyPasswordFrame();
@@ -44,6 +46,17 @@ public:
     void createAccount(const std::string &playerName, const std::string &playerPassword);
     void logInAccount(const std::string &playerName, const std::string &playerPassword);
     void logOutAccount();
+
+    void requestStatistics(const std::string &playerName);
+    void displayStatistics(const std::string &playerName,
+                           const std::vector<std::string> &lobbyNameIds,
+                           const std::vector<std::string> &blackPlayerNames,
+                           const std::vector<std::string> &redPlayerNames,
+                           const std::vector<uint64_t> &winners,
+                           uint64_t matchesPlayed,
+                           uint64_t matchesWon,
+                           uint64_t matchesLost,
+                           uint64_t matchesDrawed);
 
     void createLobby(const std::string &lobbyPassword);
     void joinLobby(const std::string &lobbyPassword);
@@ -134,15 +147,6 @@ private:
     WindowState m_windowState;
 
     QStackedLayout *m_windowLayout;
-    static constexpr int CREATE_ACCOUNT_INDEX = 0;
-    static constexpr int CREATE_LOBBY_INDEX = 1;
-    static constexpr int GAME_INDEX = 2;
-    static constexpr int IN_LOBBY_INDEX = 3;
-    static constexpr int LOBBY_LIST_INDEX = 4;
-    static constexpr int LOBBY_PASSWORD_INDEX = 5;
-    static constexpr int LOG_IN_ACCOUNT_INDEX = 6;
-    static constexpr int MAIN_MENU_INDEX = 7;
-    static constexpr int TITLE_INDEX = 8;
 
     std::weak_ptr<CheckersPlayerNode> m_playerNode;
 
@@ -156,6 +160,7 @@ private:
     LobbyPasswordFrame *m_lobbyPasswordFrame;
     LogInAccountFrame *m_logInAccountFrame;
     MainMenuFrame *m_mainMenuFrame;
+    StatisticsFrame *m_statisticsFrame;
     TitleFrame *m_titleFrame;
 };
 

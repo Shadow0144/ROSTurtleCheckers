@@ -11,6 +11,7 @@
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
+#include "turtle_checkers_interfaces/srv/get_statistics.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
@@ -39,6 +40,8 @@ private:
                             std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Response> response);
     void getLobbyListRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Request> request,
                              std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Response> response);
+    void getStatisticsRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Request> request,
+                             std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Response> response);
 
     void leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message);
     void logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message);
@@ -48,6 +51,7 @@ private:
     rclcpp::Service<turtle_checkers_interfaces::srv::LogInAccount>::SharedPtr m_logInAccountService;
     rclcpp::Service<turtle_checkers_interfaces::srv::CreateLobby>::SharedPtr m_createLobbyService;
     rclcpp::Service<turtle_checkers_interfaces::srv::GetLobbyList>::SharedPtr m_getLobbyListService;
+    rclcpp::Service<turtle_checkers_interfaces::srv::GetStatistics>::SharedPtr m_getStatisticsService;
     rclcpp::Service<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyService;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;

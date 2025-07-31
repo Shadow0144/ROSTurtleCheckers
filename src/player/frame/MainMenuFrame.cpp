@@ -37,6 +37,12 @@ MainMenuFrame::MainMenuFrame(
     m_playerNameLabel->setFont(playerNameFont);
     playerNameLayout->addWidget(m_playerNameLabel);
 
+    std::string statisticsString = "Statistics";
+    auto statisticsButton = new QPushButton(statisticsString.c_str());
+    statisticsButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(statisticsButton, &QPushButton::released, this, &MainMenuFrame::handleStatisticsButton);
+    playerNameLayout->addWidget(statisticsButton);
+
     std::string logOutAccountString = "Log Out";
     auto logOutAccountButton = new QPushButton(logOutAccountString.c_str());
     logOutAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
@@ -77,6 +83,11 @@ void MainMenuFrame::showEvent(QShowEvent *event)
     (void)event; // NO LINT
 
     m_playerNameLabel->setText(Parameters::getPlayerName().c_str());
+}
+
+void MainMenuFrame::handleStatisticsButton()
+{
+    m_playerWindow->moveToStatisticsFrame();
 }
 
 void MainMenuFrame::handleLogOutAccountButton()

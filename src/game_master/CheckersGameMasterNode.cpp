@@ -200,6 +200,27 @@ void CheckersGameMasterNode::getLobbyListRequest(const std::shared_ptr<turtle_ch
         m_publicKey, m_privateKey);
 }
 
+void CheckersGameMasterNode::getStatisticsRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Request> request,
+                                                  std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Response> response)
+{
+    const auto &playerStatistics = m_databaseHandler->getPlayerStatistics(request->player_name);
+
+    response->player_name = request->player_name;
+    for (const auto &match : playerStatistics.matchInfoList)
+    {
+        response->lobby_name_ids.push_back(match.lobbyNameId);
+        response->black_player_names.push_back(match.blackPlayerName);
+        response->red_player_names.push_back(match.redPlayerName);
+        response->winners.push_back(match.winner);
+    }
+    response->matches_played = playerStatistics.matchesPlayed;
+    response->matches_won = playerStatistics.matchesWon;
+    response->matches_lost = playerStatistics.matchesLost;
+    response->matches_drawed = playerStatistics.matchesDrawed;
+
+    // No checksum required
+}
+
 void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Request> request,
                                               std::shared_ptr<turtle_checkers_interfaces::srv::JoinLobby::Response> response)
 {

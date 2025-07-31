@@ -43,6 +43,7 @@ qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/player/frame/LobbyPasswordFrame.hpp
   include/player/frame/LogInAccountFrame.hpp
   include/player/frame/MainMenuFrame.hpp
+  include/player/frame/StatisticsFrame.hpp
   include/player/frame/TitleFrame.hpp
   include/player/CheckersPlayerWindow.hpp 
   include/player/CheckersPlayerNode.hpp)
@@ -72,6 +73,7 @@ add_executable(checkers_player_node
   src/player/frame/LobbyPasswordFrame.cpp
   src/player/frame/LogInAccountFrame.cpp
   src/player/frame/MainMenuFrame.cpp
+  src/player/frame/StatisticsFrame.cpp
   src/player/frame/TitleFrame.cpp
   src/player/CheckersPlayerWindow.cpp
   src/player/CheckersPlayerNode.cpp
