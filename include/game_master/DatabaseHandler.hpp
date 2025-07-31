@@ -8,6 +8,24 @@
 
 #include <string>
 #include <memory>
+#include <vector>
+
+struct PlayerStatistics
+{
+    std::string playerName;
+    struct MatchInfo
+    {
+        std::string lobbyNameId;
+        std::string blackPlayerName;
+        std::string redPlayerName;
+        int winner;
+    };
+    std::vector<MatchInfo> matchInfoList;
+    int matchesPlayed;
+    int matchesWon;
+    int matchesLost;
+    int matchesDrawed;
+};
 
 class DatabaseHandler
 {
@@ -20,7 +38,18 @@ public:
     bool addPlayer(const std::string &playerName, size_t hashedPlayerPassword);
     bool removePlayer(const std::string &playerName);
 
+    bool checkPlayerBanned(const std::string &playerName);
+    bool setPlayerBanned(const std::string &playerName, bool banned);
+
     bool checkPasswordCorrect(const std::string &playerName, size_t hashedPlayerPassword);
+
+    bool changePassword(const std::string &playerName, size_t hashedPlayerPassword);
+
+    bool addMatch(const std::string &lobbyName, const std::string &lobbyId,
+                  const std::string &blackPlayerName, const std::string &redPlayerName,
+                  int winner);
+
+    PlayerStatistics getPlayerStatistics(const std::string &playerName);
 
     const std::string getErrorMessage(); // Clears the message after getting
 
