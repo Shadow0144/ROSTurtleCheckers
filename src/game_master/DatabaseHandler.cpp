@@ -262,7 +262,7 @@ bool DatabaseHandler::checkPlayerBanned(const std::string &playerName)
 bool DatabaseHandler::setPlayerBanned(const std::string &playerName, bool banned)
 {
     // Prepare the query
-    auto query = "UPDATE players SET (banned = ?) WHERE (name = ?);";
+    auto query = "UPDATE players SET banned = ? WHERE name = ?;";
     sqlite3_stmt *stmt = nullptr;
     if (sqlite3_prepare_v2(m_db, query, -1, &stmt, nullptr) != SQLITE_OK)
     {
@@ -276,7 +276,7 @@ bool DatabaseHandler::setPlayerBanned(const std::string &playerName, bool banned
     sqlite3_bind_text(stmt, 2, playerName.c_str(), -1, SQLITE_TRANSIENT);
 
     // Run the query
-    if (sqlite3_step(stmt) != SQLITE_ROW)
+    if (sqlite3_step(stmt) != SQLITE_DONE)
     {
         m_errorMessage = "Failed to run SQL query";
         TurtleLogger::logWarn("Failed to run SQL query: " + std::string(sqlite3_errmsg(m_db)));

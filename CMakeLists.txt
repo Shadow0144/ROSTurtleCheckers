@@ -113,13 +113,16 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+install(FILES turtles_checkers_authorization_key.key
+  DESTINATION share/${PROJECT_NAME})
+
 install(DIRECTORY img
   DESTINATION share/${PROJECT_NAME}
   FILES_MATCHING PATTERN "*.png")
 
-  install(DIRECTORY styles
-    DESTINATION share/${PROJECT_NAME}
-    FILES_MATCHING PATTERN "*.qss")
+install(DIRECTORY styles
+  DESTINATION share/${PROJECT_NAME}
+  FILES_MATCHING PATTERN "*.qss")
   
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})

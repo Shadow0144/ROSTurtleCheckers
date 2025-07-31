@@ -13,8 +13,10 @@
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/get_statistics.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
+#include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
 
 #include "shared/RSAKeyGenerator.hpp"
 #include "game_master/DatabaseHandler.hpp"
@@ -41,10 +43,17 @@ private:
     void getLobbyListRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Request> request,
                              std::shared_ptr<turtle_checkers_interfaces::srv::GetLobbyList::Response> response);
     void getStatisticsRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Request> request,
-                             std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Response> response);
+                              std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Response> response);
 
     void leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message);
     void logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message);
+    void setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message);
+
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountPublisher;
+
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::SetPlayerBanned>::SharedPtr m_setPlayerBannedSubscription;
 
     rclcpp::Service<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterService;
     rclcpp::Service<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountService;
@@ -54,18 +63,17 @@ private:
     rclcpp::Service<turtle_checkers_interfaces::srv::GetStatistics>::SharedPtr m_getStatisticsService;
     rclcpp::Service<turtle_checkers_interfaces::srv::JoinLobby>::SharedPtr m_joinLobbyService;
 
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountSubscription;
-
     std::shared_ptr<rclcpp::Node> m_gameMasterNode;
-    
+
     DatabaseHandlerUniPtr m_databaseHandler;
 
     std::unordered_map<std::string, uint64_t> m_playerPublicKeys;
     std::unordered_map<std::string, CheckersGameLobbyPtr> m_checkersGameLobbies;
 
-    uint16_t MAX_LOBBY_LIMIT = 1000; // Max ID is 1 less, they then loop around
-    uint16_t m_nextLobbyId;          // [0 - MAX_LOBBY_LIMIT)
+    uint16_t MAX_LOBBY_LIMIT = 1000u; // Max ID is 1 less, they then loop around
+    uint16_t m_nextLobbyId;           // [0 - MAX_LOBBY_LIMIT)
+
+    uint64_t m_authorizationKey = 0u;
 
     uint64_t m_publicKey;
     uint64_t m_privateKey;

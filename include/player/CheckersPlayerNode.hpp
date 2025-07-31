@@ -6,6 +6,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
+#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
@@ -95,6 +96,7 @@ private:
     void declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message);
     void drawDeclinedCallback(const turtle_checkers_interfaces::msg::DrawDeclined::SharedPtr message);
     void drawOfferedCallback(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message);
+    void forceLogoutAccountCallback(const turtle_checkers_interfaces::msg::ForceLogoutAccount::SharedPtr message);
     void gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message);
     void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
     void playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message);
@@ -125,18 +127,6 @@ private:
 
     std::unique_ptr<CheckersPlayerWindow> m_checkersPlayerWindow;
 
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawDeclined>::SharedPtr m_drawDeclinedSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawOffered>::SharedPtr m_drawOfferedSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbySubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateChat>::SharedPtr m_updateChatSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerSubscription;
-
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ChatMessage>::SharedPtr m_chatMessagePublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerPublisher;
@@ -145,6 +135,19 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::TimerChanged>::SharedPtr m_timerChangedPublisher;
+
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawDeclined>::SharedPtr m_drawDeclinedSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawOffered>::SharedPtr m_drawOfferedSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateChat>::SharedPtr m_updateChatSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerSubscription;
 
     rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountClient;

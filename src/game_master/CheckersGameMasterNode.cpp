@@ -9,13 +9,16 @@
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
+#include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
 
 #include <memory>
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
@@ -25,6 +28,8 @@
 
 using std::placeholders::_1;
 using std::placeholders::_2;
+
+const std::string authorizationKeyFile = "turtles_checkers_authorization_key.key";
 
 CheckersGameMasterNode::CheckersGameMasterNode()
 {
@@ -41,7 +46,17 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     // Create/load the player database
     m_databaseHandler = std::make_unique<DatabaseHandler>(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/db");
 
-    // Create the services and subscriptions
+    // Create the publishers, subscriptions, and services
+
+    m_forceLogoutAccountPublisher = m_gameMasterNode->create_publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
+        "ForceLogoutAccount", 10);
+
+    m_leaveLobbySubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LeaveLobby>(
+        "LeaveLobby", 10, std::bind(&CheckersGameMasterNode::leaveLobbyCallback, this, std::placeholders::_1));
+    m_logOutAccountSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LogOutAccount>(
+        "LogOutAccount", 10, std::bind(&CheckersGameMasterNode::logOutAccountCallback, this, std::placeholders::_1));
+    m_setPlayerBannedSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::SetPlayerBanned>(
+        "SetPlayerBanned", 10, std::bind(&CheckersGameMasterNode::setPlayerBannedCallback, this, std::placeholders::_1));
 
     m_connectToGameMasterService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::ConnectToGameMaster>(
         "ConnectToGameMaster", std::bind(&CheckersGameMasterNode::connectToGameMasterRequest,
@@ -62,10 +77,23 @@ CheckersGameMasterNode::CheckersGameMasterNode()
         "JoinLobby", std::bind(&CheckersGameMasterNode::joinLobbyRequest,
                                this, std::placeholders::_1, std::placeholders::_2));
 
-    m_leaveLobbySubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LeaveLobby>(
-        "LeaveLobby", 10, std::bind(&CheckersGameMasterNode::leaveLobbyCallback, this, std::placeholders::_1));
-    m_logOutAccountSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LogOutAccount>(
-        "LogOutAccount", 10, std::bind(&CheckersGameMasterNode::logOutAccountCallback, this, std::placeholders::_1));
+    // Get the authorization key from the file
+    try
+    {
+        std::ifstream file(authorizationKeyFile);
+        if (file)
+        {
+            file >> m_authorizationKey;
+        }
+        else
+        {
+            TurtleLogger::logError("Error opening authorization key file");
+        }
+    }
+    catch (const std::exception &e)
+    {
+        TurtleLogger::logError(std::string("Authorization key file error: ") + e.what());
+    }
 
     TurtleLogger::logInfo("Starting Turtles Checkers game node; now accepting players!");
 }
@@ -77,6 +105,7 @@ void CheckersGameMasterNode::connectToGameMasterRequest(const std::shared_ptr<tu
 
     response->game_master_public_key = m_publicKey;
 }
+
 void CheckersGameMasterNode::createAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Request> request,
                                                   std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Response> response)
 {
@@ -97,6 +126,7 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
 {
     response->player_name = request->player_name;
 
+    // Checked if logged in already
     if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
     {
         // Already logged in
@@ -105,13 +135,23 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
     }
     else
     {
-        auto hashedPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_player_password, m_privateKey, m_publicKey);
-        response->logged_in = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPlayerPassword);
-        response->error_msg = m_databaseHandler->getErrorMessage();
-
-        if (response->logged_in) // If logging in succeeded, add to the list
+        // Check if the player has been banned
+        if (m_databaseHandler->checkPlayerBanned(request->player_name))
         {
-            m_playerPublicKeys[request->player_name] = request->player_public_key;
+            // Already logged in
+            response->logged_in = false;
+            response->error_msg = "Player is banned";
+        }
+        else
+        {
+            auto hashedPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_player_password, m_privateKey, m_publicKey);
+            response->logged_in = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPlayerPassword);
+            response->error_msg = m_databaseHandler->getErrorMessage();
+
+            if (response->logged_in) // If logging in succeeded, add to the list
+            {
+                m_playerPublicKeys[request->player_name] = request->player_public_key;
+            }
         }
     }
 
@@ -317,6 +357,33 @@ void CheckersGameMasterNode::logOutAccountCallback(const turtle_checkers_interfa
     if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
     {
         m_playerPublicKeys.erase(message->player_name);
+    }
+}
+
+void CheckersGameMasterNode::setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message)
+{
+    // Check that the authorization key was loaded and matches
+    if (m_authorizationKey == 0 || m_authorizationKey != message->authorization_key)
+    {
+        TurtleLogger::logWarn("Unauthorized attempt to access server");
+        return;
+    }
+
+    m_databaseHandler->setPlayerBanned(message->player_name, message->banned);
+
+    if (message->banned) // If the player was banned, force them to logout
+    {
+        auto forceLogoutAccountMessage = turtle_checkers_interfaces::msg::ForceLogoutAccount();
+        forceLogoutAccountMessage.player_name = message->player_name;
+        forceLogoutAccountMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>{}(forceLogoutAccountMessage),
+            m_publicKey, m_privateKey);
+        m_forceLogoutAccountPublisher->publish(forceLogoutAccountMessage);
+
+        if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
+        {
+            m_playerPublicKeys.erase(message->player_name);
+        }
     }
 }
 

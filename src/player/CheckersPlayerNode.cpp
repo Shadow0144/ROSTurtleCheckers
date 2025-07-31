@@ -11,6 +11,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
+#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
@@ -134,6 +135,9 @@ int CheckersPlayerNode::exec()
     m_logOutAccountPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::LogOutAccount>(
         "LogOutAccount", 10);
 
+    m_forceLogoutAccountSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
+        "/ForceLogoutAccount", 10, std::bind(&CheckersPlayerNode::forceLogoutAccountCallback, this, _1));
+
     // Ensure the game master node is reachable, then get the public key from it
     std::thread(&CheckersPlayerNode::connectToGameMaster, this).detach();
 
@@ -142,7 +146,20 @@ int CheckersPlayerNode::exec()
 
 void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, const std::string &lobbyId)
 {
-    // Create the subscriptions, publishers, and services now that we have the full topic names
+    // Create the publishers, subscribers, and services now that we have the full topic names
+
+    m_chatMessagePublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ChatMessage>(
+        lobbyName + "/id" + lobbyId + "/ChatMessage", 10);
+    m_forfitPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Forfit>(
+        lobbyName + "/id" + lobbyId + "/Forfit", 10);
+    m_kickPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::KickPlayer>(
+        lobbyName + "/id" + lobbyId + "/KickPlayer", 10);
+    m_offerDrawPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::OfferDraw>(
+        lobbyName + "/id" + lobbyId + "/OfferDraw", 10);
+    m_playerReadyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>(
+        lobbyName + "/id" + lobbyId + "/PlayerReady", 10);
+    m_timerChangedPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::TimerChanged>(
+        lobbyName + "/id" + lobbyId + "/TimerChanged", 10);
 
     m_declareWinnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::DeclareWinner>(
         lobbyName + "/id" + lobbyId + "/DeclareWinner", 10, std::bind(&CheckersPlayerNode::declareWinnerCallback, this, _1));
@@ -166,19 +183,6 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/UpdateLobbyOwner", 10, std::bind(&CheckersPlayerNode::updateLobbyOwnerCallback, this, _1));
     m_updateTimerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateTimer>(
         lobbyName + "/id" + lobbyId + "/UpdateTimer", 10, std::bind(&CheckersPlayerNode::updateTimerCallback, this, _1));
-
-    m_chatMessagePublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ChatMessage>(
-        lobbyName + "/id" + lobbyId + "/ChatMessage", 10);
-    m_forfitPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Forfit>(
-        lobbyName + "/id" + lobbyId + "/Forfit", 10);
-    m_kickPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::KickPlayer>(
-        lobbyName + "/id" + lobbyId + "/KickPlayer", 10);
-    m_offerDrawPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::OfferDraw>(
-        lobbyName + "/id" + lobbyId + "/OfferDraw", 10);
-    m_playerReadyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::PlayerReady>(
-        lobbyName + "/id" + lobbyId + "/PlayerReady", 10);
-    m_timerChangedPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::TimerChanged>(
-        lobbyName + "/id" + lobbyId + "/TimerChanged", 10);
 
     m_requestPieceMoveClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::RequestPieceMove>(
         lobbyName + "/id" + lobbyId + "/RequestPieceMove");
@@ -273,8 +277,8 @@ void CheckersPlayerNode::requestStatistics(const std::string &playerName)
     request->player_name = playerName;
 
     m_getStatisticsClient->async_send_request(request,
-                                        std::bind(&CheckersPlayerNode::getStatisticsResponse,
-                                                  this, std::placeholders::_1));
+                                              std::bind(&CheckersPlayerNode::getStatisticsResponse,
+                                                        this, std::placeholders::_1));
 }
 
 void CheckersPlayerNode::createLobby(
@@ -475,6 +479,26 @@ void CheckersPlayerNode::drawOfferedCallback(const turtle_checkers_interfaces::m
     }
 
     m_checkersPlayerWindow->drawOffered();
+}
+
+void CheckersPlayerNode::forceLogoutAccountCallback(const turtle_checkers_interfaces::msg::ForceLogoutAccount::SharedPtr message)
+{
+    if (Parameters::getPlayerName() != message->player_name)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    // TODO: Tell the player they have been banned
+
+    m_checkersPlayerWindow->logOutAccount();
 }
 
 void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message)

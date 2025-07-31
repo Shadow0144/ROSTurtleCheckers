@@ -4,6 +4,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
+#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
@@ -119,6 +120,17 @@ struct std::hash<turtle_checkers_interfaces::msg::DrawOffered>
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::ForceLogoutAccount &message) const noexcept
+    {
+        size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
         return combinedHash;
     }
