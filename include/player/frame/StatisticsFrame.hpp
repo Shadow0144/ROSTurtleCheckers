@@ -41,9 +41,24 @@ private:
     void handleBackButton();
     void handleViewPlayerButton(const std::string &playerName);
 
+    void buildMatchList();
+
     CheckersPlayerWindow *m_playerWindow;
 
     QLabel *m_playerNameLabel;
+    QLabel *m_matchesPlayedLabel;
+    QLabel *m_matchesWonLabel;
+    QLabel *m_matchesLostLabel;
+    QLabel *m_matchesDrawedLabel;
+
+	QWidget *m_matchListLayoutWidget;
+
+    QScrollArea *m_matchListScrollArea;
+
+    std::vector<std::string> m_lobbyNameIds;
+    std::vector<std::string> m_blackPlayerNames;
+    std::vector<std::string> m_redPlayerNames;
+    std::vector<uint64_t> m_winners;
 };
 
 typedef std::unique_ptr<StatisticsFrame> StatisticsFrameUniPtr;

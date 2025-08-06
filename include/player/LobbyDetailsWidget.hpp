@@ -2,7 +2,6 @@
 
 #include <QWidget>
 
-#include <memory>
 #include <string>
 #include <vector>
 #include <functional>
@@ -18,5 +17,3 @@ public:
                        bool hasPassword,
                        const std::function<void()> &onJoinFunction);
 };
-
-typedef std::shared_ptr<LobbyDetailsWidget> LobbyDetailsWidgetPtr;

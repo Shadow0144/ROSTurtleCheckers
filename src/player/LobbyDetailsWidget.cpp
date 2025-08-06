@@ -8,6 +8,10 @@
 #include <QString>
 #include <QStyle>
 
+#include <string>
+#include <vector>
+#include <functional>
+
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
 
@@ -18,8 +22,9 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
                                        const std::string &redPlayerName,
                                        bool hasPassword,
                                        const std::function<void()> &onJoinFunction)
+    : QWidget(parent)
 {
-    setProperty("lobby", QVariant(true));
+    setProperty("details", QVariant(true));
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     // Update the style
     style()->unpolish(this);

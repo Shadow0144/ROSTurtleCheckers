@@ -1,6 +1,6 @@
 QWidget { background-color: black; }
 QWidget[framed="true"] { border: 2px solid gray; }
-QWidget[lobby="true"] { border: 1px solid white; }
+QWidget[details="true"] { border: 1px solid white; }
 
 QLabel { color: white; }
 QLabel:disabled { color: dimGray; }
