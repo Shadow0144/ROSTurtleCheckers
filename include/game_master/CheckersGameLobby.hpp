@@ -32,6 +32,7 @@
 #include "turtle_checkers_interfaces/srv/resync_board.hpp"
 
 #include "game_master/MasterBoard.hpp"
+#include "game_master/DatabaseHandler.hpp"
 
 class CheckersGameLobby
 {
@@ -41,7 +42,8 @@ public:
                       uint64_t privateKey,
                       const std::string &lobbyName,
                       const std::string &lobbyId,
-                      uint64_t lobbyPasswordHash);
+                      uint64_t lobbyPasswordHash,
+                      const std::weak_ptr<DatabaseHandler> &databaseHandler);
     ~CheckersGameLobby();
 
     const std::string &getLobbyName() const;
@@ -88,7 +90,7 @@ private:
     void requestBoardStateRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Request> request,
                                   std::shared_ptr<turtle_checkers_interfaces::srv::RequestBoardState::Response> response);
     void resyncBoardRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ResyncBoard::Request> request,
-                                  std::shared_ptr<turtle_checkers_interfaces::srv::ResyncBoard::Response> response);
+                            std::shared_ptr<turtle_checkers_interfaces::srv::ResyncBoard::Response> response);
 
     bool isPieceValidForTurn(int requestedPieceTileIndex) const;
 
@@ -137,7 +139,7 @@ private:
     std::chrono::seconds m_blackTimeRemaining;
     std::chrono::seconds m_redTimeRemaining;
     std::chrono::time_point<std::chrono::system_clock> m_startTurnTimestamp;
-    
+
     const std::chrono::seconds MAX_SECONDS_BEFORE_START{3u};
     std::mutex m_gameStartTimerMutex;
     std::thread m_gameStartTimerThread;
@@ -158,6 +160,8 @@ private:
     std::unordered_map<TurtlePieceColor, uint64_t> m_playerPublicKeysByColor;
 
     uint64_t m_lobbyPasswordHash;
+
+    std::weak_ptr<DatabaseHandler> m_databaseHandler;
 };
 
 typedef std::shared_ptr<CheckersGameLobby> CheckersGameLobbyPtr;

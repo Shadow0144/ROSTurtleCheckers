@@ -95,7 +95,7 @@ int CheckersPlayerNode::exec()
     m_checkersPlayerWindow->show();
 
     // Try to subscribe to a game and connect to a lobby
-    TurtleLogger::logInfo("Player " + Parameters::getPlayerName() + " searching for lobby...");
+    TurtleLogger::logInfo("Player node created");
 
     rcl_interfaces::msg::FloatingPointRange range;
     range.from_value = 0.01f;
@@ -785,7 +785,7 @@ void CheckersPlayerNode::getStatisticsResponse(rclcpp::Client<turtle_checkers_in
                                               result->matches_played,
                                               result->matches_won,
                                               result->matches_lost,
-                                              result->matches_drawed);
+                                              result->matches_drawn);
 }
 
 void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::JoinLobby>::SharedFuture future)

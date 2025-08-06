@@ -8,6 +8,7 @@
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
+#include "turtle_checkers_interfaces/srv/get_statistics.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
@@ -25,6 +26,7 @@
 #include "shared/RSAKeyGenerator.hpp"
 #include "shared/TurtleLogger.hpp"
 #include "game_master/CheckersGameLobby.hpp"
+#include "game_master/DatabaseHandler.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -44,7 +46,7 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     RSAKeyGenerator::generateRSAKeyPair(m_publicKey, m_privateKey);
 
     // Create/load the player database
-    m_databaseHandler = std::make_unique<DatabaseHandler>(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/db");
+    m_databaseHandler = std::make_shared<DatabaseHandler>(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/db");
 
     // Create the publishers, subscriptions, and services
 
@@ -73,6 +75,9 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     m_getLobbyListService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::GetLobbyList>(
         "GetLobbyList", std::bind(&CheckersGameMasterNode::getLobbyListRequest,
                                   this, std::placeholders::_1, std::placeholders::_2));
+    m_getStatisticsService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::GetStatistics>(
+        "GetStatistics", std::bind(&CheckersGameMasterNode::getStatisticsRequest,
+                                   this, std::placeholders::_1, std::placeholders::_2));
     m_joinLobbyService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::JoinLobby>(
         "JoinLobby", std::bind(&CheckersGameMasterNode::joinLobbyRequest,
                                this, std::placeholders::_1, std::placeholders::_2));
@@ -80,7 +85,7 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     // Get the authorization key from the file
     try
     {
-        std::ifstream file(ament_index_cpp::get_package_share_directory("turtle_checkers") + authorizationKeyFile);
+        std::ifstream file(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/" + authorizationKeyFile);
         if (file)
         {
             file >> m_authorizationKey;
@@ -186,7 +191,8 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
                                                                              m_privateKey,
                                                                              lobbyName,
                                                                              lobbyId,
-                                                                             unencryptedHashedLobbyPassword);
+                                                                             unencryptedHashedLobbyPassword,
+                                                                             m_databaseHandler);
                 m_checkersGameLobbies[fullName] = checkersGameLobby;
                 checkersGameLobby->addPlayer(request->player_name, m_playerPublicKeys[request->player_name],
                                              static_cast<TurtlePieceColor>(request->desired_player_color));
@@ -256,7 +262,7 @@ void CheckersGameMasterNode::getStatisticsRequest(const std::shared_ptr<turtle_c
     response->matches_played = playerStatistics.matchesPlayed;
     response->matches_won = playerStatistics.matchesWon;
     response->matches_lost = playerStatistics.matchesLost;
-    response->matches_drawed = playerStatistics.matchesDrawed;
+    response->matches_drawn = playerStatistics.matchesDrawn;
 
     // No checksum required
 }

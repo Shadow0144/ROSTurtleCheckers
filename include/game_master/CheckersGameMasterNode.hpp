@@ -65,7 +65,7 @@ private:
 
     std::shared_ptr<rclcpp::Node> m_gameMasterNode;
 
-    DatabaseHandlerUniPtr m_databaseHandler;
+    DatabaseHandlerPtr m_databaseHandler;
 
     std::unordered_map<std::string, uint64_t> m_playerPublicKeys;
     std::unordered_map<std::string, CheckersGameLobbyPtr> m_checkersGameLobbies;

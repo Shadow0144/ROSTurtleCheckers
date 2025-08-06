@@ -24,7 +24,7 @@ struct PlayerStatistics
     int matchesPlayed;
     int matchesWon;
     int matchesLost;
-    int matchesDrawed;
+    int matchesDrawn;
 };
 
 class DatabaseHandler
@@ -61,4 +61,4 @@ private:
     std::string m_errorMessage;
 };
 
-typedef std::unique_ptr<DatabaseHandler> DatabaseHandlerUniPtr;
+typedef std::shared_ptr<DatabaseHandler> DatabaseHandlerPtr;

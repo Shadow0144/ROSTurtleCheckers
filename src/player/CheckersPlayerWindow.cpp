@@ -185,10 +185,10 @@ void CheckersPlayerWindow::displayStatistics(const std::string &playerName,
                                              uint64_t matchesPlayed,
                                              uint64_t matchesWon,
                                              uint64_t matchesLost,
-                                             uint64_t matchesDrawed)
+                                             uint64_t matchesDrawn)
 {
     m_statisticsFrame->displayStatistics(playerName, lobbyNameIds, blackPlayerNames, redPlayerNames,
-                                         winners, matchesPlayed, matchesWon, matchesLost, matchesDrawed);
+                                         winners, matchesPlayed, matchesWon, matchesLost, matchesDrawn);
 }
 
 void CheckersPlayerWindow::createLobby(const std::string &lobbyPassword)

@@ -34,9 +34,10 @@
 #include <ctime>
 #include <random>
 
-#include "game_master/MasterBoard.hpp"
 #include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
+#include "game_master/MasterBoard.hpp"
+#include "game_master/DatabaseHandler.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -46,7 +47,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
                                      uint64_t privateKey,
                                      const std::string &lobbyName,
                                      const std::string &lobbyId,
-                                     uint64_t lobbyPasswordHash)
+                                     uint64_t lobbyPasswordHash,
+                                     const std::weak_ptr<DatabaseHandler> &databaseHandler)
     : m_lobbyName(lobbyName),
       m_lobbyId(lobbyId)
 {
@@ -54,6 +56,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
     m_publicKey = publicKey;
     m_privateKey = privateKey;
     m_lobbyPasswordHash = lobbyPasswordHash;
+
+    m_databaseHandler = databaseHandler;
 
     m_board = std::make_shared<MasterBoard>();
 
@@ -474,6 +478,13 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
                 std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
                 m_publicKey, m_privateKey);
             m_declareWinnerPublisher->publish(winnerMessage);
+
+            if (auto databaseHandler = m_databaseHandler.lock())
+            {
+                databaseHandler->addMatch(m_lobbyName, m_lobbyId,
+                                          m_blackPlayerName, m_redPlayerName,
+                                          winnerMessage.winner);
+            }
         }
         else if (m_gameState == GameState::BlackMove)
         {
@@ -590,6 +601,13 @@ void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Fo
         std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
         m_publicKey, m_privateKey);
     m_declareWinnerPublisher->publish(winnerMessage);
+
+    if (auto databaseHandler = m_databaseHandler.lock())
+    {
+        databaseHandler->addMatch(m_lobbyName, m_lobbyId,
+                                  m_blackPlayerName, m_redPlayerName,
+                                  winnerMessage.winner);
+    }
 }
 
 void CheckersGameLobby::kickPlayerCallback(const turtle_checkers_interfaces::msg::KickPlayer::SharedPtr message)
@@ -637,6 +655,13 @@ void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg:
                 std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
                 m_publicKey, m_privateKey);
             m_declareWinnerPublisher->publish(winnerMessage);
+
+            if (auto databaseHandler = m_databaseHandler.lock())
+            {
+                databaseHandler->addMatch(m_lobbyName, m_lobbyId,
+                                          m_blackPlayerName, m_redPlayerName,
+                                          winnerMessage.winner);
+            }
         }
 
         m_playerOfferingDraw = message->player_name;
@@ -745,6 +770,13 @@ void CheckersGameLobby::checkTimers()
                 std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
                 m_publicKey, m_privateKey);
             m_declareWinnerPublisher->publish(winnerMessage);
+
+            if (auto databaseHandler = m_databaseHandler.lock())
+            {
+                databaseHandler->addMatch(m_lobbyName, m_lobbyId,
+                                          m_blackPlayerName, m_redPlayerName,
+                                          winnerMessage.winner);
+            }
         }
         else if (m_gameState == GameState::RedMove && timePassed > m_redTimeRemaining)
         {
@@ -759,6 +791,13 @@ void CheckersGameLobby::checkTimers()
                 std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(winnerMessage),
                 m_publicKey, m_privateKey);
             m_declareWinnerPublisher->publish(winnerMessage);
+
+            if (auto databaseHandler = m_databaseHandler.lock())
+            {
+                databaseHandler->addMatch(m_lobbyName, m_lobbyId,
+                                          m_blackPlayerName, m_redPlayerName,
+                                          winnerMessage.winner);
+            }
         }
     }
 }

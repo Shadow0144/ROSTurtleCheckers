@@ -56,7 +56,7 @@ public:
                            uint64_t matchesPlayed,
                            uint64_t matchesWon,
                            uint64_t matchesLost,
-                           uint64_t matchesDrawed);
+                           uint64_t matchesDrawn);
 
     void createLobby(const std::string &lobbyPassword);
     void joinLobby(const std::string &lobbyPassword);

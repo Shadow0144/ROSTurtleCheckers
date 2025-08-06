@@ -474,10 +474,22 @@ PlayerStatistics DatabaseHandler::getPlayerStatistics(const std::string &playerN
     sqlite3_finalize(stmt);
 
     // Prepare the query
-    query = "SELECT (SUM(CASE WHERE (black_player_name = :PLAYER_NAME OR red_player_name = :PLAYER_NAME)), "
-            "(SUM(CASE WHERE (black_player_name = :PLAYER_NAME AND winner = 1) + SUM(CASE WHERE (red_player_name = :PLAYER_NAME AND winner = 2)), "
-            "(SUM(CASE WHERE (black_player_name = :PLAYER_NAME AND winner = 2) + (SUM(CASE WHERE (red_player_name = :PLAYER_NAME AND winner = 1)),"
-            "(SUM(CASE WHERE ((black_player_name = :PLAYER_NAME OR red_player_name = :PLAYER_NAME) AND winner = 3)));";
+    query = "SELECT "
+            " SUM(CASE "
+            "  WHEN black_player_name = :PLAYER_NAME OR red_player_name = :PLAYER_NAME "
+            "  THEN 1 ELSE 0 END) AS matches_played, "
+            " SUM(CASE "
+            "  WHEN(black_player_name = :PLAYER_NAME AND winner = 1) "
+            "  OR(red_player_name = :PLAYER_NAME AND winner = 2) "
+            "  THEN 1 ELSE 0 END) AS matches_won, "
+            " SUM(CASE "
+            "  WHEN(black_player_name = :PLAYER_NAME AND winner = 2) "
+            "  OR(red_player_name = :PLAYER_NAME AND winner = 1) "
+            "  THEN 1 ELSE 0 END) AS matches_lost, "
+            " SUM(CASE "
+            "  WHEN(black_player_name = :PLAYER_NAME OR red_player_name = :PLAYER_NAME) "
+            "  AND winner = 3 THEN 1 ELSE 0 END) AS matches_drawn "
+            "FROM matches;";
     stmt = nullptr;
     if (sqlite3_prepare_v2(m_db, query, -1, &stmt, nullptr) != SQLITE_OK)
     {
@@ -502,7 +514,7 @@ PlayerStatistics DatabaseHandler::getPlayerStatistics(const std::string &playerN
     playerStatistics.matchesPlayed = (sqlite3_column_type(stmt, 0) == SQLITE_NULL) ? 0 : sqlite3_column_int(stmt, 0);
     playerStatistics.matchesWon = (sqlite3_column_type(stmt, 1) == SQLITE_NULL) ? 0 : sqlite3_column_int(stmt, 1);
     playerStatistics.matchesLost = (sqlite3_column_type(stmt, 2) == SQLITE_NULL) ? 0 : sqlite3_column_int(stmt, 2);
-    playerStatistics.matchesDrawed = (sqlite3_column_type(stmt, 3) == SQLITE_NULL) ? 0 : sqlite3_column_int(stmt, 3);
+    playerStatistics.matchesDrawn = (sqlite3_column_type(stmt, 3) == SQLITE_NULL) ? 0 : sqlite3_column_int(stmt, 3);
 
     // Free the resources
     sqlite3_finalize(stmt);

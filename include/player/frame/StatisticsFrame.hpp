@@ -9,6 +9,9 @@
 #include <QRadioButton>
 #include <QScrollArea>
 #include <QLabel>
+#include <QLineEdit>
+#include <QString>
+#include <QProgressBar>
 
 #include <memory>
 #include <string>
@@ -35,23 +38,23 @@ public:
                            uint64_t matchesPlayed,
                            uint64_t matchesWon,
                            uint64_t matchesLost,
-                           uint64_t matchesDrawed);
+                           uint64_t matchesDrawn);
 
 private:
+    void handleSearchPlayerButton();
     void handleBackButton();
-    void handleViewPlayerButton(const std::string &playerName);
 
-    void buildMatchList();
+    void buildProgressBar();
+    void buildMatchList(const std::string &playerName);
 
     CheckersPlayerWindow *m_playerWindow;
 
-    QLabel *m_playerNameLabel;
+    QLineEdit *m_playerNameLineEdit;
+    QPushButton *m_searchPlayerButton;
     QLabel *m_matchesPlayedLabel;
     QLabel *m_matchesWonLabel;
     QLabel *m_matchesLostLabel;
-    QLabel *m_matchesDrawedLabel;
-
-	QWidget *m_matchListLayoutWidget;
+    QLabel *m_matchesDrawnLabel;
 
     QScrollArea *m_matchListScrollArea;
 

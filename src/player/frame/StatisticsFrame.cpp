@@ -6,6 +6,10 @@
 #include <QGridLayout>
 #include <QScrollArea>
 #include <QLabel>
+#include <QLineEdit>
+#include <QString>
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <QPushButton>
 #include <QCheckBox>
 #include <QComboBox>
@@ -34,52 +38,67 @@ StatisticsFrame::StatisticsFrame(
     auto statisticsLayout = new QVBoxLayout(this);
     statisticsLayout->setAlignment(Qt::AlignCenter);
 
+    auto statisticsContentLayout = new QGridLayout();
+    statisticsContentLayout->setAlignment(Qt::AlignCenter);
+    statisticsLayout->addLayout(statisticsContentLayout);
+
     auto titleWidget = new TitleWidget();
-    statisticsLayout->addWidget(titleWidget);
+    statisticsContentLayout->addWidget(titleWidget, 0, 0, 1, 4);
 
-    auto playerNameLayout = new QHBoxLayout();
     auto playerNameLabel = new QLabel("Player: ");
-    playerNameLayout->addWidget(playerNameLabel);
-    m_playerNameLabel = new QLabel("");
-    m_playerNameLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    playerNameLayout->addWidget(m_playerNameLabel);
-    statisticsLayout->addLayout(playerNameLayout);
+    playerNameLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(playerNameLabel, 1, 0);
+    m_playerNameLineEdit = new QLineEdit("");
+    m_playerNameLineEdit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(m_playerNameLineEdit, 1, 1, 1, 2);
 
-    auto playerSummaryStatsLayout = new QGridLayout();
+    m_searchPlayerButton = new QPushButton("Search");
+    m_searchPlayerButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    std::string playerNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_PLAYER_NAME) + "}$";
+    auto playerNameValidator = new QRegularExpressionValidator(QRegularExpression(playerNameRegex.c_str()));
+    m_playerNameLineEdit->setValidator(playerNameValidator);
+    connect(m_searchPlayerButton, &QPushButton::released, this, &StatisticsFrame::handleSearchPlayerButton);
+    statisticsContentLayout->addWidget(m_searchPlayerButton, 1, 3);
 
     auto matchesPlayedLabel = new QLabel("Matches played: ");
-    playerSummaryStatsLayout->addWidget(matchesPlayedLabel, 0, 0);
-    m_matchesPlayedLabel = new QLabel("");
-    playerSummaryStatsLayout->addWidget(m_matchesPlayedLabel, 0, 1);
+    matchesPlayedLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(matchesPlayedLabel, 2, 0);
+    m_matchesPlayedLabel = new QLabel("0");
+    m_matchesPlayedLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(m_matchesPlayedLabel, 2, 1);
 
     auto matchesWonLabel = new QLabel("Matches won: ");
-    playerSummaryStatsLayout->addWidget(matchesWonLabel, 0, 2);
-    m_matchesWonLabel = new QLabel("");
-    playerSummaryStatsLayout->addWidget(m_matchesWonLabel, 0, 3);
+    matchesWonLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(matchesWonLabel, 2, 2);
+    m_matchesWonLabel = new QLabel("0");
+    m_matchesWonLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(m_matchesWonLabel, 2, 3);
 
     auto matchesLostLabel = new QLabel("Matches lost: ");
-    playerSummaryStatsLayout->addWidget(matchesLostLabel, 1, 0);
-    m_matchesLostLabel = new QLabel("");
-    playerSummaryStatsLayout->addWidget(m_matchesLostLabel, 1, 1);
+    matchesLostLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(matchesLostLabel, 3, 0);
+    m_matchesLostLabel = new QLabel("0");
+    m_matchesLostLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(m_matchesLostLabel, 3, 1);
 
-    auto matchesDrawedLabel = new QLabel("Matches drawed: ");
-    playerSummaryStatsLayout->addWidget(matchesDrawedLabel, 1, 2);
-    m_matchesDrawedLabel = new QLabel("");
-    playerSummaryStatsLayout->addWidget(m_matchesDrawedLabel, 1, 3);
-
-    statisticsLayout->addLayout(playerSummaryStatsLayout);
+    auto matchesDrawnLabel = new QLabel("Matches drawn: ");
+    matchesDrawnLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(matchesDrawnLabel, 3, 2);
+    m_matchesDrawnLabel = new QLabel("0");
+    m_matchesDrawnLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    statisticsContentLayout->addWidget(m_matchesDrawnLabel, 3, 3);
 
     m_matchListScrollArea = new QScrollArea();
     m_matchListScrollArea->setWidgetResizable(true);
     m_matchListScrollArea->setFixedSize(STATISTICS_SCROLL_W, STATISTICS_SCROLL_H);
     m_matchListScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
-    m_matchListLayoutWidget = nullptr;
-    buildMatchList();
+    statisticsContentLayout->addWidget(m_matchListScrollArea, 4, 0, 1, 4);
 
-    statisticsLayout->addWidget(m_matchListScrollArea);
-
+    auto statisticsButtonWidget = new QWidget();
+    statisticsButtonWidget->setContentsMargins(0, 10, 0, 10);
     auto statisticsButtonLayout = new QHBoxLayout();
+    statisticsButtonWidget->setLayout(statisticsButtonLayout);
 
     std::string backString = "Back";
     auto backButton = new QPushButton(backString.c_str());
@@ -88,7 +107,7 @@ StatisticsFrame::StatisticsFrame(
             &StatisticsFrame::handleBackButton);
     statisticsButtonLayout->addWidget(backButton);
 
-    statisticsLayout->addLayout(statisticsButtonLayout);
+    statisticsContentLayout->addWidget(statisticsButtonWidget, 5, 0, 1, 4);
 }
 
 StatisticsFrame::~StatisticsFrame()
@@ -99,9 +118,27 @@ void StatisticsFrame::showEvent(QShowEvent *event)
 {
     (void)event; // NO LINT
 
+    m_playerNameLineEdit->setEnabled(false);
+    m_searchPlayerButton->setEnabled(false);
+    buildProgressBar();
     const auto playerName = Parameters::getPlayerName();
-    m_playerNameLabel->setText(playerName.c_str());
+    m_playerNameLineEdit->setText(playerName.c_str());
     m_playerWindow->requestStatistics(playerName);
+}
+
+void StatisticsFrame::buildProgressBar()
+{
+    auto matchListProgressBarWidget = new QWidget();
+    auto matchListProgressBarLayout = new QVBoxLayout();
+    matchListProgressBarWidget->setLayout(matchListProgressBarLayout);
+    matchListProgressBarWidget->setContentsMargins(50, 50, 50, 50);
+    matchListProgressBarLayout->setAlignment(Qt::AlignCenter);
+
+    auto matchListProgressBar = new QProgressBar();
+    matchListProgressBar->setRange(0, 0);
+    matchListProgressBarLayout->addWidget(matchListProgressBar);
+
+    m_matchListScrollArea->setWidget(matchListProgressBarWidget);
 }
 
 void StatisticsFrame::displayStatistics(const std::string &playerName,
@@ -112,33 +149,27 @@ void StatisticsFrame::displayStatistics(const std::string &playerName,
                                         uint64_t matchesPlayed,
                                         uint64_t matchesWon,
                                         uint64_t matchesLost,
-                                        uint64_t matchesDrawed)
+                                        uint64_t matchesDrawn)
 {
-    m_playerNameLabel->setText(playerName.c_str());
+    m_playerNameLineEdit->setText(playerName.c_str());
     m_matchesPlayedLabel->setText(QString::number(matchesPlayed));
     m_matchesWonLabel->setText(QString::number(matchesWon));
     m_matchesLostLabel->setText(QString::number(matchesLost));
-    m_matchesDrawedLabel->setText(QString::number(matchesDrawed));
+    m_matchesDrawnLabel->setText(QString::number(matchesDrawn));
 
     m_lobbyNameIds = lobbyNameIds;
     m_blackPlayerNames = blackPlayerNames;
     m_redPlayerNames = redPlayerNames;
     m_winners = winners;
 
-    buildMatchList();
+    buildMatchList(playerName);
 }
 
-void StatisticsFrame::buildMatchList()
+void StatisticsFrame::buildMatchList(const std::string &playerName)
 {
-    if (m_matchListLayoutWidget)
-    {
-        delete m_matchListLayoutWidget;
-        m_matchListLayoutWidget = nullptr;
-    }
-
-    m_matchListLayoutWidget = new QWidget();
-    m_matchListLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    auto matchListLayout = new QVBoxLayout(m_matchListLayoutWidget);
+    auto matchListLayoutWidget = new QWidget();
+    matchListLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    auto matchListLayout = new QVBoxLayout(matchListLayoutWidget);
 
     const auto numLobbies = m_lobbyNameIds.size();
     if (m_lobbyNameIds.size() != m_blackPlayerNames.size() ||
@@ -151,6 +182,7 @@ void StatisticsFrame::buildMatchList()
     {
         // Add a match details widget
         matchListLayout->addWidget(new MatchDetailsWidget(this,
+                                                          playerName,
                                                           m_lobbyNameIds[i],
                                                           m_blackPlayerNames[i],
                                                           m_redPlayerNames[i],
@@ -160,16 +192,24 @@ void StatisticsFrame::buildMatchList()
     auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);
     matchListLayout->addItem(spacer);
 
-    m_matchListScrollArea->setWidget(m_matchListLayoutWidget);
+    m_matchListScrollArea->setWidget(matchListLayoutWidget);
+
+    m_playerNameLineEdit->setEnabled(true);
+    m_searchPlayerButton->setEnabled(true);
 
     update();
+}
+
+void StatisticsFrame::handleSearchPlayerButton()
+{
+    m_playerNameLineEdit->setEnabled(false);
+    m_searchPlayerButton->setEnabled(false);
+    buildProgressBar();
+    const auto playerName = m_playerNameLineEdit->text().toStdString();
+    m_playerWindow->requestStatistics(playerName);
 }
 
 void StatisticsFrame::handleBackButton()
 {
     m_playerWindow->moveToMainMenuFrame();
-}
-
-void StatisticsFrame::handleViewPlayerButton(const std::string &playerName)
-{
 }
