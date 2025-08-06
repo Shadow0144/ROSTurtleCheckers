@@ -21,6 +21,16 @@ MasterBoard::MasterBoard()
     TurtlePieceFactory::createTurtlePieces(NUM_PIECES_PER_PLAYER, m_tiles);
 }
 
+size_t MasterBoard::getBlackPiecesRemaining() const
+{
+    return m_blackPiecesRemaining;
+}
+
+size_t MasterBoard::getRedPiecesRemaining() const
+{
+    return m_redPiecesRemaining;
+}
+
 std::string MasterBoard::getPieceNameAtTileIndex(int tileIndex) const
 {
     if (tileIndex > -1 && tileIndex < static_cast<int>(NUM_PLAYABLE_TILES))
@@ -304,6 +314,18 @@ void MasterBoard::checkPlayersCanMove(bool isBlackTurn, std::vector<size_t> &mov
     else if (!redPlayerHasMoves)
     {
         m_winner = Winner::Black;
+    }
+}
+
+void MasterBoard::getTileInfo(std::vector<std::string> &turtlePieceNamePerTile,
+                              std::vector<uint64_t> &turtlePieceColorPerTile,
+                              std::vector<bool> &turtlePieceIsKingedPerTile)
+{
+    for (const auto &tile : m_tiles)
+    {
+        turtlePieceNamePerTile.push_back(tile->getTurtlePieceName());
+        turtlePieceColorPerTile.push_back(static_cast<uint64_t>(tile->getTurtlePieceColor()));
+        turtlePieceIsKingedPerTile.push_back(tile->getIsTurtlePieceKinged());
     }
 }
 

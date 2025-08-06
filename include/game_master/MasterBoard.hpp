@@ -19,6 +19,9 @@ public:
     bool getMustJump() const;
     void setMustJump(bool mustJump);
 
+    size_t getBlackPiecesRemaining() const;
+    size_t getRedPiecesRemaining() const;
+
     std::string getPieceNameAtTileIndex(int tileIndex) const;
     TurtlePieceColor getPieceColorAtTileIndex(int tileIndex) const;
     std::vector<uint64_t> requestReachableTiles(int tileIndex) const;
@@ -31,6 +34,10 @@ public:
     void slayTurtlesAtJumpedTileIndices();
 
     void checkPlayersCanMove(bool isBlackTurn, std::vector<size_t> &movableTileIndices);
+
+    void getTileInfo(std::vector<std::string> &turtlePieceNamePerTile,
+                     std::vector<uint64_t> &turtlePieceColorPerTile,
+                     std::vector<bool> &turtlePieceIsKingedPerTile);
 
 private:
     TurtlePieceColor getColorFromPieceName(const std::string &pieceName) const;

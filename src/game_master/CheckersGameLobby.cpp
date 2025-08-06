@@ -505,7 +505,24 @@ void CheckersGameLobby::resyncBoardRequest(const std::shared_ptr<turtle_checkers
 {
     (void)request; // Unused parameter
 
-    // TODO: Fill in response
+    response->lobby_name = m_lobbyName;
+    response->lobby_id = m_lobbyId;
+    response->black_time_remaining_seconds = m_blackTimeRemaining.count();
+    response->red_time_remaining_seconds = m_redTimeRemaining.count();
+    response->game_state = static_cast<uint64_t>(m_gameState);
+
+    std::vector<std::string> turtlePieceNamePerTile;
+    std::vector<uint64_t> turtlePieceColorPerTile;
+    std::vector<bool> turtlePieceIsKingedPerTile;
+    m_board->getTileInfo(turtlePieceNamePerTile, turtlePieceColorPerTile, turtlePieceIsKingedPerTile);
+    response->turtle_piece_name_per_tile = turtlePieceNamePerTile;
+    response->turtle_piece_color_per_tile = turtlePieceColorPerTile;
+    response->turtle_piece_is_kinged_per_tile = turtlePieceIsKingedPerTile;
+
+    response->board_hash = std::hash<MasterBoardPtr>{}(m_board);
+
+    response->black_pieces_remaining = m_board->getBlackPiecesRemaining();
+    response->red_pieces_remaining = m_board->getRedPiecesRemaining();
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
         std::hash<turtle_checkers_interfaces::srv::ResyncBoard::Response::SharedPtr>{}(response),
