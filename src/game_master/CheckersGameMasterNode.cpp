@@ -80,7 +80,7 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     // Get the authorization key from the file
     try
     {
-        std::ifstream file(authorizationKeyFile);
+        std::ifstream file(ament_index_cpp::get_package_share_directory("turtle_checkers") + authorizationKeyFile);
         if (file)
         {
             file >> m_authorizationKey;
