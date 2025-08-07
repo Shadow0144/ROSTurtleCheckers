@@ -186,3 +186,4 @@ install/
 log/
 .vs/
 *.key
+report_email.config
