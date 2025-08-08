@@ -185,5 +185,3 @@ install/ROSTurtleCheckers/share/ROSTurtleCheckers/local_setup.zsh
 install/
 log/
 .vs/
-*.key
-report_email.config

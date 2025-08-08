@@ -33,13 +33,19 @@
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-const std::string authorizationKeyFile = "turtles_checkers_authorization_key.key";
+const std::string authorizationKeyFile = "turtle_checkers_authorization_key.key";
 const std::string reportEmailFile = "report_email.config";
 
 bool isValidEmail(const std::string &email)
 {
     const std::regex pattern(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
     return std::regex_match(email, pattern);
+}
+
+bool isValidUnsignedInt(const std::string &number)
+{
+    static const std::regex pattern(R"(^\d+$)");
+    return std::regex_match(number, pattern);
 }
 
 CheckersGameMasterNode::CheckersGameMasterNode()
@@ -99,7 +105,16 @@ CheckersGameMasterNode::CheckersGameMasterNode()
         std::ifstream file(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/" + authorizationKeyFile);
         if (file)
         {
-            file >> m_authorizationKey;
+            std::string key;
+            file >> key;
+            if (isValidUnsignedInt(key))
+            {
+                m_authorizationKey = std::stoull(key);
+            }
+            else
+            {
+                TurtleLogger::logError("Authorization key must be an unsigned 64-bit integer");
+            }
         }
         else
         {
@@ -443,7 +458,7 @@ void CheckersGameMasterNode::reportPlayerCallback(const turtle_checkers_interfac
 void CheckersGameMasterNode::setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message)
 {
     // Check that the authorization key was loaded and matches
-    if (m_authorizationKey == 0 || m_authorizationKey != message->authorization_key)
+    if (m_authorizationKey == 0u || m_authorizationKey != message->authorization_key)
     {
         TurtleLogger::logWarn("Unauthorized attempt to access server");
         return;

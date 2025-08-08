@@ -117,7 +117,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(FILES turtles_checkers_authorization_key.key
+install(FILES turtle_checkers_authorization_key.key
   DESTINATION share/${PROJECT_NAME})
 
 install(FILES report_email.config
