@@ -31,6 +31,7 @@ include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
 qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/player/TitleWidget.hpp
+  include/player/DialogWidget.hpp
   include/player/LobbyDetailsWidget.hpp
   include/player/MatchDetailsWidget.hpp
   include/player/TileRender.hpp
@@ -65,6 +66,7 @@ add_executable(checkers_player_node
   src/player/HUD.cpp
   src/player/CheckersBoardRender.cpp
   src/player/TitleWidget.cpp
+  src/player/DialogWidget.cpp
   src/player/LobbyDetailsWidget.cpp
   src/player/MatchDetailsWidget.cpp
   src/player/frame/CreateAccountFrame.cpp
@@ -116,6 +118,9 @@ if(BUILD_TESTING)
 endif()
 
 install(FILES turtles_checkers_authorization_key.key
+  DESTINATION share/${PROJECT_NAME})
+
+install(FILES report_email.config
   DESTINATION share/${PROJECT_NAME})
 
 install(DIRECTORY img

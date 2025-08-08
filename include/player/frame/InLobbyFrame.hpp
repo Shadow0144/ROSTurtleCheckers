@@ -5,6 +5,7 @@
 // #endif
 
 #include <QFrame>
+#include <QWidget>
 #include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
@@ -16,6 +17,7 @@
 #include <chrono>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 
 class CheckersPlayerWindow;
@@ -52,6 +54,7 @@ public:
                         std::chrono::time_point<std::chrono::system_clock> timeStamp);
 
     // Send to server
+    void reportPlayer(const std::string &chatMessages);
     void sendChatMessage(const std::string &chatMessage);
 
 private:
@@ -59,6 +62,9 @@ private:
     void handleRedKickButton();
 
     void handleLeaveLobbyButton();
+
+    void handleReportPlayerConfirmButton();
+    void handleReportPlayerCancelButton();
 
     void handleBlackReadyButtonToggled(int state);
     void handleRedReadyButtonToggled(int state);
@@ -68,6 +74,8 @@ private:
     void updateGameStartTimer();
 
     CheckersPlayerWindow *m_playerWindow;
+
+    QWidget *m_inLobbyWidget;
 
     QCheckBox *m_blackReadyInLobbyCheckBox;
     QCheckBox *m_redReadyInLobbyCheckBox;
@@ -90,6 +98,9 @@ private:
     QComboBox *m_timerComboBox;
 
     ChatBox *m_chatBox;
+
+    DialogWidget *m_reportPlayerConfirmDialog;
+    std::string m_reportingChatMessages;
 
     std::string m_blackPlayerName;
     std::string m_redPlayerName;

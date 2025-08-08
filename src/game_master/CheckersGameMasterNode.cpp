@@ -13,6 +13,7 @@
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
+#include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
 
 #include <memory>
@@ -20,6 +21,7 @@
 #include <sstream>
 #include <iomanip>
 #include <fstream>
+#include <regex>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
@@ -32,6 +34,13 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 const std::string authorizationKeyFile = "turtles_checkers_authorization_key.key";
+const std::string reportEmailFile = "report_email.config";
+
+bool isValidEmail(const std::string &email)
+{
+    const std::regex pattern(R"(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)");
+    return std::regex_match(email, pattern);
+}
 
 CheckersGameMasterNode::CheckersGameMasterNode()
 {
@@ -57,6 +66,8 @@ CheckersGameMasterNode::CheckersGameMasterNode()
         "LeaveLobby", 10, std::bind(&CheckersGameMasterNode::leaveLobbyCallback, this, std::placeholders::_1));
     m_logOutAccountSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LogOutAccount>(
         "LogOutAccount", 10, std::bind(&CheckersGameMasterNode::logOutAccountCallback, this, std::placeholders::_1));
+    m_reportPlayerSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::ReportPlayer>(
+        "ReportPlayer", 10, std::bind(&CheckersGameMasterNode::reportPlayerCallback, this, std::placeholders::_1));
     m_setPlayerBannedSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::SetPlayerBanned>(
         "SetPlayerBanned", 10, std::bind(&CheckersGameMasterNode::setPlayerBannedCallback, this, std::placeholders::_1));
 
@@ -89,6 +100,28 @@ CheckersGameMasterNode::CheckersGameMasterNode()
         if (file)
         {
             file >> m_authorizationKey;
+        }
+        else
+        {
+            TurtleLogger::logError("Error opening authorization key file");
+        }
+    }
+    catch (const std::exception &e)
+    {
+        TurtleLogger::logError(std::string("Authorization key file error: ") + e.what());
+    }
+
+    // Get the report email address from the file
+    try
+    {
+        std::ifstream file(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/" + reportEmailFile);
+        if (file)
+        {
+            file >> m_reportEmailAddress;
+            if (!isValidEmail(m_reportEmailAddress))
+            {
+                m_reportEmailAddress.clear();
+            }
         }
         else
         {
@@ -363,6 +396,47 @@ void CheckersGameMasterNode::logOutAccountCallback(const turtle_checkers_interfa
     if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
     {
         m_playerPublicKeys.erase(message->player_name);
+    }
+}
+
+void CheckersGameMasterNode::reportPlayerCallback(const turtle_checkers_interfaces::msg::ReportPlayer::SharedPtr message)
+{
+    if (m_reportEmailAddress.empty())
+    {
+        std::cerr << "Report email address not configured in report_email.config" << std::endl;
+        return; // No where to send a report to, exit
+    }
+
+    uint64_t playerPublicKey = 0u;
+    if (m_playerPublicKeys.find(message->reporting_player_name) != m_playerPublicKeys.end())
+    {
+        playerPublicKey = m_playerPublicKeys[message->reporting_player_name];
+    }
+
+    if (playerPublicKey == 0u ||
+        !RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::ReportPlayer>{}(*message),
+            playerPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    const auto recipient = m_reportEmailAddress;
+    const auto subject = std::string("Turtles Checkers Player Reported");
+    const auto body = std::string("Reporting player: " + message->reporting_player_name + "\n" +
+                                  "Reported player: " + message->reported_player_name + "\n" +
+                                  "\nChat log:\n" + message->chat_messages);
+
+    // Build the Linux command string
+    std::string command = "echo \"" + body + "\" | mail -s \"" + subject + "\" " + recipient;
+
+    // Call the system mail command
+    int result = std::system(command.c_str());
+
+    if (result != 0)
+    {
+        std::cerr << "Failed to send report email" << std::endl;
     }
 }
 

@@ -79,6 +79,7 @@ CreateAccountFrame::CreateAccountFrame(
     createAccountLayout->addWidget(m_errorMessageLabel);
 
     auto createAccountButtonLayout = new QHBoxLayout();
+    createAccountButtonLayout->setAlignment(Qt::AlignCenter);
 
     std::string createAccountString = "Create Account";
     m_createAccountButton = new QPushButton(createAccountString.c_str());

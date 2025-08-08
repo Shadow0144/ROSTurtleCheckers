@@ -32,6 +32,26 @@ const std::string &Parameters::getPlayerName()
     return s_parametersInstance->m_playerName;
 }
 
+void Parameters::setOpponentName(const std::string &opponentName)
+{
+    if (!s_parametersInstance)
+    {
+        createParametersInstance();
+    }
+
+    s_parametersInstance->m_opponentName = opponentName;
+}
+
+const std::string &Parameters::getOpponentName()
+{
+    if (!s_parametersInstance)
+    {
+        createParametersInstance();
+    }
+
+    return s_parametersInstance->m_opponentName;
+}
+
 void Parameters::setPlayerColor(TurtlePieceColor playerColor)
 {
     if (!s_parametersInstance)
@@ -50,6 +70,26 @@ TurtlePieceColor Parameters::getPlayerColor()
     }
 
     return s_parametersInstance->m_playerColor;
+}
+
+void Parameters::setOpponentColor(TurtlePieceColor opponentColor)
+{
+    if (!s_parametersInstance)
+    {
+        createParametersInstance();
+    }
+
+    s_parametersInstance->m_opponentColor = opponentColor;
+}
+
+TurtlePieceColor Parameters::getOpponentColor()
+{
+    if (!s_parametersInstance)
+    {
+        createParametersInstance();
+    }
+
+    return s_parametersInstance->m_opponentColor;
 }
 
 void Parameters::setLobbyName(const std::string &lobbyName)

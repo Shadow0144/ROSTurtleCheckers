@@ -4,8 +4,8 @@
 //  NO LINT
 // #endif
 
-#include <QWidget>
 #include <QFrame>
+#include <QWidget>
 #include <QImage>
 #include <QPainter>
 #include <QPaintEvent>
@@ -26,6 +26,7 @@
 #include "player/TurtlePieceRender.hpp"
 #include "player/TurtleGraveyard.hpp"
 #include "player/HUD.hpp"
+#include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 
 class CheckersPlayerWindow;
@@ -59,21 +60,22 @@ public:
 					  size_t blackTimeRemainSec, size_t redTimeRemainSec);
 	void drawDeclined();
 	void drawOffered();
-	
-    void clearChat();
+
+	void clearChat();
 
 	// Send to server
+	void reportPlayer(const std::string &chatMessages); // Creates a popup
 	void sendChatMessage(const std::string &chatMessage);
 
 	uint64_t getBoardHash() const;
 	void resyncBoard(uint64_t blackTimeRemainingSeconds,
-				uint64_t redTimeRemainingSeconds,
-				uint64_t gameState,
-				uint64_t blackPiecesRemaining,
-				uint64_t redPiecesRemaining,
-				std::vector<std::string> turtlePieceNamePerTile,
-				std::vector<uint64_t> turtlePieceColorPerTile,
-				std::vector<bool> turtlePieceIsKingedPerTile);
+					 uint64_t redTimeRemainingSeconds,
+					 uint64_t gameState,
+					 uint64_t blackPiecesRemaining,
+					 uint64_t redPiecesRemaining,
+					 std::vector<std::string> turtlePieceNamePerTile,
+					 std::vector<uint64_t> turtlePieceColorPerTile,
+					 std::vector<bool> turtlePieceIsKingedPerTile);
 
 protected:
 	void mouseMoveEvent(QMouseEvent *event) override;
@@ -86,28 +88,38 @@ private:
 
 	void clearSelections();
 
-	void handleOfferRematchButton();
-	void handleOfferDrawButton();
-	void handleDeclineDrawButton();
-	void handleForfitButton();
-	void handleOfferDrawConfirmButton();
-	void handleOfferDrawCancelButton();
-	void handleForfitConfirmButton();
-	void handleForfitCancelButton();
-	void handleLeaveGameButton();
+	void handleOfferDrawButton();		// Creates a confirmation popup
+	void handleAcceptOfferDrawButton(); // Commits to the draw offer
+	void handleCancelOfferDrawButton(); // Cancels the popup
+
+	void handleAcceptDrawButton();	// Accepts an incoming draw offer
+	void handleDeclineDrawButton(); // Declines a draw offer
+
+	void handleForfitButton();		  // Creates a confirmation popup
+	void handleForfitConfirmButton(); // Commits to the forfit
+	void handleForfitCancelButton();  // Cancels the popup
+
+	void handleReportPlayerConfirmButton(); // Commits to the report
+	void handleReportPlayerCancelButton();	// Cancels the popup
+
+	void handleLeaveGameButton();	 // Leaves the lobby
+	void handleOfferRematchButton(); // Creates a new lobby
+
+	void displayDialog(bool dialogDisplayed, DialogWidget *dialog = nullptr);
 
 	CheckersPlayerWindow *m_playerWindow;
+
+	QWidget *m_gameWidget;
 
 	QPushButton *m_offerDrawButton;
 	QPushButton *m_forfitButton;
 
-	QWidget *m_offerDrawConfirmLayoutWidget;
-	QWidget *m_forfitConfirmLayoutWidget;
-	QWidget *m_drawOfferedLayoutWidget;
-	QWidget *m_offeringDrawLayoutWidget;
-
-	QWidget *m_leaveGameLayoutWidget;
-	QPushButton *m_leaveGameButton;
+	DialogWidget *m_offerDrawConfirmDialog;
+	DialogWidget *m_offeringDrawDialog;
+	DialogWidget *m_offeredDrawDialog;
+	DialogWidget *m_forfitConfirmDialog;
+	DialogWidget *m_reportPlayerConfirmDialog;
+	DialogWidget *m_leaveGameDialog;
 
 	GameState m_gameState;
 
@@ -120,6 +132,8 @@ private:
 	ChatBox *m_chatBox;
 
 	bool m_showingDialog;
+
+	std::string m_reportingChatMessages;
 
 	QTimer *m_redrawTimer;
 };

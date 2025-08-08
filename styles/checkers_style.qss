@@ -1,10 +1,12 @@
 QWidget { background-color: black; }
+QWidget[dialog="true"] { border: 2px solid white; }
 QWidget[framed="true"] { border: 2px solid gray; }
 QWidget[details="true"] { border: 1px solid white; }
 
 QLabel { color: white; }
 QLabel:disabled { color: dimGray; }
 QLabel[highlight="true"] { color: aqua; }
+QLabel:disabled[highlight="true"] { color: dimGray; }
 QLabel[error="true"] { color: red; }
 
 QPushButton { color: white; border: 1px solid white; padding: 5px 10px; }
@@ -49,3 +51,4 @@ QComboBox QAbstractItemView {
 }
 
 QScrollArea { border: 1px solid white; }
+QScrollArea:disabled { border: 1px solid gray; }

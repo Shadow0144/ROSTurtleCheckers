@@ -86,6 +86,7 @@ CreateLobbyFrame::CreateLobbyFrame(
     createLobbyLayout->addLayout(createLobbyDesiredColorLayout);
 
     auto createLobbyButtonLayout = new QHBoxLayout();
+    createLobbyButtonLayout->setAlignment(Qt::AlignCenter);
 
     std::string commitCreateLobbyString = "Create Lobby";
     m_createLobbyButton = new QPushButton(commitCreateLobbyString.c_str());

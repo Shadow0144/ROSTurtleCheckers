@@ -64,6 +64,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     enterLobbyPasswordLayout->addWidget(m_passwordIncorrectLabel);
 
     auto enterLobbyPasswordButtonLayout = new QHBoxLayout();
+    enterLobbyPasswordButtonLayout->setAlignment(Qt::AlignCenter);
 
     std::string confirmPasswordString = "Join Lobby";
     m_confirmPasswordButton = new QPushButton(confirmPasswordString.c_str());

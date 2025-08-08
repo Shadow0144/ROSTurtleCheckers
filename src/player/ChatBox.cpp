@@ -19,20 +19,36 @@
 #include "shared/CheckersConsts.hpp"
 
 ChatBox::ChatBox(QWidget *parent,
-                 int chatWidth, int chatHeight,
+                 int chatWidth,
+                 int chatHeight,
+                 const std::function<void(const std::string &)> &reportPlayerCallback,
                  const std::function<void(const std::string &)> &sendMessageCallback)
     : QWidget(parent, Qt::WindowFlags())
 {
+    m_reportPlayerCallback = reportPlayerCallback;
     m_sendMessageCallback = sendMessageCallback;
 
     auto chatBoxLayout = new QVBoxLayout(this);
     chatBoxLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
+    auto chatTitleWidget = new QWidget();
+    auto chatTitleLayout = new QHBoxLayout();
+    chatTitleLayout->setAlignment(Qt::AlignBottom);
+    chatTitleWidget->setLayout(chatTitleLayout);
+
     auto chatLabel = new QLabel("Chat");
     auto chatFont = chatLabel->font();
     chatFont.setPointSize(CHAT_HEADER_FONT_SIZE);
     chatLabel->setFont(chatFont);
-    chatBoxLayout->addWidget(chatLabel);
+    chatTitleLayout->addWidget(chatLabel);
+
+    chatTitleLayout->addStretch(1);
+
+    m_reportPlayerButton = new QPushButton("Report Player");
+    connect(m_reportPlayerButton, &QPushButton::released, this, &ChatBox::handleReportPlayerButton);
+    chatTitleLayout->addWidget(m_reportPlayerButton);
+
+    chatBoxLayout->addWidget(chatTitleWidget);
 
     m_chatScrollArea = new QScrollArea();
     m_chatScrollArea->setWidgetResizable(true);
@@ -61,7 +77,7 @@ ChatBox::ChatBox(QWidget *parent,
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
     auto sendButton = new QPushButton("Send");
-    connect(sendButton, &QPushButton::released, this, &ChatBox::sendMessage);
+    connect(sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
     connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, sendButton, &QPushButton::click);
     sendButton->setDefault(true);
     chatEntryLayout->addWidget(sendButton);
@@ -69,7 +85,12 @@ ChatBox::ChatBox(QWidget *parent,
     chatBoxLayout->addLayout(chatEntryLayout);
 }
 
-void ChatBox::sendMessage()
+void ChatBox::handleReportPlayerButton()
+{
+    m_reportPlayerCallback(m_chatContentLabel->text().toStdString());
+}
+
+void ChatBox::handleSendMessageButton()
 {
     m_sendMessageCallback(m_chatEntryLineEdit->text().toStdString());
     m_chatEntryLineEdit->clear();
@@ -109,4 +130,9 @@ void ChatBox::addMessage(const std::string &playerName,
 void ChatBox::clear()
 {
     m_chatContentLabel->clear();
+}
+
+void ChatBox::setReportPlayerButtonEnabled(bool isEnabled)
+{
+    m_reportPlayerButton->setEnabled(isEnabled);
 }

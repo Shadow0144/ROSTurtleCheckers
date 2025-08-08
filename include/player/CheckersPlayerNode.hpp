@@ -17,6 +17,7 @@
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
@@ -77,6 +78,8 @@ public:
     void setReady(bool ready);
     void setTimer(uint64_t timerSeconds);
 
+    void reportPlayer(const std::string &chatMessages);
+
     void sendChatMessage(const std::string &chatMessage);
     void requestPieceMove(size_t sourceTileIndex, size_t destinationTileIndex);
     void requestReachableTiles(size_t selectedPieceTileIndex);
@@ -134,6 +137,7 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadyPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::ReportPlayer>::SharedPtr m_reportPlayerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::TimerChanged>::SharedPtr m_timerChangedPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerSubscription;

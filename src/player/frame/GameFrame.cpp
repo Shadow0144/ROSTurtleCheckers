@@ -23,6 +23,13 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
+#include "player/CheckersBoardRender.hpp"
+#include "player/TileRender.hpp"
+#include "player/TurtlePieceRender.hpp"
+#include "player/TurtleGraveyard.hpp"
+#include "player/HUD.hpp"
+#include "player/DialogWidget.hpp"
+#include "player/ChatBox.hpp"
 #include "player/Parameters.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 
@@ -48,9 +55,8 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 	m_hud->setGameState(GameState::Connecting);
 
-	m_chatBox = new ChatBox(this,
-							CHAT_IN_GAME_WIDTH, CHAT_IN_GAME_HEIGHT,
-							[this](const std::string &chatMessage)
+	m_chatBox = new ChatBox(this, CHAT_IN_GAME_WIDTH, CHAT_IN_GAME_HEIGHT, [this](const std::string &chatMessages)
+							{ this->reportPlayer(chatMessages); }, [this](const std::string &chatMessage)
 							{ this->sendChatMessage(chatMessage); });
 	m_chatBox->setGeometry(CHAT_BOX_IN_GAME_X, CHAT_BOX_IN_GAME_Y,
 						   CHAT_BOX_IN_GAME_WIDTH, CHAT_BOX_IN_GAME_HEIGHT);
@@ -62,120 +68,60 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 									 GRAVEYARD_WIDTH + CHAT_BOX_IN_GAME_WIDTH,
 									 0);
 
-	m_offerDrawButton = new QPushButton(this);
+	m_offerDrawButton = new QPushButton();
 	m_offerDrawButton->setText("Offer Draw");
 	connect(m_offerDrawButton, &QPushButton::released, this, &GameFrame::handleOfferDrawButton);
 	buttonLayout->addWidget(m_offerDrawButton);
 
-	m_forfitButton = new QPushButton(this);
+	m_forfitButton = new QPushButton();
 	m_forfitButton->setText("Forfit");
 	connect(m_forfitButton, &QPushButton::released, this, &GameFrame::handleForfitButton);
 	buttonLayout->addWidget(m_forfitButton);
 
 	// Offer draw confirm dialog
-
-	m_offerDrawConfirmLayoutWidget = new QWidget(this);
-	auto offerDrawConfirmLayout = new QHBoxLayout(m_offerDrawConfirmLayoutWidget);
-
-	auto offerDrawConfirmButton = new QPushButton(this);
-	offerDrawConfirmButton->setText("Offer Draw");
-	offerDrawConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
-	connect(offerDrawConfirmButton, &QPushButton::released, this, &GameFrame::handleOfferDrawConfirmButton);
-	offerDrawConfirmLayout->addWidget(offerDrawConfirmButton);
-
-	auto offerDrawCancelButton = new QPushButton(this);
-	offerDrawCancelButton->setText("Cancel");
-	offerDrawCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
-	connect(offerDrawCancelButton, &QPushButton::released, this, &GameFrame::handleOfferDrawCancelButton);
-	offerDrawConfirmLayout->addWidget(offerDrawCancelButton);
-
-	offerDrawConfirmLayout->invalidate();
-	offerDrawConfirmLayout->activate();
-	m_offerDrawConfirmLayoutWidget->adjustSize();
-	m_offerDrawConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
-										 BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
-	m_offerDrawConfirmLayoutWidget->hide();
+	m_offerDrawConfirmDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
+												"",
+												"Offer draw", {[this]()
+															   { this->handleAcceptOfferDrawButton(); }},
+												"Cancel", {[this]()
+														   { this->handleCancelOfferDrawButton(); }});
 
 	// Offering draw waiting dialog
-
-	m_offeringDrawLayoutWidget = new QWidget(this);
-	auto offeringDrawLayout = new QHBoxLayout(m_offeringDrawLayoutWidget);
-
-	auto offeringDrawLabel = new QLabel(this);
-	offeringDrawLabel->setText("Offering draw...");
-	offeringDrawLayout->addWidget(offeringDrawLabel);
-
-	offeringDrawLayout->invalidate();
-	offeringDrawLayout->activate();
-	m_offeringDrawLayoutWidget->adjustSize();
-	m_offeringDrawLayoutWidget->move(BOARD_CENTER_X - (m_offeringDrawLayoutWidget->width() / 2),
-									 BOARD_CENTER_Y - (m_offeringDrawLayoutWidget->height() / 2));
-	m_offeringDrawLayoutWidget->hide();
+	m_offeringDrawDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
+											"Offering draw...",
+											"", {[]() {}},
+											"", {[]() {}});
 
 	// Draw offered accept or decline dialog
-
-	m_drawOfferedLayoutWidget = new QWidget(this);
-	auto drawOfferedLayout = new QHBoxLayout(m_drawOfferedLayoutWidget);
-
-	auto drawOfferedAcceptButton = new QPushButton(this);
-	drawOfferedAcceptButton->setText("Accept Draw");
-	drawOfferedAcceptButton->setFixedWidth(MENU_BUTTON_WIDTH);
-	connect(drawOfferedAcceptButton, &QPushButton::released, this, &GameFrame::handleOfferDrawConfirmButton);
-	drawOfferedLayout->addWidget(drawOfferedAcceptButton);
-
-	auto drawOfferedDeclineButton = new QPushButton(this);
-	drawOfferedDeclineButton->setText("Decline Draw");
-	drawOfferedDeclineButton->setFixedWidth(MENU_BUTTON_WIDTH);
-	connect(drawOfferedDeclineButton, &QPushButton::released, this, &GameFrame::handleDeclineDrawButton);
-	drawOfferedLayout->addWidget(drawOfferedDeclineButton);
-
-	drawOfferedLayout->invalidate();
-	drawOfferedLayout->activate();
-	m_drawOfferedLayoutWidget->adjustSize();
-	m_drawOfferedLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
-									BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
-	m_drawOfferedLayoutWidget->hide();
+	m_offeredDrawDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
+										   "",
+										   "Accept draw", {[this]()
+														   { this->handleAcceptDrawButton(); }},
+										   "Decline draw", {[this]()
+															{ this->handleDeclineDrawButton(); }});
 
 	// Forfit confirm dialog
+	m_forfitConfirmDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
+											 "",
+											 "Forfit", {[this]()
+														{ this->handleForfitConfirmButton(); }},
+											 "Cancel", {[this]()
+														{ this->handleForfitCancelButton(); }});
 
-	m_forfitConfirmLayoutWidget = new QWidget(this);
-	auto forfitConfirmLayout = new QHBoxLayout(m_forfitConfirmLayoutWidget);
-
-	auto forfitConfirmButton = new QPushButton(this);
-	forfitConfirmButton->setText("Forfit");
-	forfitConfirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
-	connect(forfitConfirmButton, &QPushButton::released, this, &GameFrame::handleForfitConfirmButton);
-	forfitConfirmLayout->addWidget(forfitConfirmButton);
-
-	auto forfitCancelButton = new QPushButton(this);
-	forfitCancelButton->setText("Cancel");
-	forfitCancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
-	connect(forfitCancelButton, &QPushButton::released, this, &GameFrame::handleForfitCancelButton);
-	forfitConfirmLayout->addWidget(forfitCancelButton);
-
-	forfitConfirmLayout->invalidate();
-	forfitConfirmLayout->activate();
-	m_forfitConfirmLayoutWidget->adjustSize();
-	m_forfitConfirmLayoutWidget->move(BOARD_CENTER_X - (m_offerDrawConfirmLayoutWidget->width() / 2),
-									  BOARD_CENTER_Y - (m_offerDrawConfirmLayoutWidget->height() / 2));
-	m_forfitConfirmLayoutWidget->hide();
+	// Report player confirm dialog
+	m_reportPlayerConfirmDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
+												   "Report player and leave lobby?",
+												   "Report", {[this]()
+															  { this->handleReportPlayerConfirmButton(); }},
+												   "Cancel", {[this]()
+															  { this->handleReportPlayerCancelButton(); }});
 
 	// Leave game dialog
-
-	m_leaveGameLayoutWidget = new QWidget(this);
-	auto leaveGameLayout = new QHBoxLayout(m_leaveGameLayoutWidget);
-
-	m_leaveGameButton = new QPushButton(this);
-	m_leaveGameButton->setText("Leave Game");
-	m_leaveGameButton->setFixedWidth(MENU_BUTTON_WIDTH);
-	connect(m_leaveGameButton, &QPushButton::released, this, &GameFrame::handleLeaveGameButton);
-	leaveGameLayout->addWidget(m_leaveGameButton);
-
-	leaveGameLayout->invalidate();
-	leaveGameLayout->activate();
-	m_leaveGameLayoutWidget->adjustSize();
-	m_leaveGameLayoutWidget->move(BOARD_CENTER_X - (m_leaveGameLayoutWidget->width() / 2), VICTORY_BUTTONS_Y);
-	m_leaveGameLayoutWidget->hide();
+	m_leaveGameDialog = new DialogWidget(this, BOARD_CENTER_X, VICTORY_BUTTONS_Y,
+										 "",
+										 "Leave game", {[this]()
+														{ this->handleLeaveGameButton(); }},
+										 "", {[]() {}});
 }
 
 GameFrame::~GameFrame()
@@ -194,6 +140,7 @@ void GameFrame::hideEvent(QHideEvent *event)
 	(void)event; // NO LINT
 
 	m_redrawTimer->stop();
+	displayDialog(false);
 }
 
 void GameFrame::connectedToGame()
@@ -203,14 +150,7 @@ void GameFrame::connectedToGame()
 		m_gameState = GameState::Connected;
 	}
 
-	m_showingDialog = false;
-	m_offeringDrawLayoutWidget->hide();
-	m_drawOfferedLayoutWidget->hide();
-	m_offerDrawConfirmLayoutWidget->hide();
-	m_forfitConfirmLayoutWidget->hide();
-	m_leaveGameLayoutWidget->hide();
-	m_offerDrawButton->setEnabled(true);
-	m_forfitButton->setEnabled(true);
+	displayDialog(false);
 
 	auto playerColor = Parameters::getPlayerColor();
 
@@ -246,6 +186,12 @@ void GameFrame::requestedReachableTiles(const std::vector<size_t> &reachableTile
 	update();
 }
 
+void GameFrame::reportPlayer(const std::string &chatMessages)
+{
+	m_reportingChatMessages = chatMessages;
+	displayDialog(true, m_reportPlayerConfirmDialog);
+}
+
 void GameFrame::clearChat()
 {
 	m_chatBox->clear();
@@ -272,17 +218,7 @@ void GameFrame::declaredWinner(Winner winner)
 	m_gameState = GameState::GameFinished;
 	m_hud->setGameState(m_gameState);
 
-	m_showingDialog = false;
-
-	m_offeringDrawLayoutWidget->hide();
-	m_drawOfferedLayoutWidget->hide();
-	m_offerDrawConfirmLayoutWidget->hide();
-	m_offerDrawButton->setEnabled(false);
-
-	m_forfitConfirmLayoutWidget->hide();
-	m_forfitButton->setEnabled(false);
-
-	m_leaveGameLayoutWidget->show();
+	displayDialog(true, m_leaveGameDialog);
 
 	update();
 }
@@ -343,26 +279,15 @@ void GameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex
 
 void GameFrame::drawDeclined()
 {
-	m_showingDialog = false;
-	m_offeringDrawLayoutWidget->hide();
-	m_drawOfferedLayoutWidget->hide();
-	m_offerDrawButton->setEnabled(true);
-	m_forfitButton->setEnabled(true);
-
-	update();
+	displayDialog(false);
 }
 
 void GameFrame::drawOffered()
 {
 	if (m_gameState != GameState::GameFinished)
 	{
-		m_showingDialog = true;
-		m_offerDrawConfirmLayoutWidget->hide();
-		m_drawOfferedLayoutWidget->show();
-		m_offerDrawButton->setEnabled(false);
-		m_forfitButton->setEnabled(false);
-
-		update();
+		displayDialog(false);
+		m_offeredDrawDialog->show();
 	}
 }
 
@@ -513,79 +438,75 @@ void GameFrame::mousePressEvent(QMouseEvent *event)
 	QFrame::mousePressEvent(event); // Ensure base class event handling
 }
 
-void GameFrame::handleOfferRematchButton()
-{
-}
-
 void GameFrame::handleOfferDrawButton()
 {
-	m_showingDialog = true;
-	m_offerDrawConfirmLayoutWidget->show();
-	m_offerDrawButton->setEnabled(false);
-	m_forfitButton->setEnabled(false);
+	displayDialog(true, m_offerDrawConfirmDialog);
+}
 
-	update();
+void GameFrame::handleAcceptOfferDrawButton()
+{
+	displayDialog(true, m_offeringDrawDialog);
+	m_playerWindow->offerDraw();
+}
+
+void GameFrame::handleCancelOfferDrawButton()
+{
+	displayDialog(false);
+}
+
+void GameFrame::handleAcceptDrawButton()
+{
+	displayDialog(false);
+	m_playerWindow->offerDraw();
 }
 
 void GameFrame::handleDeclineDrawButton()
 {
-	m_showingDialog = false;
-	m_offerDrawConfirmLayoutWidget->hide();
-	m_offerDrawButton->setEnabled(true);
-	m_forfitButton->setEnabled(true);
+	displayDialog(false);
 	m_playerWindow->declineDraw();
-
-	update();
 }
 
 void GameFrame::handleForfitButton()
 {
-	m_showingDialog = true;
-	m_forfitConfirmLayoutWidget->show();
-	m_offerDrawButton->setEnabled(false);
-	m_forfitButton->setEnabled(false);
-
-	update();
-}
-
-void GameFrame::handleOfferDrawConfirmButton()
-{
-	m_playerWindow->offerDraw();
-	m_offerDrawConfirmLayoutWidget->hide();
-	m_offeringDrawLayoutWidget->show();
-
-	update();
-}
-
-void GameFrame::handleOfferDrawCancelButton()
-{
-	m_showingDialog = false;
-	m_offerDrawConfirmLayoutWidget->hide();
-	m_offerDrawButton->setEnabled(true);
-	m_forfitButton->setEnabled(true);
-
-	update();
+	displayDialog(true, m_forfitConfirmDialog);
 }
 
 void GameFrame::handleForfitConfirmButton()
 {
+	displayDialog(false);
 	m_playerWindow->forfit();
 }
 
 void GameFrame::handleForfitCancelButton()
 {
-	m_showingDialog = false;
-	m_forfitConfirmLayoutWidget->hide();
-	m_offerDrawButton->setEnabled(true);
-	m_forfitButton->setEnabled(true);
+	displayDialog(false);
+}
 
-	update();
+void GameFrame::handleReportPlayerConfirmButton()
+{
+	displayDialog(false);
+	m_playerWindow->reportPlayer(m_reportingChatMessages);
+	m_reportingChatMessages.clear();
+	m_playerWindow->leaveLobby();
+	m_playerWindow->moveToMainMenuFrame();
+}
+
+void GameFrame::handleReportPlayerCancelButton()
+{
+	displayDialog(false);
+	m_reportingChatMessages.clear();
 }
 
 void GameFrame::handleLeaveGameButton()
 {
+	displayDialog(false);
 	m_playerWindow->leaveLobby();
 	m_playerWindow->moveToMainMenuFrame();
+}
+
+void GameFrame::handleOfferRematchButton()
+{
+	// TODO: Add button to end game dialog that creates a lobby and holds the position open for the other player
 }
 
 uint64_t GameFrame::getBoardHash() const
@@ -614,6 +535,25 @@ void GameFrame::resyncBoard(uint64_t blackTimeRemainingSeconds,
 						 turtlePieceIsKingedPerTile,
 						 m_blackPlayerGraveyard,
 						 m_redPlayerGraveyard);
+}
+
+void GameFrame::displayDialog(bool dialogDisplayed, DialogWidget *dialog)
+{
+	// Enable or disable everything as needed
+	m_showingDialog = dialogDisplayed;
+	m_chatBox->setEnabled(!m_showingDialog);
+	m_offerDrawButton->setEnabled(!m_showingDialog);
+	m_forfitButton->setEnabled(!m_showingDialog);
+	m_offerDrawConfirmDialog->hide();
+	m_offeringDrawDialog->hide();
+	m_offeredDrawDialog->hide();
+	m_forfitConfirmDialog->hide();
+	m_leaveGameDialog->hide();
+	m_reportPlayerConfirmDialog->hide();
+	if (dialogDisplayed && dialog)
+	{
+		dialog->show();
+	}
 }
 
 void GameFrame::paintEvent(QPaintEvent *event)

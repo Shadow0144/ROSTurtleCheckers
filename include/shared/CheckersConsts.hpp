@@ -82,7 +82,7 @@ constexpr int STATISTICS_SCROLL_H = 200;
 constexpr int MATCH_LIST_LOBBY_NAME_WIDTH = 130;
 constexpr int MATCH_LIST_PLAYER_NAME_WIDTH = 130;
 
-constexpr int IN_LOBBY_LAYOUT_MARGINS = 50;
+constexpr int IN_LOBBY_LAYOUT_MARGINS = 24;
 
 constexpr int HUD_HEIGHT = 20;
 constexpr int HUD_TEXT_X_OFFSET = 5;
@@ -98,10 +98,6 @@ constexpr int HUD_TURTLE_ICON_Y_OFFSET = 1;
 constexpr int HUD_TURTLE_ICON_HEIGHT_WIDTH = 18;
 constexpr int HUD_BLACK_TIMER_TEXT_X_OFFSET = 250;
 constexpr int HUD_RED_TIMER_TEXT_X_OFFSET = 450;
-constexpr int VICTORY_TEXT_Y_OFFSET = -55;
-constexpr int VICTORY_TEXT_HEIGHT = 24;
-constexpr int VICTORY_TEXT_FONT_SIZE = 24;
-constexpr int VICTORY_IMAGE_Y_OFFSET = 15;
 
 constexpr int GRAVEYARD_WIDTH = 2u * TILE_WIDTH;
 
@@ -124,15 +120,22 @@ constexpr int CHAT_BOX_IN_GAME_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_
 constexpr int CHAT_IN_LOBBY_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_IN_GAME_WIDTH - (2 * IN_LOBBY_LAYOUT_MARGINS) - 20;
 constexpr int CHAT_IN_LOBBY_HEIGHT = 50;
 constexpr int CHAT_IN_GAME_WIDTH = 180;
-constexpr int CHAT_IN_GAME_HEIGHT = 440;
+constexpr int CHAT_IN_GAME_HEIGHT = 405;
 
 constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_IN_GAME_WIDTH;
 constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
 
+constexpr int WINDOW_CENTER_X = WINDOW_WIDTH / 2;
+constexpr int WINDOW_CENTER_Y = WINDOW_HEIGHT / 2;
+
 constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);
 constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);
 
-constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 65;
+constexpr int VICTORY_TEXT_Y_OFFSET = -85;
+constexpr int VICTORY_TEXT_HEIGHT = 24;
+constexpr int VICTORY_TEXT_FONT_SIZE = 24;
+constexpr int VICTORY_IMAGE_Y_OFFSET = 0;
+constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 80;
 
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 

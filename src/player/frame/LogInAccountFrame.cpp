@@ -69,6 +69,7 @@ LogInAccountFrame::LogInAccountFrame(
     logInAccountLayout->addWidget(m_errorMessageLabel);
 
     auto logInAccountButtonLayout = new QHBoxLayout();
+    logInAccountButtonLayout->setAlignment(Qt::AlignCenter);
 
     std::string logInAccountString = "Log In";
     m_logInAccountButton = new QPushButton(logInAccountString.c_str());

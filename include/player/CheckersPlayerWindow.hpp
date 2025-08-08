@@ -93,6 +93,8 @@ public:
     void setPlayerReady(const std::string &playerName, bool ready);
     void updateTimer(uint64_t timerSeconds);
 
+    void reportPlayer(const std::string &chatMessages);
+
     void addChatMessage(const std::string &playerName,
                         TurtlePieceColor playerColor,
                         const std::string &chatMessage,

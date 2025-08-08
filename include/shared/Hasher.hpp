@@ -15,6 +15,7 @@
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
@@ -270,6 +271,19 @@ struct std::hash<turtle_checkers_interfaces::msg::PlayerReady>
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
         hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
         hashCombine(combinedHash, std::hash<bool>{}(message.ready));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::ReportPlayer>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::ReportPlayer &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.reporting_player_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.reported_player_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.chat_messages));
         return combinedHash;
     }
 };

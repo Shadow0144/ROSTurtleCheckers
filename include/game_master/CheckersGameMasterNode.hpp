@@ -16,6 +16,7 @@
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
+#include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
 
 #include "shared/RSAKeyGenerator.hpp"
@@ -47,12 +48,14 @@ private:
 
     void leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message);
     void logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message);
+    void reportPlayerCallback(const turtle_checkers_interfaces::msg::ReportPlayer::SharedPtr message);
     void setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message);
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::ReportPlayer>::SharedPtr m_reportPlayerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::SetPlayerBanned>::SharedPtr m_setPlayerBannedSubscription;
 
     rclcpp::Service<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterService;
@@ -74,6 +77,8 @@ private:
     uint16_t m_nextLobbyId;           // [0 - MAX_LOBBY_LIMIT)
 
     uint64_t m_authorizationKey = 0u;
+
+    std::string m_reportEmailAddress = "";
 
     uint64_t m_publicKey;
     uint64_t m_privateKey;

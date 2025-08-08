@@ -22,6 +22,7 @@
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
+#include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
@@ -134,6 +135,9 @@ int CheckersPlayerNode::exec()
         "LeaveLobby", 10);
     m_logOutAccountPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::LogOutAccount>(
         "LogOutAccount", 10);
+
+    m_reportPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ReportPlayer>(
+        "ReportPlayer", 10);
 
     m_forceLogoutAccountSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
         "/ForceLogoutAccount", 10, std::bind(&CheckersPlayerNode::forceLogoutAccountCallback, this, _1));
@@ -401,6 +405,19 @@ void CheckersPlayerNode::setTimer(uint64_t timerSeconds)
         std::hash<turtle_checkers_interfaces::msg::TimerChanged>{}(message),
         m_publicKey, m_privateKey);
     m_timerChangedPublisher->publish(message);
+}
+
+void CheckersPlayerNode::reportPlayer(const std::string &chatMessages)
+{
+    // Send a report to the game master and then leave the lobby
+    auto message = turtle_checkers_interfaces::msg::ReportPlayer();
+    message.reporting_player_name = Parameters::getPlayerName();
+    message.reported_player_name = Parameters::getOpponentName();
+    message.chat_messages = chatMessages;
+    message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::msg::ReportPlayer>{}(message),
+        m_publicKey, m_privateKey);
+    m_reportPlayerPublisher->publish(message);
 }
 
 void CheckersPlayerNode::sendChatMessage(const std::string &chatMessage)

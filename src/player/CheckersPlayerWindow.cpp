@@ -166,6 +166,7 @@ void CheckersPlayerWindow::logOutAccount()
         playerNode->logOutAccount();
     }
     Parameters::setPlayerName(""); // Clear out the player name
+    Parameters::setOpponentName(""); // Clear out the opponent name too
     moveToTitleFrame();
 }
 
@@ -368,6 +369,14 @@ void CheckersPlayerWindow::gameStarted(GameState gameState,
     moveToGameFrame();
 
     update();
+}
+
+void CheckersPlayerWindow::reportPlayer(const std::string &chatMessages)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->reportPlayer(chatMessages);
+    }
 }
 
 void CheckersPlayerWindow::addChatMessage(const std::string &playerName,

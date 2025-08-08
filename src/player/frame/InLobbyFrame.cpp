@@ -1,6 +1,7 @@
 #include "player/frame/InLobbyFrame.hpp"
 
 #include <QFrame>
+#include <QWidget>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -19,6 +20,7 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/TitleWidget.hpp"
+#include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
@@ -39,12 +41,14 @@ InLobbyFrame::InLobbyFrame(
     connect(m_gameStartTimer, &QTimer::timeout, this, [this]()
             { this->updateGameStartTimer(); });
 
-    auto inLobbyLayout = new QVBoxLayout(this);
+    m_inLobbyWidget = new QWidget(this);
+    auto inLobbyLayout = new QVBoxLayout();
     inLobbyLayout->setAlignment(Qt::AlignCenter);
     inLobbyLayout->setContentsMargins(IN_LOBBY_LAYOUT_MARGINS,
                                       IN_LOBBY_LAYOUT_MARGINS,
                                       IN_LOBBY_LAYOUT_MARGINS,
                                       IN_LOBBY_LAYOUT_MARGINS);
+    m_inLobbyWidget->setLayout(inLobbyLayout);
 
     auto titleWidget = new TitleWidget();
     inLobbyLayout->addWidget(titleWidget);
@@ -201,8 +205,8 @@ InLobbyFrame::InLobbyFrame(
 
     inLobbyLayout->addLayout(timerLayout);
 
-    m_chatBox = new ChatBox(nullptr, CHAT_IN_LOBBY_WIDTH, CHAT_IN_LOBBY_HEIGHT,
-                            [this](const std::string &chatMessage)
+    m_chatBox = new ChatBox(nullptr, CHAT_IN_LOBBY_WIDTH, CHAT_IN_LOBBY_HEIGHT, [this](const std::string &chatMessages)
+                            { this->reportPlayer(chatMessages); }, [this](const std::string &chatMessage)
                             { this->sendChatMessage(chatMessage); });
     inLobbyLayout->addWidget(m_chatBox);
 
@@ -216,6 +220,14 @@ InLobbyFrame::InLobbyFrame(
     inLobbyButtonLayout->addWidget(leaveLobbyInLobbyButton);
 
     inLobbyLayout->addLayout(inLobbyButtonLayout);
+
+    // Report player confirm dialog
+    m_reportPlayerConfirmDialog = new DialogWidget(this, WINDOW_CENTER_X, WINDOW_CENTER_Y,
+                                                   "Report player and leave lobby?",
+                                                   "Report", {[this]()
+                                                              { this->handleReportPlayerConfirmButton(); }},
+                                                   "Cancel", {[this]()
+                                                              { this->handleReportPlayerCancelButton(); }});
 }
 
 InLobbyFrame::~InLobbyFrame()
@@ -234,7 +246,8 @@ void InLobbyFrame::showEvent(QShowEvent *event)
 void InLobbyFrame::hideEvent(QHideEvent *event)
 {
     (void)event; // NO LINT
-
+    m_reportPlayerConfirmDialog->hide();
+    m_inLobbyWidget->setEnabled(true);
     m_gameStartTimer->stop();
 }
 
@@ -273,19 +286,27 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
     if (playerName == blackPlayerName)
     {
         Parameters::setPlayerColor(TurtlePieceColor::Black);
+        Parameters::setOpponentName(redPlayerName);
+        Parameters::setOpponentColor(TurtlePieceColor::Red);
     }
     else if (playerName == redPlayerName)
     {
         Parameters::setPlayerColor(TurtlePieceColor::Red);
+        Parameters::setOpponentName(blackPlayerName);
+        Parameters::setOpponentColor(TurtlePieceColor::Black);
     }
     else
     {
         Parameters::setPlayerColor(TurtlePieceColor::None);
+        Parameters::setOpponentName("");
+        Parameters::setOpponentColor(TurtlePieceColor::None);
     }
 
     std::string openString = "Open";
     bool blackPlayerJoined = !m_blackPlayerName.empty();
     bool redPlayerJoined = !m_redPlayerName.empty();
+
+    m_chatBox->setReportPlayerButtonEnabled(blackPlayerJoined && redPlayerJoined);
 
     m_blackPlayerNameLabel->setText(blackPlayerJoined ? m_blackPlayerName.c_str() : openString.c_str());
     m_blackPlayerNameLabel->setEnabled(blackPlayerJoined);
@@ -377,6 +398,13 @@ void InLobbyFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceC
     break;
     }
     setLobbyOwnerColor(m_lobbyOwnerColor); // (Re)enable the kick button
+
+    Parameters::setOpponentName(playerName);
+    Parameters::setOpponentColor(playerColor);
+
+    bool blackPlayerJoined = !m_blackPlayerName.empty();
+    bool redPlayerJoined = !m_redPlayerName.empty();
+    m_chatBox->setReportPlayerButtonEnabled(blackPlayerJoined && redPlayerJoined);
 }
 
 void InLobbyFrame::playerLeftLobby(const std::string &playerName)
@@ -402,6 +430,13 @@ void InLobbyFrame::playerLeftLobby(const std::string &playerName)
         m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         m_redPlayerName.clear();
     }
+
+    Parameters::setOpponentName("");
+    Parameters::setOpponentColor(TurtlePieceColor::None);
+
+    bool blackPlayerJoined = !m_blackPlayerName.empty();
+    bool redPlayerJoined = !m_redPlayerName.empty();
+    m_chatBox->setReportPlayerButtonEnabled(blackPlayerJoined && redPlayerJoined);
 }
 
 void InLobbyFrame::updateLobbyOwner(const std::string &lobbyOwnerPlayerName)
@@ -566,6 +601,13 @@ void InLobbyFrame::addChatMessage(const std::string &playerName,
     m_chatBox->addMessage(playerName, playerColor, chatMessage, timeStamp);
 }
 
+void InLobbyFrame::reportPlayer(const std::string &chatMessages)
+{
+    m_reportingChatMessages = chatMessages;
+    m_inLobbyWidget->setEnabled(false);
+    m_reportPlayerConfirmDialog->show();
+}
+
 void InLobbyFrame::sendChatMessage(const std::string &chatMessage)
 {
     m_playerWindow->sendChatMessage(chatMessage);
@@ -583,6 +625,21 @@ void InLobbyFrame::handleRedKickButton()
     m_playerWindow->kickPlayer(m_redPlayerName);
     m_redPlayerKickButton->setEnabled(false);
     m_redPlayerKickButton->setVisible(false);
+}
+
+void InLobbyFrame::handleReportPlayerConfirmButton()
+{
+    m_playerWindow->reportPlayer(m_reportingChatMessages);
+    m_reportingChatMessages.clear();
+    m_playerWindow->leaveLobby();
+    m_playerWindow->moveToMainMenuFrame();
+}
+
+void InLobbyFrame::handleReportPlayerCancelButton()
+{
+    m_inLobbyWidget->setEnabled(true);
+    m_reportPlayerConfirmDialog->hide();
+    m_reportingChatMessages.clear();
 }
 
 void InLobbyFrame::handleLeaveLobbyButton()
