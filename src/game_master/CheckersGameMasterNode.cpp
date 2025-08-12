@@ -9,6 +9,7 @@
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/get_statistics.hpp"
+#include "turtle_checkers_interfaces/srv/heartbeat.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
@@ -16,12 +17,15 @@
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <fstream>
 #include <regex>
+#include <unordered_map>
+#include <thread>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
@@ -68,6 +72,8 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     m_forceLogoutAccountPublisher = m_gameMasterNode->create_publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
         "ForceLogoutAccount", 10);
 
+    m_heartbeatSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::Heartbeat>(
+        "Heartbeat", 10, std::bind(&CheckersGameMasterNode::heartbeatCallback, this, std::placeholders::_1));
     m_leaveLobbySubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LeaveLobby>(
         "LeaveLobby", 10, std::bind(&CheckersGameMasterNode::leaveLobbyCallback, this, std::placeholders::_1));
     m_logOutAccountSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::LogOutAccount>(
@@ -148,7 +154,20 @@ CheckersGameMasterNode::CheckersGameMasterNode()
         TurtleLogger::logError(std::string("Authorization key file error: ") + e.what());
     }
 
+    // Start up the heartbeat thread
+    m_heartbeatThreadRunning = true;
+    m_heartbeatThread = std::thread(&CheckersGameMasterNode::checkHeartbeats, this);
+
     TurtleLogger::logInfo("Starting Turtles Checkers game node; now accepting players!");
+}
+
+CheckersGameMasterNode::~CheckersGameMasterNode()
+{
+    m_heartbeatThreadRunning = false;
+    if (m_heartbeatThread.joinable())
+    {
+        m_heartbeatThread.join();
+    }
 }
 
 void CheckersGameMasterNode::connectToGameMasterRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request> request,
@@ -171,6 +190,7 @@ void CheckersGameMasterNode::createAccountRequest(const std::shared_ptr<turtle_c
         std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr>{}(response),
         m_publicKey, m_privateKey);
 
+    std::lock_guard<std::mutex> lock(m_playerKeysMutex);
     m_playerPublicKeys[request->player_name] = request->player_public_key;
 }
 
@@ -179,8 +199,17 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
 {
     response->player_name = request->player_name;
 
+    uint64_t playerPublicKey = 0u;
+    {
+        std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+        if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+        {
+            playerPublicKey = m_playerPublicKeys[request->player_name];
+        }
+    }
+
     // Checked if logged in already
-    if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+    if (playerPublicKey != 0u)
     {
         // Already logged in
         response->logged_in = false;
@@ -203,7 +232,11 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
 
             if (response->logged_in) // If logging in succeeded, add to the list
             {
+                std::lock_guard<std::mutex> lock(m_playerKeysMutex);
                 m_playerPublicKeys[request->player_name] = request->player_public_key;
+                m_playerHeartbeatTimestamps[request->player_name] = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                                        std::chrono::system_clock::now().time_since_epoch())
+                                                                        .count();
             }
         }
     }
@@ -211,6 +244,8 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
         std::hash<turtle_checkers_interfaces::srv::LogInAccount::Response::SharedPtr>{}(response),
         m_publicKey, m_privateKey);
+
+    TurtleLogger::logInfo("Player " + request->player_name + " has logged in");
 }
 
 void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateLobby::Request> request,
@@ -218,7 +253,16 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
 {
     response->created = false;
 
-    if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+    uint64_t playerPublicKey = 0u;
+    {
+        std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+        if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+        {
+            playerPublicKey = m_playerPublicKeys[request->player_name];
+        }
+    }
+
+    if (playerPublicKey != 0u)
     {
         uint16_t attempts = 0u;
         do
@@ -242,7 +286,7 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
                                                                              unencryptedHashedLobbyPassword,
                                                                              m_databaseHandler);
                 m_checkersGameLobbies[fullName] = checkersGameLobby;
-                checkersGameLobby->addPlayer(request->player_name, m_playerPublicKeys[request->player_name],
+                checkersGameLobby->addPlayer(request->player_name, playerPublicKey,
                                              static_cast<TurtlePieceColor>(request->desired_player_color));
                 checkersGameLobby->setLobbyOwner(request->player_name);
                 response->created = true;
@@ -320,7 +364,16 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
 {
     response->joined = false;
 
-    if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+    uint64_t playerPublicKey = 0u;
+    {
+        std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+        if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+        {
+            playerPublicKey = m_playerPublicKeys[request->player_name];
+        }
+    }
+
+    if (playerPublicKey != 0u)
     {
         auto lobbyName = request->lobby_name + "#" + request->lobby_id;
         if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
@@ -336,7 +389,7 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
                     if (!checkersGameLobby->containsPlayer(request->player_name))
                     {
                         checkersGameLobby->addPlayer(request->player_name,
-                                                     m_playerPublicKeys[request->player_name],
+                                                     playerPublicKey,
                                                      static_cast<TurtlePieceColor>(request->desired_player_color));
                         response->joined = true;
                         response->error_msg = "";
@@ -388,12 +441,56 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
         m_publicKey, m_privateKey);
 }
 
+void CheckersGameMasterNode::heartbeatCallback(const turtle_checkers_interfaces::msg::Heartbeat::SharedPtr message)
+{
+    uint64_t playerPublicKey = 0u;
+    {
+        std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+        if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
+        {
+            playerPublicKey = m_playerPublicKeys[message->player_name];
+        }
+    }
+
+    if (playerPublicKey == 0u ||
+        !RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::Heartbeat>{}(*message),
+            playerPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    // The timestamp in the message is only so the checksum is unique; use the local time instead of trusting the player's clock
+    std::lock_guard<std::mutex> lock(m_heartbeatMutex);
+    m_playerHeartbeatTimestamps[message->player_name] = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                            std::chrono::system_clock::now().time_since_epoch())
+                                                            .count();
+}
+
 void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message)
 {
-    // TODO Confirm that the message has the correct key for the player
     auto lobbyName = message->lobby_name + "#" + message->lobby_id;
     if (m_checkersGameLobbies.find(lobbyName) != m_checkersGameLobbies.end())
     {
+        uint64_t playerPublicKey = 0u;
+        {
+            std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+            if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
+            {
+                playerPublicKey = m_playerPublicKeys[message->player_name];
+            }
+        }
+
+        if (playerPublicKey == 0u ||
+            !RSAKeyGenerator::checksumSignatureMatches(
+                std::hash<turtle_checkers_interfaces::msg::LeaveLobby>{}(*message),
+                playerPublicKey, message->checksum_sig))
+        {
+            std::cerr << "Checksum failed" << std::endl;
+            return; // Checksum did not match with the public key
+        }
+
         auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
         checkersGameLobby->removePlayer(message->player_name);
 
@@ -407,10 +504,23 @@ void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces
 
 void CheckersGameMasterNode::logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message)
 {
-    // TODO Confirm that the message has the correct key for the player
+    std::lock_guard<std::mutex> lock(m_playerKeysMutex);
     if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
     {
+        uint64_t playerPublicKey = m_playerPublicKeys[message->player_name];
+        if (!RSAKeyGenerator::checksumSignatureMatches(
+                std::hash<turtle_checkers_interfaces::msg::LogOutAccount>{}(*message),
+                playerPublicKey, message->checksum_sig))
+        {
+            std::cerr << "Checksum failed" << std::endl;
+            return; // Checksum did not match with the public key
+        }
+
+        // Log them out
         m_playerPublicKeys.erase(message->player_name);
+        m_playerHeartbeatTimestamps.erase(message->player_name);
+
+        TurtleLogger::logInfo("Player " + message->player_name + " has logged out");
     }
 }
 
@@ -423,9 +533,12 @@ void CheckersGameMasterNode::reportPlayerCallback(const turtle_checkers_interfac
     }
 
     uint64_t playerPublicKey = 0u;
-    if (m_playerPublicKeys.find(message->reporting_player_name) != m_playerPublicKeys.end())
     {
-        playerPublicKey = m_playerPublicKeys[message->reporting_player_name];
+        std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+        if (m_playerPublicKeys.find(message->reporting_player_name) != m_playerPublicKeys.end())
+        {
+            playerPublicKey = m_playerPublicKeys[message->reporting_player_name];
+        }
     }
 
     if (playerPublicKey == 0u ||
@@ -475,10 +588,58 @@ void CheckersGameMasterNode::setPlayerBannedCallback(const turtle_checkers_inter
             m_publicKey, m_privateKey);
         m_forceLogoutAccountPublisher->publish(forceLogoutAccountMessage);
 
-        if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
         {
-            m_playerPublicKeys.erase(message->player_name);
+            std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+            if (m_playerPublicKeys.find(message->player_name) != m_playerPublicKeys.end())
+            {
+                m_playerPublicKeys.erase(message->player_name);
+                m_playerHeartbeatTimestamps.erase(message->player_name);
+            }
         }
+    }
+}
+
+void CheckersGameMasterNode::checkHeartbeats()
+{
+    // This is run on a separate thread
+    while (m_heartbeatThreadRunning)
+    {
+        auto timeUpTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                              (std::chrono::system_clock::now() - m_heartbeatTimeout).time_since_epoch())
+                              .count();
+
+        // Check each player's heartbeat
+        {
+            std::vector<std::string> playersToLogout;
+            std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+            for (const auto &pair : m_playerPublicKeys)
+            {
+                const auto &playerName = pair.first;
+                if (m_playerHeartbeatTimestamps[playerName] < timeUpTime)
+                {
+                    // Player has timed out
+                    playersToLogout.push_back(playerName);
+                }
+            }
+
+            // Log out any players that have timed out
+            for (const auto &playerName : playersToLogout)
+            {
+                auto forceLogoutAccountMessage = turtle_checkers_interfaces::msg::ForceLogoutAccount();
+                forceLogoutAccountMessage.player_name = playerName;
+                forceLogoutAccountMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+                    std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>{}(forceLogoutAccountMessage),
+                    m_publicKey, m_privateKey);
+                m_forceLogoutAccountPublisher->publish(forceLogoutAccountMessage);
+
+                TurtleLogger::logInfo("Player " + playerName + " has timed out or lost connection");
+
+                m_playerPublicKeys.erase(playerName);
+                m_playerHeartbeatTimestamps.erase(playerName);
+            }
+        }
+
+        std::this_thread::sleep_for(m_heartbeatCheckTimer);
     }
 }
 

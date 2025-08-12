@@ -14,6 +14,7 @@
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
@@ -83,11 +84,16 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
     m_updateTimer->setInterval(16);
     m_updateTimer->start();
     connect(m_updateTimer, SIGNAL(timeout()), this, SLOT(onUpdate()));
+
+    // Create and start the heartbeat timer
+    m_heartbeatTimer = new QTimer(this);
+    m_heartbeatTimer->setInterval(m_heartbeatTime.count());
+    m_heartbeatTimer->start();
+    connect(m_heartbeatTimer, SIGNAL(timeout()), this, SLOT(sendHeartbeat()));
 }
 
 CheckersPlayerNode::~CheckersPlayerNode()
 {
-    delete m_updateTimer;
 }
 
 int CheckersPlayerNode::exec()
@@ -138,6 +144,9 @@ int CheckersPlayerNode::exec()
 
     m_reportPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ReportPlayer>(
         "ReportPlayer", 10);
+
+    m_heartbeatPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Heartbeat>(
+        "Heartbeat", 10);
 
     m_forceLogoutAccountSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
         "/ForceLogoutAccount", 10, std::bind(&CheckersPlayerNode::forceLogoutAccountCallback, this, _1));
@@ -1003,6 +1012,23 @@ void CheckersPlayerNode::forfit()
     m_forfitPublisher->publish(message);
 }
 
+void CheckersPlayerNode::sendHeartbeat()
+{
+    const auto &playerName = Parameters::getPlayerName();
+    if (!playerName.empty())
+    {
+        auto message = turtle_checkers_interfaces::msg::Heartbeat();
+        message.player_name = playerName;
+        message.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::system_clock::now().time_since_epoch())
+                                .count();
+        message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::msg::Heartbeat>{}(message),
+            m_publicKey, m_privateKey);
+        m_heartbeatPublisher->publish(message);
+    }
+}
+
 void CheckersPlayerNode::onUpdate()
 {
     if (!rclcpp::ok())
@@ -1016,6 +1042,11 @@ void CheckersPlayerNode::onUpdate()
 
 void CheckersPlayerNode::shutdown()
 {
+    // Tell the game master the player is leaving if they are logged in
+    if (!Parameters::getPlayerName().empty())
+    {
+        logOutAccount();
+    }
     rclcpp::shutdown();
 }
 

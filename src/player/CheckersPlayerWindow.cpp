@@ -38,7 +38,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_windowState = WindowState::MainMenu;
 
     setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    setWindowTitle("TurtleCheckers");
+    setWindowTitle(QString::fromStdString("Turtle Checkers"));
 
     setMouseTracking(true);
 
@@ -165,7 +165,7 @@ void CheckersPlayerWindow::logOutAccount()
     {
         playerNode->logOutAccount();
     }
-    Parameters::setPlayerName(""); // Clear out the player name
+    Parameters::setPlayerName("");   // Clear out the player name
     Parameters::setOpponentName(""); // Clear out the opponent name too
     moveToTitleFrame();
 }

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <thread>
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -14,6 +16,7 @@
 #include "turtle_checkers_interfaces/srv/get_statistics.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
+#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
@@ -27,6 +30,7 @@ class CheckersGameMasterNode
 {
 public:
     CheckersGameMasterNode();
+    ~CheckersGameMasterNode();
 
     std::shared_ptr<rclcpp::Node> &getNodeHandle();
 
@@ -46,13 +50,17 @@ private:
     void getStatisticsRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Request> request,
                               std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Response> response);
 
+    void heartbeatCallback(const turtle_checkers_interfaces::msg::Heartbeat::SharedPtr message);
     void leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message);
     void logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message);
     void reportPlayerCallback(const turtle_checkers_interfaces::msg::ReportPlayer::SharedPtr message);
     void setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message);
 
+    void checkHeartbeats();
+
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountPublisher;
 
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::Heartbeat>::SharedPtr m_heartbeatSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::ReportPlayer>::SharedPtr m_reportPlayerSubscription;
@@ -70,15 +78,23 @@ private:
 
     DatabaseHandlerPtr m_databaseHandler;
 
+    std::mutex m_playerKeysMutex;
     std::unordered_map<std::string, uint64_t> m_playerPublicKeys;
     std::unordered_map<std::string, CheckersGameLobbyPtr> m_checkersGameLobbies;
 
     uint16_t MAX_LOBBY_LIMIT = 1000u; // Max ID is 1 less, they then loop around
-    uint16_t m_nextLobbyId;           // [0 - MAX_LOBBY_LIMIT)
+    uint16_t m_nextLobbyId = 0u;      // [0 - MAX_LOBBY_LIMIT)
 
     uint64_t m_authorizationKey = 0u;
 
     std::string m_reportEmailAddress = "";
+
+    std::chrono::milliseconds m_heartbeatCheckTimer{3000u};
+    std::chrono::milliseconds m_heartbeatTimeout{30000u};
+    std::mutex m_heartbeatMutex;
+    std::thread m_heartbeatThread;
+    bool m_heartbeatThreadRunning = false;
+    std::unordered_map<std::string, int64_t> m_playerHeartbeatTimestamps;
 
     uint64_t m_publicKey;
     uint64_t m_privateKey;

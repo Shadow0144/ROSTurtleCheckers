@@ -9,6 +9,7 @@
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
@@ -95,6 +96,8 @@ public:
 public slots:
     void onUpdate();
 
+    void sendHeartbeat();
+
 private:
     void declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message);
     void drawDeclinedCallback(const turtle_checkers_interfaces::msg::DrawDeclined::SharedPtr message);
@@ -132,6 +135,7 @@ private:
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ChatMessage>::SharedPtr m_chatMessagePublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::Heartbeat>::SharedPtr m_heartbeatPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountPublisher;
@@ -169,6 +173,8 @@ private:
     uint64_t m_gameMasterPublicKey;
 
     QTimer *m_updateTimer;
+    QTimer *m_heartbeatTimer;
+    std::chrono::milliseconds m_heartbeatTime{1500u};
 };
 
 typedef std::weak_ptr<CheckersPlayerNode> CheckersPlayerNodeWkPtr;

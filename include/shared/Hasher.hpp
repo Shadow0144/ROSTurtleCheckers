@@ -7,6 +7,7 @@
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
+#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
@@ -164,6 +165,18 @@ struct std::hash<turtle_checkers_interfaces::msg::GameStart>
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.red_time_remaining_seconds));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.game_state));
         hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(message.movable_tile_indices));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::Heartbeat>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::Heartbeat &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.timestamp));
         return combinedHash;
     }
 };
