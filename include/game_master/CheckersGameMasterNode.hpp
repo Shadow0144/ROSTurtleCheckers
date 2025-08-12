@@ -8,6 +8,13 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include "turtle_checkers_interfaces/msg/client_heartbeat.hpp"
+#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
+#include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/log_out_account.hpp"
+#include "turtle_checkers_interfaces/msg/report_player.hpp"
+#include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
+#include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
@@ -15,12 +22,6 @@
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
 #include "turtle_checkers_interfaces/srv/get_statistics.hpp"
 #include "turtle_checkers_interfaces/srv/join_lobby.hpp"
-#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
-#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
-#include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
-#include "turtle_checkers_interfaces/msg/log_out_account.hpp"
-#include "turtle_checkers_interfaces/msg/report_player.hpp"
-#include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
 
 #include "shared/RSAKeyGenerator.hpp"
 #include "game_master/DatabaseHandler.hpp"
@@ -35,6 +36,12 @@ public:
     std::shared_ptr<rclcpp::Node> &getNodeHandle();
 
 private:
+    void clientHeartbeatCallback(const turtle_checkers_interfaces::msg::ClientHeartbeat::SharedPtr message);
+    void leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message);
+    void logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message);
+    void reportPlayerCallback(const turtle_checkers_interfaces::msg::ReportPlayer::SharedPtr message);
+    void setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message);
+
     void connectToGameMasterRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request> request,
                                     std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Response> response);
     void createAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Request> request,
@@ -50,17 +57,12 @@ private:
     void getStatisticsRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Request> request,
                               std::shared_ptr<turtle_checkers_interfaces::srv::GetStatistics::Response> response);
 
-    void heartbeatCallback(const turtle_checkers_interfaces::msg::Heartbeat::SharedPtr message);
-    void leaveLobbyCallback(const turtle_checkers_interfaces::msg::LeaveLobby::SharedPtr message);
-    void logOutAccountCallback(const turtle_checkers_interfaces::msg::LogOutAccount::SharedPtr message);
-    void reportPlayerCallback(const turtle_checkers_interfaces::msg::ReportPlayer::SharedPtr message);
-    void setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message);
+    void handleHeartbeats();
 
-    void checkHeartbeats();
-
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::ServerHeartbeat>::SharedPtr m_serverHeartbeatPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountPublisher;
 
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::Heartbeat>::SharedPtr m_heartbeatSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::ClientHeartbeat>::SharedPtr m_clientHeartbeatSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::ReportPlayer>::SharedPtr m_reportPlayerSubscription;
@@ -90,11 +92,11 @@ private:
     std::string m_reportEmailAddress = "";
 
     std::chrono::milliseconds m_heartbeatCheckTimer{3000u};
-    std::chrono::milliseconds m_heartbeatTimeout{30000u};
+    std::chrono::milliseconds m_heartbeatTimeout{10000u};
     std::mutex m_heartbeatMutex;
     std::thread m_heartbeatThread;
     bool m_heartbeatThreadRunning = false;
-    std::unordered_map<std::string, int64_t> m_playerHeartbeatTimestamps;
+    std::unordered_map<std::string, std::chrono::system_clock::time_point> m_playerHeartbeatTimestamps;
 
     uint64_t m_publicKey;
     uint64_t m_privateKey;

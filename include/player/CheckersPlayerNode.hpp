@@ -3,13 +3,13 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "turtle_checkers_interfaces/msg/chat_message.hpp"
+#include "turtle_checkers_interfaces/msg/client_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
-#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
@@ -19,6 +19,7 @@
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
+#include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
@@ -42,6 +43,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <mutex>
 
 #include "shared/CheckersConsts.hpp"
 
@@ -97,6 +99,7 @@ public slots:
     void onUpdate();
 
     void sendHeartbeat();
+    void checkHeartbeat();
 
 private:
     void declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message);
@@ -108,6 +111,7 @@ private:
     void playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message);
     void playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message);
     void playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message);
+    void serverHeartbeatCallback(const turtle_checkers_interfaces::msg::ServerHeartbeat::SharedPtr message);
     void updateChatCallback(const turtle_checkers_interfaces::msg::UpdateChat::SharedPtr message);
     void updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message);
     void updateTimerCallback(const turtle_checkers_interfaces::msg::UpdateTimer::SharedPtr message);
@@ -134,8 +138,8 @@ private:
     std::unique_ptr<CheckersPlayerWindow> m_checkersPlayerWindow;
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ChatMessage>::SharedPtr m_chatMessagePublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::ClientHeartbeat>::SharedPtr m_clientHeartbeatPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitPublisher;
-    rclcpp::Publisher<turtle_checkers_interfaces::msg::Heartbeat>::SharedPtr m_heartbeatPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountPublisher;
@@ -149,10 +153,11 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawOffered>::SharedPtr m_drawOfferedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::ServerHeartbeat>::SharedPtr m_serverHeartbeatSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateChat>::SharedPtr m_updateChatSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerSubscription;
@@ -174,7 +179,15 @@ private:
 
     QTimer *m_updateTimer;
     QTimer *m_heartbeatTimer;
+    QTimer *m_heartbeatCheckTimer;
+    std::chrono::milliseconds m_updateTime{16u};
     std::chrono::milliseconds m_heartbeatTime{1500u};
+    std::chrono::milliseconds m_heartbeatCheckTime{15000u};
+    std::chrono::milliseconds m_heartbeatTimeout{10000u};
+    std::chrono::system_clock::time_point m_serverHeartbeatTimestamp;
+    std::mutex m_heartbeatMutex;
+
+    bool m_connectedToServer;
 };
 
 typedef std::weak_ptr<CheckersPlayerNode> CheckersPlayerNodeWkPtr;

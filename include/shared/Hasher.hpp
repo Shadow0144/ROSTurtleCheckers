@@ -1,13 +1,13 @@
 #pragma once
 
 #include "turtle_checkers_interfaces/msg/chat_message.hpp"
+#include "turtle_checkers_interfaces/msg/client_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
-#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
@@ -17,6 +17,7 @@
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
+#include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
@@ -83,6 +84,18 @@ struct std::hash<turtle_checkers_interfaces::msg::ChatMessage>
         hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.player_color));
         hashCombine(combinedHash, std::hash<std::string>{}(message.msg));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::ClientHeartbeat>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::ClientHeartbeat &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.timestamp));
         return combinedHash;
     }
 };
@@ -165,18 +178,6 @@ struct std::hash<turtle_checkers_interfaces::msg::GameStart>
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.red_time_remaining_seconds));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.game_state));
         hashCombine(combinedHash, std::hash<std::vector<uint64_t>>{}(message.movable_tile_indices));
-        return combinedHash;
-    }
-};
-
-template <>
-struct std::hash<turtle_checkers_interfaces::msg::Heartbeat>
-{
-    size_t operator()(const turtle_checkers_interfaces::msg::Heartbeat &message) const noexcept
-    {
-        size_t combinedHash = 0u;
-        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
-        hashCombine(combinedHash, std::hash<uint64_t>{}(message.timestamp));
         return combinedHash;
     }
 };
@@ -297,6 +298,17 @@ struct std::hash<turtle_checkers_interfaces::msg::ReportPlayer>
         hashCombine(combinedHash, std::hash<std::string>{}(message.reporting_player_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.reported_player_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.chat_messages));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::ServerHeartbeat>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::ServerHeartbeat &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<uint64_t>{}(message.timestamp));
         return combinedHash;
     }
 };

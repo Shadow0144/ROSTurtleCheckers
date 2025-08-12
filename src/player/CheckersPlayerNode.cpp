@@ -8,13 +8,13 @@
 #include "ament_index_cpp/get_package_share_directory.hpp" // For getting the styles directory
 
 #include "turtle_checkers_interfaces/msg/chat_message.hpp"
+#include "turtle_checkers_interfaces/msg/client_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
 #include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
-#include "turtle_checkers_interfaces/msg/heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
@@ -24,6 +24,7 @@
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
+#include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/timer_changed.hpp"
 #include "turtle_checkers_interfaces/msg/update_board.hpp"
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
@@ -48,6 +49,7 @@
 #include <algorithm>
 #include <string>
 #include <thread>
+#include <mutex>
 
 #include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
@@ -63,6 +65,7 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
     // Create the node
     rclcpp::init(argc, argv);
     m_playerNode = rclcpp::Node::make_shared("checkers_player_node");
+    m_connectedToServer = false;
 
     // Initialize the logger
     TurtleLogger::initialize("checkers_player_node");
@@ -81,15 +84,21 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
 
     // Create and start the update timer
     m_updateTimer = new QTimer(this);
-    m_updateTimer->setInterval(16);
+    m_updateTimer->setInterval(m_updateTime.count());
     m_updateTimer->start();
     connect(m_updateTimer, SIGNAL(timeout()), this, SLOT(onUpdate()));
 
-    // Create and start the heartbeat timer
+    // Create and start the send heartbeat timer
     m_heartbeatTimer = new QTimer(this);
     m_heartbeatTimer->setInterval(m_heartbeatTime.count());
     m_heartbeatTimer->start();
     connect(m_heartbeatTimer, SIGNAL(timeout()), this, SLOT(sendHeartbeat()));
+
+    // Create and start the check heartbeat timer
+    m_heartbeatCheckTimer = new QTimer(this);
+    m_heartbeatCheckTimer->setInterval(m_heartbeatCheckTime.count());
+    m_heartbeatCheckTimer->start();
+    connect(m_heartbeatCheckTimer, SIGNAL(timeout()), this, SLOT(checkHeartbeat()));
 }
 
 CheckersPlayerNode::~CheckersPlayerNode()
@@ -119,37 +128,33 @@ int CheckersPlayerNode::exec()
 
     TurtleLogger::logInfo(std::string("Starting turtle checkers board with node name ") + m_playerNode->get_fully_qualified_name());
 
+    m_clientHeartbeatPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ClientHeartbeat>(
+        "ClientHeartbeat", 10);
     m_connectToGameMasterClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::ConnectToGameMaster>(
         "ConnectToGameMaster");
-
     m_createAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateAccount>(
         "CreateAccount");
-    m_logInAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::LogInAccount>(
-        "LogInAccount");
-
-    m_getStatisticsClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::GetStatistics>(
-        "GetStatistics");
-
     m_createLobbyClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateLobby>(
         "CreateLobby");
     m_getLobbyListClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::GetLobbyList>(
         "GetLobbyList");
+    m_getStatisticsClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::GetStatistics>(
+        "GetStatistics");
     m_joinLobbyClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::JoinLobby>(
         "JoinLobby");
-
     m_leaveLobbyPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::LeaveLobby>(
         "LeaveLobby", 10);
+    m_logInAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::LogInAccount>(
+        "LogInAccount");
     m_logOutAccountPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::LogOutAccount>(
         "LogOutAccount", 10);
-
     m_reportPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ReportPlayer>(
         "ReportPlayer", 10);
 
-    m_heartbeatPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Heartbeat>(
-        "Heartbeat", 10);
-
     m_forceLogoutAccountSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
-        "/ForceLogoutAccount", 10, std::bind(&CheckersPlayerNode::forceLogoutAccountCallback, this, _1));
+        "ForceLogoutAccount", 10, std::bind(&CheckersPlayerNode::forceLogoutAccountCallback, this, _1));
+    m_serverHeartbeatSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ServerHeartbeat>(
+        "ServerHeartbeat", 10, std::bind(&CheckersPlayerNode::serverHeartbeatCallback, this, _1));
 
     // Ensure the game master node is reachable, then get the public key from it
     std::thread(&CheckersPlayerNode::connectToGameMaster, this).detach();
@@ -182,8 +187,6 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/DrawOffered", 10, std::bind(&CheckersPlayerNode::drawOfferedCallback, this, _1));
     m_gameStartSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::GameStart>(
         lobbyName + "/id" + lobbyId + "/GameStart", 10, std::bind(&CheckersPlayerNode::gameStartCallback, this, _1));
-    m_updateBoardSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>(
-        lobbyName + "/id" + lobbyId + "/UpdateBoard", 10, std::bind(&CheckersPlayerNode::updateBoardCallback, this, _1));
     m_playerJoinedLobbySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>(
         lobbyName + "/id" + lobbyId + "/PlayerJoinedLobby", 10, std::bind(&CheckersPlayerNode::playerJoinedLobbyCallback, this, _1));
     m_playerLeftLobbySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>(
@@ -192,6 +195,8 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/PlayerReadied", 10, std::bind(&CheckersPlayerNode::playerReadiedCallback, this, _1));
     m_updateChatSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateChat>(
         lobbyName + "/id" + lobbyId + "/UpdateChat", 10, std::bind(&CheckersPlayerNode::updateChatCallback, this, _1));
+    m_updateBoardSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateBoard>(
+        lobbyName + "/id" + lobbyId + "/UpdateBoard", 10, std::bind(&CheckersPlayerNode::updateBoardCallback, this, _1));
     m_updateLobbyOwnerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>(
         lobbyName + "/id" + lobbyId + "/UpdateLobbyOwner", 10, std::bind(&CheckersPlayerNode::updateLobbyOwnerCallback, this, _1));
     m_updateTimerSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::UpdateTimer>(
@@ -605,6 +610,20 @@ void CheckersPlayerNode::playerReadiedCallback(const turtle_checkers_interfaces:
     m_checkersPlayerWindow->setPlayerReady(message->player_name, message->ready);
 }
 
+void CheckersPlayerNode::serverHeartbeatCallback(const turtle_checkers_interfaces::msg::ServerHeartbeat::SharedPtr message)
+{
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::ServerHeartbeat>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        std::cerr << "Checksum failed" << std::endl;
+        return; // Checksum did not match with the public key
+    }
+
+    std::lock_guard<std::mutex> lock(m_heartbeatMutex);
+    m_serverHeartbeatTimestamp = std::chrono::system_clock::now();
+}
+
 void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message)
 {
     if (Parameters::getLobbyName() != message->lobby_name || Parameters::getLobbyId() != message->lobby_id)
@@ -714,6 +733,7 @@ void CheckersPlayerNode::connectToGameMasterResponse(rclcpp::Client<turtle_check
     m_gameMasterPublicKey = result->game_master_public_key;
 
     m_checkersPlayerWindow->setConnectedToServer(true);
+    m_connectedToServer = true;
 
     m_checkersPlayerWindow->update();
 }
@@ -1017,15 +1037,30 @@ void CheckersPlayerNode::sendHeartbeat()
     const auto &playerName = Parameters::getPlayerName();
     if (!playerName.empty())
     {
-        auto message = turtle_checkers_interfaces::msg::Heartbeat();
+        auto message = turtle_checkers_interfaces::msg::ClientHeartbeat();
         message.player_name = playerName;
         message.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                                 std::chrono::system_clock::now().time_since_epoch())
                                 .count();
         message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-            std::hash<turtle_checkers_interfaces::msg::Heartbeat>{}(message),
+            std::hash<turtle_checkers_interfaces::msg::ClientHeartbeat>{}(message),
             m_publicKey, m_privateKey);
-        m_heartbeatPublisher->publish(message);
+        m_clientHeartbeatPublisher->publish(message);
+    }
+}
+
+void CheckersPlayerNode::checkHeartbeat()
+{
+    if (m_connectedToServer)
+    {
+        std::lock_guard<std::mutex> lock(m_heartbeatMutex);
+        auto timeUpTime = std::chrono::system_clock::now() - m_heartbeatTimeout;
+        if (m_serverHeartbeatTimestamp < timeUpTime)
+        {
+            // Lost connection to server
+            m_checkersPlayerWindow->setConnectedToServer(false);
+            m_connectedToServer = false;
+        }
     }
 }
 
