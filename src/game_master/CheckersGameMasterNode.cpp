@@ -4,9 +4,10 @@
 #include "ament_index_cpp/get_package_share_directory.hpp" // For getting the styles directory
 
 #include "turtle_checkers_interfaces/msg/client_heartbeat.hpp"
-#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
+#include "turtle_checkers_interfaces/msg/player_banned.hpp"
+#include "turtle_checkers_interfaces/msg/player_logged_out.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
@@ -70,10 +71,12 @@ CheckersGameMasterNode::CheckersGameMasterNode()
 
     // Create the publishers, subscriptions, and services
 
+    m_playerBannedPublisher = m_gameMasterNode->create_publisher<turtle_checkers_interfaces::msg::PlayerBanned>(
+        "PlayerBanned", 10);
+    m_playerLoggedOutPublisher = m_gameMasterNode->create_publisher<turtle_checkers_interfaces::msg::PlayerLoggedOut>(
+        "PlayerLoggedOut", 10);
     m_serverHeartbeatPublisher = m_gameMasterNode->create_publisher<turtle_checkers_interfaces::msg::ServerHeartbeat>(
         "ServerHeartbeat", 10);
-    m_forceLogoutAccountPublisher = m_gameMasterNode->create_publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
-        "ForceLogoutAccount", 10);
 
     m_clientHeartbeatSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::ClientHeartbeat>(
         "ClientHeartbeat", 10, std::bind(&CheckersGameMasterNode::clientHeartbeatCallback, this, std::placeholders::_1));
@@ -222,7 +225,7 @@ void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces
         }
 
         auto &checkersGameLobby = m_checkersGameLobbies[lobbyName];
-        checkersGameLobby->removePlayer(message->player_name);
+        checkersGameLobby->removePlayer(message->player_name, false);
 
         if (checkersGameLobby->isLobbyEmpty())
         {
@@ -311,12 +314,12 @@ void CheckersGameMasterNode::setPlayerBannedCallback(const turtle_checkers_inter
 
     if (message->banned) // If the player was banned, force them to logout
     {
-        auto forceLogoutAccountMessage = turtle_checkers_interfaces::msg::ForceLogoutAccount();
-        forceLogoutAccountMessage.player_name = message->player_name;
-        forceLogoutAccountMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-            std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>{}(forceLogoutAccountMessage),
+        auto playerBannedMessage = turtle_checkers_interfaces::msg::PlayerBanned();
+        playerBannedMessage.player_name = message->player_name;
+        playerBannedMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::msg::PlayerBanned>{}(playerBannedMessage),
             m_publicKey, m_privateKey);
-        m_forceLogoutAccountPublisher->publish(forceLogoutAccountMessage);
+        m_playerBannedPublisher->publish(playerBannedMessage);
 
         {
             std::lock_guard<std::mutex> lock(m_playerKeysMutex);
@@ -631,12 +634,12 @@ void CheckersGameMasterNode::handleHeartbeats()
             // Log out any players that have timed out
             for (const auto &playerName : playersToLogout)
             {
-                auto forceLogoutAccountMessage = turtle_checkers_interfaces::msg::ForceLogoutAccount();
-                forceLogoutAccountMessage.player_name = playerName;
-                forceLogoutAccountMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-                    std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>{}(forceLogoutAccountMessage),
+                auto playerLoggedOutMessage = turtle_checkers_interfaces::msg::PlayerLoggedOut();
+                playerLoggedOutMessage.player_name = playerName;
+                playerLoggedOutMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+                    std::hash<turtle_checkers_interfaces::msg::PlayerLoggedOut>{}(playerLoggedOutMessage),
                     m_publicKey, m_privateKey);
-                m_forceLogoutAccountPublisher->publish(forceLogoutAccountMessage);
+                m_playerLoggedOutPublisher->publish(playerLoggedOutMessage);
 
                 TurtleLogger::logInfo("Player " + playerName + " has timed out or lost connection");
 

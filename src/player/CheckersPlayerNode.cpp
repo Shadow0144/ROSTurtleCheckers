@@ -12,15 +12,17 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
+#include "turtle_checkers_interfaces/msg/player_banned.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_kicked.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_logged_out.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
@@ -151,8 +153,10 @@ int CheckersPlayerNode::exec()
     m_reportPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ReportPlayer>(
         "ReportPlayer", 10);
 
-    m_forceLogoutAccountSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>(
-        "ForceLogoutAccount", 10, std::bind(&CheckersPlayerNode::forceLogoutAccountCallback, this, _1));
+    m_playerBannedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerBanned>(
+        "PlayerBanned", 10, std::bind(&CheckersPlayerNode::playerBannedCallback, this, _1));
+    m_playerLoggedOutSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerLoggedOut>(
+        "PlayerLoggedOut", 10, std::bind(&CheckersPlayerNode::playerLoggedOutCallback, this, _1));
     m_serverHeartbeatSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ServerHeartbeat>(
         "ServerHeartbeat", 10, std::bind(&CheckersPlayerNode::serverHeartbeatCallback, this, _1));
 
@@ -189,6 +193,8 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
         lobbyName + "/id" + lobbyId + "/GameStart", 10, std::bind(&CheckersPlayerNode::gameStartCallback, this, _1));
     m_playerJoinedLobbySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>(
         lobbyName + "/id" + lobbyId + "/PlayerJoinedLobby", 10, std::bind(&CheckersPlayerNode::playerJoinedLobbyCallback, this, _1));
+    m_playerKickedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerKicked>(
+        lobbyName + "/id" + lobbyId + "/PlayerKicked", 10, std::bind(&CheckersPlayerNode::playerKickedCallback, this, _1));
     m_playerLeftLobbySubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>(
         lobbyName + "/id" + lobbyId + "/PlayerLeftLobby", 10, std::bind(&CheckersPlayerNode::playerLeftLobbyCallback, this, _1));
     m_playerReadiedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerReadied>(
@@ -460,7 +466,7 @@ void CheckersPlayerNode::declareWinnerCallback(const turtle_checkers_interfaces:
             std::hash<turtle_checkers_interfaces::msg::DeclareWinner>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -481,7 +487,7 @@ void CheckersPlayerNode::drawDeclinedCallback(const turtle_checkers_interfaces::
             std::hash<turtle_checkers_interfaces::msg::DrawDeclined>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -499,7 +505,7 @@ void CheckersPlayerNode::drawOfferedCallback(const turtle_checkers_interfaces::m
             std::hash<turtle_checkers_interfaces::msg::DrawOffered>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -510,26 +516,6 @@ void CheckersPlayerNode::drawOfferedCallback(const turtle_checkers_interfaces::m
     }
 
     m_checkersPlayerWindow->drawOffered();
-}
-
-void CheckersPlayerNode::forceLogoutAccountCallback(const turtle_checkers_interfaces::msg::ForceLogoutAccount::SharedPtr message)
-{
-    if (Parameters::getPlayerName() != message->player_name)
-    {
-        return;
-    }
-
-    if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>{}(*message),
-            m_gameMasterPublicKey, message->checksum_sig))
-    {
-        std::cerr << "Checksum failed" << std::endl;
-        return; // Checksum did not match with the public key
-    }
-
-    // TODO: Tell the player they have been banned
-
-    m_checkersPlayerWindow->logOutAccount();
 }
 
 void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message)
@@ -543,7 +529,7 @@ void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg
             std::hash<turtle_checkers_interfaces::msg::GameStart>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -554,6 +540,24 @@ void CheckersPlayerNode::gameStartCallback(const turtle_checkers_interfaces::msg
     m_checkersPlayerWindow->gameStarted(gameState, movableTileIndices, blackTimeRemainSec, redTimeRemainSec);
 
     m_checkersPlayerWindow->update();
+}
+
+void CheckersPlayerNode::playerBannedCallback(const turtle_checkers_interfaces::msg::PlayerBanned::SharedPtr message)
+{
+    if (Parameters::getPlayerName() != message->player_name)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::PlayerBanned>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        TurtleLogger::logError("Checksum failed");
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->banned();
 }
 
 void CheckersPlayerNode::playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message)
@@ -567,11 +571,31 @@ void CheckersPlayerNode::playerJoinedLobbyCallback(const turtle_checkers_interfa
             std::hash<turtle_checkers_interfaces::msg::PlayerJoinedLobby>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
     m_checkersPlayerWindow->playerJoinedLobby(message->player_name, static_cast<TurtlePieceColor>(message->player_color));
+}
+
+void CheckersPlayerNode::playerKickedCallback(const turtle_checkers_interfaces::msg::PlayerKicked::SharedPtr message)
+{
+    if (Parameters::getPlayerName() != message->player_name ||
+        Parameters::getLobbyName() != message->lobby_name ||
+        Parameters::getLobbyId() != message->lobby_id)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::PlayerKicked>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        TurtleLogger::logError("Checksum failed");
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->kicked();
 }
 
 void CheckersPlayerNode::playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message)
@@ -585,11 +609,29 @@ void CheckersPlayerNode::playerLeftLobbyCallback(const turtle_checkers_interface
             std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
     m_checkersPlayerWindow->playerLeftLobby(message->player_name);
+}
+
+void CheckersPlayerNode::playerLoggedOutCallback(const turtle_checkers_interfaces::msg::PlayerLoggedOut::SharedPtr message)
+{
+    if (Parameters::getPlayerName() != message->player_name)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::msg::PlayerLoggedOut>{}(*message),
+            m_gameMasterPublicKey, message->checksum_sig))
+    {
+        TurtleLogger::logError("Checksum failed");
+        return; // Checksum did not match with the public key
+    }
+
+    m_checkersPlayerWindow->loggedOut();
 }
 
 void CheckersPlayerNode::playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message)
@@ -603,7 +645,7 @@ void CheckersPlayerNode::playerReadiedCallback(const turtle_checkers_interfaces:
             std::hash<turtle_checkers_interfaces::msg::PlayerReadied>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -616,7 +658,7 @@ void CheckersPlayerNode::serverHeartbeatCallback(const turtle_checkers_interface
             std::hash<turtle_checkers_interfaces::msg::ServerHeartbeat>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -635,7 +677,7 @@ void CheckersPlayerNode::updateBoardCallback(const turtle_checkers_interfaces::m
             std::hash<turtle_checkers_interfaces::msg::UpdateBoard>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -678,7 +720,7 @@ void CheckersPlayerNode::updateChatCallback(const turtle_checkers_interfaces::ms
             std::hash<turtle_checkers_interfaces::msg::UpdateChat>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -699,7 +741,7 @@ void CheckersPlayerNode::updateLobbyOwnerCallback(const turtle_checkers_interfac
             std::hash<turtle_checkers_interfaces::msg::UpdateLobbyOwner>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -717,7 +759,7 @@ void CheckersPlayerNode::updateTimerCallback(const turtle_checkers_interfaces::m
             std::hash<turtle_checkers_interfaces::msg::UpdateTimer>{}(*message),
             m_gameMasterPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -746,7 +788,7 @@ void CheckersPlayerNode::createAccountResponse(rclcpp::Client<turtle_checkers_in
             std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -769,7 +811,7 @@ void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_inte
             std::hash<turtle_checkers_interfaces::srv::CreateLobby::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -808,7 +850,7 @@ void CheckersPlayerNode::getLobbyListResponse(rclcpp::Client<turtle_checkers_int
             std::hash<turtle_checkers_interfaces::srv::GetLobbyList::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -842,7 +884,7 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
             std::hash<turtle_checkers_interfaces::srv::JoinLobby::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -885,7 +927,7 @@ void CheckersPlayerNode::logInAccountResponse(rclcpp::Client<turtle_checkers_int
             std::hash<turtle_checkers_interfaces::srv::LogInAccount::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -908,7 +950,7 @@ void CheckersPlayerNode::requestPieceMoveResponse(rclcpp::Client<turtle_checkers
             std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -925,7 +967,7 @@ void CheckersPlayerNode::requestReachableTilesResponse(rclcpp::Client<turtle_che
             std::hash<turtle_checkers_interfaces::srv::RequestReachableTiles::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -943,11 +985,11 @@ void CheckersPlayerNode::resyncBoardResponse(rclcpp::Client<turtle_checkers_inte
             std::hash<turtle_checkers_interfaces::srv::ResyncBoard::Response::SharedPtr>{}(result),
             m_gameMasterPublicKey, result->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logError("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
-    std::clog << "Resyncing board" << std::endl;
+    TurtleLogger::logInfo("Resyncing board");
 
     m_checkersPlayerWindow->resyncBoard(result->black_time_remaining_seconds,
                                         result->red_time_remaining_seconds,
@@ -1058,7 +1100,8 @@ void CheckersPlayerNode::checkHeartbeat()
         if (m_serverHeartbeatTimestamp < timeUpTime)
         {
             // Lost connection to server
-            m_checkersPlayerWindow->setConnectedToServer(false);
+            TurtleLogger::logError("Lost connection to server");
+            m_checkersPlayerWindow->disconnected();
             m_connectedToServer = false;
         }
     }

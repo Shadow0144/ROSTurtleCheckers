@@ -12,6 +12,7 @@
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_kicked.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
@@ -107,6 +108,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
         m_lobbyName + "/id" + m_lobbyId + "/UpdateBoard", 10);
     m_playerJoinedLobbyPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerJoinedLobby", 10);
+    m_playerKickedPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerKicked>(
+        m_lobbyName + "/id" + m_lobbyId + "/PlayerKicked", 10);
     m_playerLeftLobbyPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>(
         m_lobbyName + "/id" + m_lobbyId + "/PlayerLeftLobby", 10);
     m_playerReadiedPublisher = m_nodeHandle->create_publisher<turtle_checkers_interfaces::msg::PlayerReadied>(
@@ -253,7 +256,7 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, uin
     return acceptedColor;
 }
 
-void CheckersGameLobby::removePlayer(const std::string &playerName)
+void CheckersGameLobby::removePlayer(const std::string &playerName, bool kick)
 {
     m_lobbyOwnerPlayerName = "";
     if (playerName == m_blackPlayerName)
@@ -269,14 +272,28 @@ void CheckersGameLobby::removePlayer(const std::string &playerName)
         m_lobbyOwnerPlayerName = m_blackPlayerName;
     }
 
-    auto message = turtle_checkers_interfaces::msg::PlayerLeftLobby();
-    message.lobby_name = m_lobbyName;
-    message.lobby_id = m_lobbyId;
-    message.player_name = playerName;
-    message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-        std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>{}(message),
-        m_publicKey, m_privateKey);
-    m_playerLeftLobbyPublisher->publish(message);
+    if (kick)
+    {
+        auto kickMessage = turtle_checkers_interfaces::msg::PlayerKicked();
+        kickMessage.lobby_name = m_lobbyName;
+        kickMessage.lobby_id = m_lobbyId;
+        kickMessage.player_name = playerName;
+        kickMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::msg::PlayerKicked>{}(kickMessage),
+            m_publicKey, m_privateKey);
+        m_playerKickedPublisher->publish(kickMessage);
+    }
+    else
+    {
+        auto leftMessage = turtle_checkers_interfaces::msg::PlayerLeftLobby();
+        leftMessage.lobby_name = m_lobbyName;
+        leftMessage.lobby_id = m_lobbyId;
+        leftMessage.player_name = playerName;
+        leftMessage.checksum_sig = RSAKeyGenerator::createChecksumSignature(
+            std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>{}(leftMessage),
+            m_publicKey, m_privateKey);
+        m_playerLeftLobbyPublisher->publish(leftMessage);
+    }
 
     // Also update the lobby owner
     if (!m_lobbyOwnerPlayerName.empty())
@@ -614,7 +631,7 @@ void CheckersGameLobby::kickPlayerCallback(const turtle_checkers_interfaces::msg
 {
     if (message->requesting_player_name == m_lobbyOwnerPlayerName)
     {
-        removePlayer(message->kick_player_name);
+        removePlayer(message->kick_player_name, true);
     }
 }
 

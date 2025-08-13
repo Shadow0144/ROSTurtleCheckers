@@ -18,6 +18,7 @@
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_kicked.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
@@ -55,7 +56,7 @@ public:
     TurtlePieceColor addPlayer(const std::string &playerName,
                                uint64_t playerPublicKey,
                                TurtlePieceColor desiredColor);
-    void removePlayer(const std::string &playerName);
+    void removePlayer(const std::string &playerName, bool kicked);
 
     void setLobbyOwner(const std::string &playerName);
     const std::string &getLobbyOwner() const;
@@ -109,6 +110,7 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbyPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerKicked>::SharedPtr m_playerKickedPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateChat>::SharedPtr m_updateChatPublisher;

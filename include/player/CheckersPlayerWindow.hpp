@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+#include <QWidget>
 #include <QStackedLayout>
 
 #include "shared/CheckersConsts.hpp"
@@ -21,6 +22,7 @@
 #include "player/frame/MainMenuFrame.hpp"
 #include "player/frame/StatisticsFrame.hpp"
 #include "player/frame/TitleFrame.hpp"
+#include "player/DialogWidget.hpp"
 
 class CheckersPlayerNode;
 
@@ -129,6 +131,16 @@ public:
     void drawDeclined();
     void drawOffered();
 
+    void disconnected();
+    void loggedOut();
+    void kicked();
+    void banned();
+
+	void displayDialog(bool dialogDisplayed, DialogWidget *dialog = nullptr);
+
+    void handleReturnToTitle();
+    void handleReturnToLobbyList();
+
     uint64_t getBoardHash() const;
 
 protected:
@@ -148,6 +160,7 @@ private:
     };
     WindowState m_windowState;
 
+    QWidget *m_windowLayoutWidget;
     QStackedLayout *m_windowLayout;
 
     std::weak_ptr<CheckersPlayerNode> m_playerNode;
@@ -164,6 +177,12 @@ private:
     MainMenuFrame *m_mainMenuFrame;
     StatisticsFrame *m_statisticsFrame;
     TitleFrame *m_titleFrame;
+
+	bool m_showingDialog;
+	DialogWidget *m_disconnectedDialog;
+	DialogWidget *m_kickedDialog;
+	DialogWidget *m_bannedDialog;
+	DialogWidget *m_loggedOutDialog;
 };
 
 typedef std::unique_ptr<CheckersPlayerWindow> CheckersPlayerWindowUniPtr;

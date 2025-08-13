@@ -5,15 +5,17 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
+#include "turtle_checkers_interfaces/msg/player_banned.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_kicked.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_logged_out.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
@@ -141,17 +143,6 @@ struct std::hash<turtle_checkers_interfaces::msg::DrawOffered>
 };
 
 template <>
-struct std::hash<turtle_checkers_interfaces::msg::ForceLogoutAccount>
-{
-    size_t operator()(const turtle_checkers_interfaces::msg::ForceLogoutAccount &message) const noexcept
-    {
-        size_t combinedHash = 0u;
-        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
-        return combinedHash;
-    }
-};
-
-template <>
 struct std::hash<turtle_checkers_interfaces::msg::Forfit>
 {
     size_t operator()(const turtle_checkers_interfaces::msg::Forfit &message) const noexcept
@@ -235,6 +226,17 @@ struct std::hash<turtle_checkers_interfaces::msg::OfferDraw>
 };
 
 template <>
+struct std::hash<turtle_checkers_interfaces::msg::PlayerBanned>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::PlayerBanned &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        return combinedHash;
+    }
+};
+
+template <>
 struct std::hash<turtle_checkers_interfaces::msg::PlayerJoinedLobby>
 {
     size_t operator()(const turtle_checkers_interfaces::msg::PlayerJoinedLobby &message) const noexcept
@@ -249,6 +251,19 @@ struct std::hash<turtle_checkers_interfaces::msg::PlayerJoinedLobby>
 };
 
 template <>
+struct std::hash<turtle_checkers_interfaces::msg::PlayerKicked>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::PlayerKicked &message) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        return combinedHash;
+    }
+};
+
+template <>
 struct std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>
 {
     size_t operator()(const turtle_checkers_interfaces::msg::PlayerLeftLobby &message) const noexcept
@@ -256,6 +271,17 @@ struct std::hash<turtle_checkers_interfaces::msg::PlayerLeftLobby>
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
+        hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::msg::PlayerLoggedOut>
+{
+    size_t operator()(const turtle_checkers_interfaces::msg::PlayerLoggedOut &message) const noexcept
+    {
+        size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<std::string>{}(message.player_name));
         return combinedHash;
     }

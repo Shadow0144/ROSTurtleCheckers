@@ -18,6 +18,11 @@
 #include "player/frame/MainMenuFrame.hpp"
 #include "player/frame/StatisticsFrame.hpp"
 #include "player/frame/TitleFrame.hpp"
+#include "player/DialogWidget.hpp"
+
+#include <QWidget>
+#include <QStackedLayout>
+#include <QString>
 
 static constexpr int CREATE_ACCOUNT_INDEX = 0;
 static constexpr int CREATE_LOBBY_INDEX = 1;
@@ -42,8 +47,8 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
 
     setMouseTracking(true);
 
-    QWidget *windowLayoutWidget = new QWidget(this);
-    m_windowLayout = new QStackedLayout(windowLayoutWidget);
+    m_windowLayoutWidget = new QWidget(this);
+    m_windowLayout = new QStackedLayout(m_windowLayoutWidget);
 
     // Create and add the screens to the layout
     m_createAccountFrame = new CreateAccountFrame(this);
@@ -70,7 +75,35 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
 
     m_windowLayout->setCurrentIndex(TITLE_INDEX);
 
-    setCentralWidget(windowLayoutWidget);
+    setCentralWidget(m_windowLayoutWidget);
+
+    // Disconnected dialog
+    m_disconnectedDialog = new DialogWidget(this, WINDOW_CENTER_X, WINDOW_CENTER_Y,
+                                            "Lost connection to server",
+                                            "Return to title", {[this]()
+                                                                { this->handleReturnToTitle(); }},
+                                            "", {[]() {}});
+
+    // Logged out dialog
+    m_loggedOutDialog = new DialogWidget(this, WINDOW_CENTER_X, WINDOW_CENTER_Y,
+                                         "You have been logged out by the server",
+                                         "Return to title", {[this]()
+                                                             { this->handleReturnToTitle(); }},
+                                         "", {[]() {}});
+
+    // Kicked dialog
+    m_kickedDialog = new DialogWidget(this, WINDOW_CENTER_X, WINDOW_CENTER_Y,
+                                      "You have been kicked",
+                                      "Return to lobby list", {[this]()
+                                                               { this->handleReturnToLobbyList(); }},
+                                      "", {[]() {}});
+
+    // Banned dialog
+    m_bannedDialog = new DialogWidget(this, WINDOW_CENTER_X, WINDOW_CENTER_Y,
+                                      "You have been banned",
+                                      "Return to title", {[this]()
+                                                          { this->handleReturnToTitle(); }},
+                                      "", {[]() {}});
 }
 
 void CheckersPlayerWindow::closeEvent(QCloseEvent *event)
@@ -87,10 +120,6 @@ void CheckersPlayerWindow::setConnectedToServer(bool connected)
 {
     m_connectedToServer = connected;
     m_titleFrame->setConnectedToServer(connected);
-    if (!m_connectedToServer)
-    {
-        moveToTitleFrame();
-    }
 }
 
 void CheckersPlayerWindow::moveToTitleFrame()
@@ -473,6 +502,54 @@ void CheckersPlayerWindow::drawDeclined()
 void CheckersPlayerWindow::drawOffered()
 {
     m_gameFrame->drawOffered();
+}
+
+void CheckersPlayerWindow::disconnected()
+{
+    setConnectedToServer(false);
+    displayDialog(true, m_disconnectedDialog);
+}
+
+void CheckersPlayerWindow::loggedOut()
+{
+    displayDialog(true, m_loggedOutDialog);
+}
+
+void CheckersPlayerWindow::kicked()
+{
+    displayDialog(true, m_kickedDialog);
+}
+
+void CheckersPlayerWindow::banned()
+{
+    displayDialog(true, m_bannedDialog);
+}
+
+void CheckersPlayerWindow::displayDialog(bool dialogDisplayed, DialogWidget *dialog)
+{
+    // Enable or disable everything as needed
+    m_showingDialog = dialogDisplayed;
+    m_windowLayoutWidget->setEnabled(!dialogDisplayed);
+    m_disconnectedDialog->hide();
+    m_loggedOutDialog->hide();
+    m_kickedDialog->hide();
+    m_bannedDialog->hide();
+    if (dialogDisplayed && dialog)
+    {
+        dialog->show();
+    }
+}
+
+void CheckersPlayerWindow::handleReturnToTitle()
+{
+    displayDialog(false, nullptr);
+    moveToTitleFrame();
+}
+
+void CheckersPlayerWindow::handleReturnToLobbyList()
+{
+    displayDialog(false, nullptr);
+    moveToLobbyListFrame();
 }
 
 uint64_t CheckersPlayerWindow::getBoardHash() const

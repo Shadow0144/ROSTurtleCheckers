@@ -7,15 +7,17 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/forfit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
+#include "turtle_checkers_interfaces/msg/player_banned.hpp"
 #include "turtle_checkers_interfaces/msg/player_joined_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_kicked.hpp"
 #include "turtle_checkers_interfaces/msg/player_left_lobby.hpp"
+#include "turtle_checkers_interfaces/msg/player_logged_out.hpp"
 #include "turtle_checkers_interfaces/msg/player_readied.hpp"
 #include "turtle_checkers_interfaces/msg/player_ready.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
@@ -105,11 +107,13 @@ private:
     void declareWinnerCallback(const turtle_checkers_interfaces::msg::DeclareWinner::SharedPtr message);
     void drawDeclinedCallback(const turtle_checkers_interfaces::msg::DrawDeclined::SharedPtr message);
     void drawOfferedCallback(const turtle_checkers_interfaces::msg::DrawOffered::SharedPtr message);
-    void forceLogoutAccountCallback(const turtle_checkers_interfaces::msg::ForceLogoutAccount::SharedPtr message);
     void gameStartCallback(const turtle_checkers_interfaces::msg::GameStart::SharedPtr message);
     void updateBoardCallback(const turtle_checkers_interfaces::msg::UpdateBoard::SharedPtr message);
+    void playerBannedCallback(const turtle_checkers_interfaces::msg::PlayerBanned::SharedPtr message);
     void playerJoinedLobbyCallback(const turtle_checkers_interfaces::msg::PlayerJoinedLobby::SharedPtr message);
+    void playerKickedCallback(const turtle_checkers_interfaces::msg::PlayerKicked::SharedPtr message);
     void playerLeftLobbyCallback(const turtle_checkers_interfaces::msg::PlayerLeftLobby::SharedPtr message);
+    void playerLoggedOutCallback(const turtle_checkers_interfaces::msg::PlayerLoggedOut::SharedPtr message);
     void playerReadiedCallback(const turtle_checkers_interfaces::msg::PlayerReadied::SharedPtr message);
     void serverHeartbeatCallback(const turtle_checkers_interfaces::msg::ServerHeartbeat::SharedPtr message);
     void updateChatCallback(const turtle_checkers_interfaces::msg::UpdateChat::SharedPtr message);
@@ -151,10 +155,12 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DeclareWinner>::SharedPtr m_declareWinnerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawDeclined>::SharedPtr m_drawDeclinedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::DrawOffered>::SharedPtr m_drawOfferedSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::GameStart>::SharedPtr m_gameStartSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerBanned>::SharedPtr m_playerBannedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerJoinedLobby>::SharedPtr m_playerJoinedLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerKicked>::SharedPtr m_playerKickedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLeftLobby>::SharedPtr m_playerLeftLobbySubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerLoggedOut>::SharedPtr m_playerLoggedOutSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReadied>::SharedPtr m_playerReadiedSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::ServerHeartbeat>::SharedPtr m_serverHeartbeatSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateBoard>::SharedPtr m_updateBoardSubscription;
@@ -183,7 +189,7 @@ private:
     std::chrono::milliseconds m_updateTime{16u};
     std::chrono::milliseconds m_heartbeatTime{1500u};
     std::chrono::milliseconds m_heartbeatCheckTime{15000u};
-    std::chrono::milliseconds m_heartbeatTimeout{10000u};
+    std::chrono::milliseconds m_heartbeatTimeout{5000u};
     std::chrono::system_clock::time_point m_serverHeartbeatTimestamp;
     std::mutex m_heartbeatMutex;
 

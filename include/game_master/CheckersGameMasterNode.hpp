@@ -9,9 +9,10 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "turtle_checkers_interfaces/msg/client_heartbeat.hpp"
-#include "turtle_checkers_interfaces/msg/force_logout_account.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
 #include "turtle_checkers_interfaces/msg/log_out_account.hpp"
+#include "turtle_checkers_interfaces/msg/player_banned.hpp"
+#include "turtle_checkers_interfaces/msg/player_logged_out.hpp"
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
@@ -59,8 +60,9 @@ private:
 
     void handleHeartbeats();
 
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerBanned>::SharedPtr m_playerBannedPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::PlayerLoggedOut>::SharedPtr m_playerLoggedOutPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ServerHeartbeat>::SharedPtr m_serverHeartbeatPublisher;
-    rclcpp::Publisher<turtle_checkers_interfaces::msg::ForceLogoutAccount>::SharedPtr m_forceLogoutAccountPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::ClientHeartbeat>::SharedPtr m_clientHeartbeatSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbySubscription;

@@ -114,6 +114,7 @@ private:
 	QPushButton *m_offerDrawButton;
 	QPushButton *m_forfitButton;
 
+	bool m_showingDialog;
 	DialogWidget *m_offerDrawConfirmDialog;
 	DialogWidget *m_offeringDrawDialog;
 	DialogWidget *m_offeredDrawDialog;
@@ -130,8 +131,6 @@ private:
 	TurtleGraveyardPtr m_redPlayerGraveyard;   // Red player's graveyard containing the slain black pieces
 	HUDPtr m_hud;
 	ChatBox *m_chatBox;
-
-	bool m_showingDialog;
 
 	std::string m_reportingChatMessages;
 
