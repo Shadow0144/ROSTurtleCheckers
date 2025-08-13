@@ -11,6 +11,7 @@
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
+#include "turtle_checkers_interfaces/srv/change_account_password.hpp"
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
@@ -89,6 +90,9 @@ CheckersGameMasterNode::CheckersGameMasterNode()
     m_setPlayerBannedSubscription = m_gameMasterNode->create_subscription<turtle_checkers_interfaces::msg::SetPlayerBanned>(
         "SetPlayerBanned", 10, std::bind(&CheckersGameMasterNode::setPlayerBannedCallback, this, std::placeholders::_1));
 
+    m_changeAccountPasswordService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::ChangeAccountPassword>(
+        "ChangeAccountPassword", std::bind(&CheckersGameMasterNode::changeAccountPasswordRequest,
+                                           this, std::placeholders::_1, std::placeholders::_2));
     m_connectToGameMasterService = m_gameMasterNode->create_service<turtle_checkers_interfaces::srv::ConnectToGameMaster>(
         "ConnectToGameMaster", std::bind(&CheckersGameMasterNode::connectToGameMasterRequest,
                                          this, std::placeholders::_1, std::placeholders::_2));
@@ -330,6 +334,51 @@ void CheckersGameMasterNode::setPlayerBannedCallback(const turtle_checkers_inter
             }
         }
     }
+}
+
+void CheckersGameMasterNode::changeAccountPasswordRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ChangeAccountPassword::Request> request,
+                                                          std::shared_ptr<turtle_checkers_interfaces::srv::ChangeAccountPassword::Response> response)
+{
+    response->player_name = request->player_name;
+    response->changed = false;
+
+    uint64_t playerPublicKey = 0u;
+    {
+        std::lock_guard<std::mutex> lock(m_playerKeysMutex);
+        if (m_playerPublicKeys.find(request->player_name) != m_playerPublicKeys.end())
+        {
+            playerPublicKey = m_playerPublicKeys[request->player_name];
+        }
+    }
+
+    // Checked if logged in already
+    if (playerPublicKey == 0u)
+    {
+        // Not logged in
+        response->error_msg = "Player not logged in";
+    }
+    else
+    {
+        auto hashedPreviousPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_previous_player_password, m_privateKey, m_publicKey);
+        bool previousPasswordCorrect = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPreviousPlayerPassword);
+        response->error_msg = m_databaseHandler->getErrorMessage();
+
+        if (previousPasswordCorrect) // Previous password is correct, update with the new one
+        {
+            auto hashedNewPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_new_player_password, m_privateKey, m_publicKey);
+            response->changed = m_databaseHandler->changePassword(request->player_name, hashedNewPlayerPassword);
+            response->error_msg = m_databaseHandler->getErrorMessage();
+
+            if (response->changed)
+            {
+                TurtleLogger::logInfo("Player " + request->player_name + " has changed their password");
+            }
+        }
+    }
+
+    response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::ChangeAccountPassword::Response::SharedPtr>{}(response),
+        m_publicKey, m_privateKey);
 }
 
 void CheckersGameMasterNode::connectToGameMasterRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request> request,

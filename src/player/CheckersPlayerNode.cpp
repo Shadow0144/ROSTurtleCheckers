@@ -32,6 +32,7 @@
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
+#include "turtle_checkers_interfaces/srv/change_account_password.hpp"
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
@@ -132,6 +133,16 @@ int CheckersPlayerNode::exec()
 
     m_clientHeartbeatPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ClientHeartbeat>(
         "ClientHeartbeat", 10);
+
+    m_playerBannedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerBanned>(
+        "PlayerBanned", 10, std::bind(&CheckersPlayerNode::playerBannedCallback, this, _1));
+    m_playerLoggedOutSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerLoggedOut>(
+        "PlayerLoggedOut", 10, std::bind(&CheckersPlayerNode::playerLoggedOutCallback, this, _1));
+    m_serverHeartbeatSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ServerHeartbeat>(
+        "ServerHeartbeat", 10, std::bind(&CheckersPlayerNode::serverHeartbeatCallback, this, _1));
+
+    m_changeAccountPasswordClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::ChangeAccountPassword>(
+        "ChangeAccountPassword");
     m_connectToGameMasterClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::ConnectToGameMaster>(
         "ConnectToGameMaster");
     m_createAccountClient = m_playerNode->create_client<turtle_checkers_interfaces::srv::CreateAccount>(
@@ -152,13 +163,6 @@ int CheckersPlayerNode::exec()
         "LogOutAccount", 10);
     m_reportPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ReportPlayer>(
         "ReportPlayer", 10);
-
-    m_playerBannedSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerBanned>(
-        "PlayerBanned", 10, std::bind(&CheckersPlayerNode::playerBannedCallback, this, _1));
-    m_playerLoggedOutSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::PlayerLoggedOut>(
-        "PlayerLoggedOut", 10, std::bind(&CheckersPlayerNode::playerLoggedOutCallback, this, _1));
-    m_serverHeartbeatSubscription = m_playerNode->create_subscription<turtle_checkers_interfaces::msg::ServerHeartbeat>(
-        "ServerHeartbeat", 10, std::bind(&CheckersPlayerNode::serverHeartbeatCallback, this, _1));
 
     // Ensure the game master node is reachable, then get the public key from it
     std::thread(&CheckersPlayerNode::connectToGameMaster, this).detach();
@@ -295,6 +299,40 @@ void CheckersPlayerNode::logOutAccount()
     m_logOutAccountPublisher->publish(message);
 }
 
+void CheckersPlayerNode::changeAccountPassword(const std::string &previousPlayerPassword,
+                                               const std::string &newPlayerPassword)
+{
+    auto request = std::make_shared<turtle_checkers_interfaces::srv::ChangeAccountPassword::Request>();
+    request->player_name = Parameters::getPlayerName();
+    if (previousPlayerPassword.empty())
+    {
+        request->encrypted_hashed_previous_player_password = 0u;
+    }
+    else
+    {
+        uint64_t hashedPreviousPlayerPassword = RSAKeyGenerator::hashString(previousPlayerPassword);
+        uint64_t encryptedHashedPreviousPlayerPassword = RSAKeyGenerator::encrypt(hashedPreviousPlayerPassword, m_gameMasterPublicKey);
+        request->encrypted_hashed_previous_player_password = encryptedHashedPreviousPlayerPassword;
+    }
+    if (newPlayerPassword.empty())
+    {
+        request->encrypted_hashed_new_player_password = 0u;
+    }
+    else
+    {
+        uint64_t hashedNewPlayerPassword = RSAKeyGenerator::hashString(newPlayerPassword);
+        uint64_t encryptedHashedNewPlayerPassword = RSAKeyGenerator::encrypt(hashedNewPlayerPassword, m_gameMasterPublicKey);
+        request->encrypted_hashed_new_player_password = encryptedHashedNewPlayerPassword;
+    }
+    request->checksum_sig = RSAKeyGenerator::createChecksumSignature(
+        std::hash<turtle_checkers_interfaces::srv::ChangeAccountPassword::Request::SharedPtr>{}(request),
+        m_publicKey, m_privateKey);
+
+    m_changeAccountPasswordClient->async_send_request(request,
+                                                      std::bind(&CheckersPlayerNode::changeAccountPasswordResponse,
+                                                                this, std::placeholders::_1));
+}
+
 void CheckersPlayerNode::requestStatistics(const std::string &playerName)
 {
     auto request = std::make_shared<turtle_checkers_interfaces::srv::GetStatistics::Request>();
@@ -320,7 +358,7 @@ void CheckersPlayerNode::createLobby(
     }
     else
     {
-        uint64_t hashedLobbyPassword = std::hash<std::string>{}(lobbyPassword);
+        uint64_t hashedLobbyPassword = RSAKeyGenerator::hashString(lobbyPassword);
         uint64_t encryptedHashedLobbyPassword = RSAKeyGenerator::encrypt(hashedLobbyPassword, m_gameMasterPublicKey);
         request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
     }
@@ -350,7 +388,7 @@ void CheckersPlayerNode::joinLobby(
     }
     else
     {
-        uint64_t hashedLobbyPassword = std::hash<std::string>{}(lobbyPassword);
+        uint64_t hashedLobbyPassword = RSAKeyGenerator::hashString(lobbyPassword);
         uint64_t encryptedHashedLobbyPassword = RSAKeyGenerator::encrypt(hashedLobbyPassword, m_gameMasterPublicKey);
         request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
     }
@@ -764,6 +802,35 @@ void CheckersPlayerNode::updateTimerCallback(const turtle_checkers_interfaces::m
     }
 
     m_checkersPlayerWindow->updateTimer(message->timer_seconds);
+}
+
+void CheckersPlayerNode::changeAccountPasswordResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ChangeAccountPassword>::SharedFuture future)
+{
+    auto result = future.get();
+
+    if (Parameters::getPlayerName() != result->player_name)
+    {
+        return;
+    }
+
+    if (!RSAKeyGenerator::checksumSignatureMatches(
+            std::hash<turtle_checkers_interfaces::srv::ChangeAccountPassword::Response::SharedPtr>{}(result),
+            m_gameMasterPublicKey, result->checksum_sig))
+    {
+        TurtleLogger::logError("Checksum failed");
+        return; // Checksum did not match with the public key
+    }
+
+    if (result->changed)
+    {
+        m_checkersPlayerWindow->accountPasswordChanged();
+    }
+    else
+    {
+        m_checkersPlayerWindow->failedAccountPasswordChange(result->error_msg);
+    }
+
+    m_checkersPlayerWindow->update();
 }
 
 void CheckersPlayerNode::connectToGameMasterResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedFuture future)

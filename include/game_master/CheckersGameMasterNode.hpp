@@ -16,6 +16,7 @@
 #include "turtle_checkers_interfaces/msg/report_player.hpp"
 #include "turtle_checkers_interfaces/msg/server_heartbeat.hpp"
 #include "turtle_checkers_interfaces/msg/set_player_banned.hpp"
+#include "turtle_checkers_interfaces/srv/change_account_password.hpp"
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/log_in_account.hpp"
@@ -43,6 +44,8 @@ private:
     void reportPlayerCallback(const turtle_checkers_interfaces::msg::ReportPlayer::SharedPtr message);
     void setPlayerBannedCallback(const turtle_checkers_interfaces::msg::SetPlayerBanned::SharedPtr message);
 
+    void changeAccountPasswordRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ChangeAccountPassword::Request> request,
+                                    std::shared_ptr<turtle_checkers_interfaces::srv::ChangeAccountPassword::Response> response);
     void connectToGameMasterRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Request> request,
                                     std::shared_ptr<turtle_checkers_interfaces::srv::ConnectToGameMaster::Response> response);
     void createAccountRequest(const std::shared_ptr<turtle_checkers_interfaces::srv::CreateAccount::Request> request,
@@ -70,6 +73,7 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::ReportPlayer>::SharedPtr m_reportPlayerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::SetPlayerBanned>::SharedPtr m_setPlayerBannedSubscription;
 
+    rclcpp::Service<turtle_checkers_interfaces::srv::ChangeAccountPassword>::SharedPtr m_changeAccountPasswordService;
     rclcpp::Service<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterService;
     rclcpp::Service<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountService;
     rclcpp::Service<turtle_checkers_interfaces::srv::LogInAccount>::SharedPtr m_logInAccountService;

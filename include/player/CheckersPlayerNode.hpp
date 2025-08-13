@@ -27,6 +27,7 @@
 #include "turtle_checkers_interfaces/msg/update_chat.hpp"
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
+#include "turtle_checkers_interfaces/srv/change_account_password.hpp"
 #include "turtle_checkers_interfaces/srv/connect_to_game_master.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
@@ -65,6 +66,9 @@ public:
     void logInAccount(const std::string &playerName,
                       const std::string &playerPassword);
     void logOutAccount();
+
+    void changeAccountPassword(const std::string &previousPlayerPassword,
+                               const std::string &newPlayerPassword);
 
     void requestStatistics(const std::string &playerName);
 
@@ -120,6 +124,7 @@ private:
     void updateLobbyOwnerCallback(const turtle_checkers_interfaces::msg::UpdateLobbyOwner::SharedPtr message);
     void updateTimerCallback(const turtle_checkers_interfaces::msg::UpdateTimer::SharedPtr message);
 
+    void changeAccountPasswordResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ChangeAccountPassword>::SharedFuture future);
     void connectToGameMasterResponse(rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedFuture future);
     void createAccountResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedFuture future);
     void createLobbyResponse(rclcpp::Client<turtle_checkers_interfaces::srv::CreateLobby>::SharedFuture future);
@@ -168,6 +173,7 @@ private:
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateLobbyOwner>::SharedPtr m_updateLobbyOwnerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerSubscription;
 
+    rclcpp::Client<turtle_checkers_interfaces::srv::ChangeAccountPassword>::SharedPtr m_changeAccountPasswordClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::ConnectToGameMaster>::SharedPtr m_connectToGameMasterClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::CreateAccount>::SharedPtr m_createAccountClient;
     rclcpp::Client<turtle_checkers_interfaces::srv::LogInAccount>::SharedPtr m_logInAccountClient;

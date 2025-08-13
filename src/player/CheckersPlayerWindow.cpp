@@ -8,6 +8,7 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/CheckersPlayerNode.hpp"
+#include "player/frame/ChangeAccountPasswordFrame.hpp"
 #include "player/frame/CreateAccountFrame.hpp"
 #include "player/frame/CreateLobbyFrame.hpp"
 #include "player/frame/GameFrame.hpp"
@@ -24,16 +25,17 @@
 #include <QStackedLayout>
 #include <QString>
 
-static constexpr int CREATE_ACCOUNT_INDEX = 0;
-static constexpr int CREATE_LOBBY_INDEX = 1;
-static constexpr int GAME_INDEX = 2;
-static constexpr int IN_LOBBY_INDEX = 3;
-static constexpr int LOBBY_LIST_INDEX = 4;
-static constexpr int LOBBY_PASSWORD_INDEX = 5;
-static constexpr int LOG_IN_ACCOUNT_INDEX = 6;
-static constexpr int MAIN_MENU_INDEX = 7;
-static constexpr int STATISTICS_INDEX = 8;
-static constexpr int TITLE_INDEX = 9;
+static constexpr int CHANGE_ACCOUNT_PASSWORD_INDEX = 0;
+static constexpr int CREATE_ACCOUNT_INDEX = 1;
+static constexpr int CREATE_LOBBY_INDEX = 2;
+static constexpr int GAME_INDEX = 3;
+static constexpr int IN_LOBBY_INDEX = 4;
+static constexpr int LOBBY_LIST_INDEX = 5;
+static constexpr int LOBBY_PASSWORD_INDEX = 6;
+static constexpr int LOG_IN_ACCOUNT_INDEX = 7;
+static constexpr int MAIN_MENU_INDEX = 8;
+static constexpr int STATISTICS_INDEX = 9;
+static constexpr int TITLE_INDEX = 10;
 
 CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &playerNode)
     : QMainWindow()
@@ -51,6 +53,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_windowLayout = new QStackedLayout(m_windowLayoutWidget);
 
     // Create and add the screens to the layout
+    m_changeAccountPasswordFrame = new ChangeAccountPasswordFrame(this);
     m_createAccountFrame = new CreateAccountFrame(this);
     m_createLobbyFrame = new CreateLobbyFrame(this);
     m_gameFrame = new GameFrame(this);
@@ -62,6 +65,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
     m_statisticsFrame = new StatisticsFrame(this);
     m_titleFrame = new TitleFrame(this);
 
+    m_windowLayout->insertWidget(CHANGE_ACCOUNT_PASSWORD_INDEX, m_changeAccountPasswordFrame);
     m_windowLayout->insertWidget(CREATE_ACCOUNT_INDEX, m_createAccountFrame);
     m_windowLayout->insertWidget(CREATE_LOBBY_INDEX, m_createLobbyFrame);
     m_windowLayout->insertWidget(GAME_INDEX, m_gameFrame);
@@ -142,11 +146,6 @@ void CheckersPlayerWindow::moveToMainMenuFrame()
     m_windowLayout->setCurrentIndex(MAIN_MENU_INDEX);
 }
 
-void CheckersPlayerWindow::moveToStatisticsFrame()
-{
-    m_windowLayout->setCurrentIndex(STATISTICS_INDEX);
-}
-
 void CheckersPlayerWindow::moveToCreateLobbyFrame()
 {
     m_windowLayout->setCurrentIndex(CREATE_LOBBY_INDEX);
@@ -155,6 +154,16 @@ void CheckersPlayerWindow::moveToCreateLobbyFrame()
 void CheckersPlayerWindow::moveToLobbyListFrame()
 {
     m_windowLayout->setCurrentIndex(LOBBY_LIST_INDEX);
+}
+
+void CheckersPlayerWindow::moveToChangeAccountPasswordFrame()
+{
+    m_windowLayout->setCurrentIndex(CHANGE_ACCOUNT_PASSWORD_INDEX);
+}
+
+void CheckersPlayerWindow::moveToStatisticsFrame()
+{
+    m_windowLayout->setCurrentIndex(STATISTICS_INDEX);
 }
 
 void CheckersPlayerWindow::moveToLobbyPasswordFrame()
@@ -329,6 +338,25 @@ void CheckersPlayerWindow::accountCreated(const std::string &playerName)
 void CheckersPlayerWindow::failedCreate(const std::string &errorMessage)
 {
     m_createAccountFrame->failedCreate(errorMessage);
+}
+
+void CheckersPlayerWindow::changeAccountPassword(const std::string &previousPlayerPassword,
+                                                 const std::string &newPlayerPassword)
+{
+    if (auto playerNode = m_playerNode.lock())
+    {
+        playerNode->changeAccountPassword(previousPlayerPassword, newPlayerPassword);
+    }
+}
+
+void CheckersPlayerWindow::accountPasswordChanged()
+{
+    m_changeAccountPasswordFrame->succeededChange();
+}
+
+void CheckersPlayerWindow::failedAccountPasswordChange(const std::string &errorMessage)
+{
+    m_changeAccountPasswordFrame->failedChange(errorMessage);
 }
 
 void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,

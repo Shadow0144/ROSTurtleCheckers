@@ -12,6 +12,7 @@
 
 #include "shared/CheckersConsts.hpp"
 
+#include "player/frame/ChangeAccountPasswordFrame.hpp"
 #include "player/frame/CreateAccountFrame.hpp"
 #include "player/frame/CreateLobbyFrame.hpp"
 #include "player/frame/GameFrame.hpp"
@@ -38,6 +39,7 @@ public:
     void moveToCreateAccountFrame();
     void moveToLogInAccountFrame();
     void moveToMainMenuFrame();
+    void moveToChangeAccountPasswordFrame();
     void moveToStatisticsFrame();
     void moveToCreateLobbyFrame();
     void moveToLobbyListFrame();
@@ -78,6 +80,11 @@ public:
     void failedLogIn(const std::string &errorMessage);
     void accountCreated(const std::string &playerName);
     void failedCreate(const std::string &errorMessage);
+
+    void changeAccountPassword(const std::string &previousPlayerPassword,
+                               const std::string &newPlayerPassword);
+    void accountPasswordChanged();
+    void failedAccountPasswordChange(const std::string &errorMessage);
 
     void connectedToLobby(const std::string &lobbyName,
                           const std::string &lobbyId,
@@ -136,7 +143,7 @@ public:
     void kicked();
     void banned();
 
-	void displayDialog(bool dialogDisplayed, DialogWidget *dialog = nullptr);
+    void displayDialog(bool dialogDisplayed, DialogWidget *dialog = nullptr);
 
     void handleReturnToTitle();
     void handleReturnToLobbyList();
@@ -149,6 +156,7 @@ protected:
 private:
     enum class WindowState
     {
+        ChangeAccountPassword,
         CreateAccount,
         CreateLobby,
         Game,
@@ -167,6 +175,7 @@ private:
 
     bool m_connectedToServer;
 
+    ChangeAccountPasswordFrame *m_changeAccountPasswordFrame;
     CreateAccountFrame *m_createAccountFrame;
     CreateLobbyFrame *m_createLobbyFrame;
     GameFrame *m_gameFrame;
@@ -178,11 +187,11 @@ private:
     StatisticsFrame *m_statisticsFrame;
     TitleFrame *m_titleFrame;
 
-	bool m_showingDialog;
-	DialogWidget *m_disconnectedDialog;
-	DialogWidget *m_kickedDialog;
-	DialogWidget *m_bannedDialog;
-	DialogWidget *m_loggedOutDialog;
+    bool m_showingDialog;
+    DialogWidget *m_disconnectedDialog;
+    DialogWidget *m_kickedDialog;
+    DialogWidget *m_bannedDialog;
+    DialogWidget *m_loggedOutDialog;
 };
 
 typedef std::unique_ptr<CheckersPlayerWindow> CheckersPlayerWindowUniPtr;

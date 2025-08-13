@@ -129,6 +129,8 @@ void CreateLobbyFrame::showEvent(QShowEvent *event)
     m_lobbyPasswordLineEdit->update();
     m_createLobbyButton->setEnabled(false);
     m_randomRadioButton->setChecked(true);
+
+    m_lobbyNameLineEdit->setFocus();
 }
 
 void CreateLobbyFrame::validateLobbyNameText(const QString &lobbyName)

@@ -26,6 +26,7 @@
 #include "turtle_checkers_interfaces/msg/update_lobby_owner.hpp"
 #include "turtle_checkers_interfaces/msg/update_timer.hpp"
 
+#include "turtle_checkers_interfaces/srv/change_account_password.hpp"
 #include "turtle_checkers_interfaces/srv/create_account.hpp"
 #include "turtle_checkers_interfaces/srv/create_lobby.hpp"
 #include "turtle_checkers_interfaces/srv/get_lobby_list.hpp"
@@ -411,6 +412,32 @@ struct std::hash<turtle_checkers_interfaces::msg::UpdateTimer>
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_id));
         hashCombine(combinedHash, std::hash<uint64_t>{}(message.timer_seconds));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::srv::ChangeAccountPassword::Request::SharedPtr>
+{
+    size_t operator()(const turtle_checkers_interfaces::srv::ChangeAccountPassword::Request::SharedPtr &request) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<std::string>{}(request->player_name));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(request->encrypted_hashed_previous_player_password));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(request->encrypted_hashed_new_player_password));
+        return combinedHash;
+    }
+};
+
+template <>
+struct std::hash<turtle_checkers_interfaces::srv::ChangeAccountPassword::Response::SharedPtr>
+{
+    size_t operator()(const turtle_checkers_interfaces::srv::ChangeAccountPassword::Response::SharedPtr &response) const noexcept
+    {
+        size_t combinedHash = 0u;
+        hashCombine(combinedHash, std::hash<bool>{}(response->changed));
+        hashCombine(combinedHash, std::hash<std::string>{}(response->player_name));
+        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
         return combinedHash;
     }
 };

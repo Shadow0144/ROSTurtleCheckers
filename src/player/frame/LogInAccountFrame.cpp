@@ -116,6 +116,8 @@ void LogInAccountFrame::showEvent(QShowEvent *event)
     m_logInAccountButton->setText(logInAccountString.c_str());
     m_logInAccountButton->setEnabled(false);
     m_errorMessageLabel->setVisible(false);
+
+    m_playerNameLineEdit->setFocus();
 }
 
 void LogInAccountFrame::failedLogIn(const std::string &errorMessage)

@@ -63,6 +63,15 @@ MainMenuFrame::MainMenuFrame(
     statisticsLayout->addWidget(statisticsButton);
     mainLayout->addLayout(statisticsLayout);
 
+    auto changeAccountPasswordLayout = new QHBoxLayout();
+    std::string changeAccountPasswordAccountString = "Change Password";
+    auto changeAccountPasswordAccountButton = new QPushButton(changeAccountPasswordAccountString.c_str());
+    changeAccountPasswordAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    changeAccountPasswordAccountButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    connect(changeAccountPasswordAccountButton, &QPushButton::released, this, &MainMenuFrame::handleChangeAccountPasswordButton);
+    changeAccountPasswordLayout->addWidget(changeAccountPasswordAccountButton);
+    mainLayout->addLayout(changeAccountPasswordLayout);
+
     auto logOutLayout = new QHBoxLayout();
     std::string logOutAccountString = "Log Out";
     auto logOutAccountButton = new QPushButton(logOutAccountString.c_str());
@@ -93,16 +102,6 @@ void MainMenuFrame::showEvent(QShowEvent *event)
     m_playerNameLabel->setText(Parameters::getPlayerName().c_str());
 }
 
-void MainMenuFrame::handleStatisticsButton()
-{
-    m_playerWindow->moveToStatisticsFrame();
-}
-
-void MainMenuFrame::handleLogOutAccountButton()
-{
-    m_playerWindow->logOutAccount();
-}
-
 void MainMenuFrame::handleCreateLobbyButton()
 {
     m_playerWindow->moveToCreateLobbyFrame();
@@ -111,6 +110,21 @@ void MainMenuFrame::handleCreateLobbyButton()
 void MainMenuFrame::handleJoinLobbyButton()
 {
     m_playerWindow->moveToLobbyListFrame();
+}
+
+void MainMenuFrame::handleStatisticsButton()
+{
+    m_playerWindow->moveToStatisticsFrame();
+}
+
+void MainMenuFrame::handleChangeAccountPasswordButton()
+{
+    m_playerWindow->moveToChangeAccountPasswordFrame();
+}
+
+void MainMenuFrame::handleLogOutAccountButton()
+{
+    m_playerWindow->logOutAccount();
 }
 
 void MainMenuFrame::handleQuitButton()

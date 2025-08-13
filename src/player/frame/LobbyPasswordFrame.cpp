@@ -101,6 +101,8 @@ void LobbyPasswordFrame::showEvent(QShowEvent *event)
     m_lobbyPasswordLineEdit->clear();
     m_confirmPasswordButton->setEnabled(false);
     m_passwordIncorrectLabel->setVisible(false);
+
+    m_lobbyPasswordLineEdit->setFocus();
 }
 
 void LobbyPasswordFrame::setPasswordIncorrect()

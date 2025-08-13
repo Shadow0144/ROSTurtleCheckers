@@ -70,6 +70,9 @@ CreateAccountFrame::CreateAccountFrame(
     createAccountLayout->addWidget(passwordWarningLabel4);
     createAccountLayout->addWidget(passwordWarningLabel5);
 
+    // Add a spacer
+    createAccountLayout->addWidget(new QLabel(""));
+
     m_errorMessageLabel = new QLabel("");
     m_errorMessageLabel->setProperty("error", true);
     auto errorMessageLabelSizePolicy = m_errorMessageLabel->sizePolicy();
@@ -77,6 +80,9 @@ CreateAccountFrame::CreateAccountFrame(
     m_errorMessageLabel->setSizePolicy(errorMessageLabelSizePolicy);
     m_errorMessageLabel->setVisible(false);
     createAccountLayout->addWidget(m_errorMessageLabel);
+
+    // Add a spacer
+    createAccountLayout->addWidget(new QLabel(""));
 
     auto createAccountButtonLayout = new QHBoxLayout();
     createAccountButtonLayout->setAlignment(Qt::AlignCenter);
@@ -126,6 +132,8 @@ void CreateAccountFrame::showEvent(QShowEvent *event)
     m_createAccountButton->setText(createAccountString.c_str());
     m_createAccountButton->setEnabled(false);
     m_errorMessageLabel->setVisible(false);
+
+    m_playerNameLineEdit->setFocus();
 }
 
 void CreateAccountFrame::failedCreate(const std::string &errorMessage)

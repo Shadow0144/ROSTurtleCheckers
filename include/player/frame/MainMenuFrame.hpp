@@ -25,10 +25,11 @@ public:
 	void showEvent(QShowEvent *event) override;
 
 private:
-	void handleStatisticsButton();
-	void handleLogOutAccountButton();
 	void handleCreateLobbyButton();
 	void handleJoinLobbyButton();
+	void handleStatisticsButton();
+	void handleChangeAccountPasswordButton();
+	void handleLogOutAccountButton();
 	void handleQuitButton();
 
 	CheckersPlayerWindow *m_playerWindow;

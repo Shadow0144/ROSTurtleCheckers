@@ -7,6 +7,7 @@ QLabel { color: white; }
 QLabel:disabled { color: dimGray; }
 QLabel[highlight="true"] { color: aqua; }
 QLabel:disabled[highlight="true"] { color: dimGray; }
+QLabel[succeeded="true"] { color: lime; }
 QLabel[error="true"] { color: red; }
 
 QPushButton { color: white; border: 1px solid white; padding: 5px 10px; }
