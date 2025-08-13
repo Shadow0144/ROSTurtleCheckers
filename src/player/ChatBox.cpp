@@ -9,6 +9,8 @@
 #include <QSpacerItem>
 #include <QPushButton>
 #include <QString>
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <QScrollBar>
 
 #include <chrono>
@@ -74,15 +76,27 @@ ChatBox::ChatBox(QWidget *parent,
 
     m_chatEntryLineEdit = new QLineEdit();
     m_chatEntryLineEdit->setMaxLength(MAX_CHARS_CHAT_BOX);
+    // Unneeded, but keep in case we want to add it or something like it back in
+    // std::string chatRegex = "^[a-zA-Z0-9a-zA-Z0-9 \\'\\\"\\/\\\\\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_CHAT_BOX) + "}$";
+    // auto chatValidator = new QRegularExpressionValidator(QRegularExpression(chatRegex.c_str()));
+    // m_chatEntryLineEdit->setValidator(chatValidator);
+    connect(m_chatEntryLineEdit, &QLineEdit::textChanged, this, &ChatBox::validateChatEntryText);
+
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
-    auto sendButton = new QPushButton("Send");
-    connect(sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
-    connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, sendButton, &QPushButton::click);
-    sendButton->setDefault(true);
-    chatEntryLayout->addWidget(sendButton);
+    m_sendButton = new QPushButton("Send");
+    connect(m_sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
+    connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, m_sendButton, &QPushButton::click);
+    m_sendButton->setDefault(true);
+    m_sendButton->setEnabled(false);
+    chatEntryLayout->addWidget(m_sendButton);
 
     chatBoxLayout->addLayout(chatEntryLayout);
+}
+
+void ChatBox::validateChatEntryText(const QString &chatEntry)
+{
+    m_sendButton->setEnabled(!chatEntry.isEmpty());
 }
 
 void ChatBox::handleReportPlayerButton()
@@ -92,8 +106,11 @@ void ChatBox::handleReportPlayerButton()
 
 void ChatBox::handleSendMessageButton()
 {
-    m_sendMessageCallback(m_chatEntryLineEdit->text().toStdString());
+    // Sanitize before sending
+    const auto &message = m_chatEntryLineEdit->text().toHtmlEscaped().toStdString();
+    m_sendMessageCallback(message);
     m_chatEntryLineEdit->clear();
+    m_sendButton->setEnabled(false);
 }
 
 void ChatBox::addMessage(const std::string &playerName,

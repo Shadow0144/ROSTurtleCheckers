@@ -31,6 +31,9 @@ public:
 
     void setReportPlayerButtonEnabled(bool isEnabled);
 
+public slots:
+    void validateChatEntryText(const QString &chatEntry);
+
 private:
     void handleReportPlayerButton();
     void handleSendMessageButton();
@@ -44,4 +47,5 @@ private:
     QLineEdit *m_chatEntryLineEdit;
 
     QPushButton *m_reportPlayerButton;
+    QPushButton *m_sendButton;
 };
