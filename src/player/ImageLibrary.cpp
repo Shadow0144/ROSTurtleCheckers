@@ -62,6 +62,10 @@ void ImageLibrary::createLibraryInstance()
     s_libraryInstance->m_winnerImage.load(imagesPath + "winner.png");
     s_libraryInstance->m_loserImage.load(imagesPath + "loser.png");
     s_libraryInstance->m_drawImage.load(imagesPath + "draw.png");
+
+    s_libraryInstance->m_flagUS.load(imagesPath + "flag_us.png");
+    s_libraryInstance->m_flagJP.load(imagesPath + "flag_jp.png");
+    s_libraryInstance->m_flagDE.load(imagesPath + "flag_de.png");
 }
 
 QImage ImageLibrary::getLockImage()
@@ -311,4 +315,34 @@ QImage ImageLibrary::getDrawImage()
     }
 
     return s_libraryInstance->m_drawImage;
+}
+
+QImage ImageLibrary::getFlagUSImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_flagUS;
+}
+
+QImage ImageLibrary::getFlagJPImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_flagJP;
+}
+
+QImage ImageLibrary::getFlagDEImage()
+{
+    if (!s_libraryInstance)
+    {
+        createLibraryInstance();
+    }
+
+    return s_libraryInstance->m_flagDE;
 }

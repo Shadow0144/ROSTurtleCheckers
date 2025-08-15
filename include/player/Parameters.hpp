@@ -25,6 +25,9 @@ public:
     static void setLobbyId(const std::string &lobbyId);
     static const std::string &getLobbyId();
 
+    static void setLanguage(Language language);
+    static Language getLanguage();
+
 private:
     static void createParametersInstance();
 
@@ -34,4 +37,6 @@ private:
     TurtlePieceColor m_opponentColor;
     std::string m_lobbyName;
     std::string m_lobbyId;
+
+    Language m_language;
 };

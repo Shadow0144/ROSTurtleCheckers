@@ -28,6 +28,10 @@ public:
     static QImage getLoserImage();
     static QImage getDrawImage();
 
+    static QImage getFlagUSImage();
+    static QImage getFlagJPImage();
+    static QImage getFlagDEImage();
+
 private:
     static void createLibraryInstance();
 
@@ -47,6 +51,10 @@ private:
     QImage m_winnerImage;
     QImage m_loserImage;
     QImage m_drawImage;
+
+    QImage m_flagUS;
+    QImage m_flagJP;
+    QImage m_flagDE;
 
     size_t m_blackImagesIndex = 0u;
     size_t m_redImagesIndex = 0u;

@@ -45,6 +45,7 @@
 #include "turtle_checkers_interfaces/srv/resync_board.hpp"
 
 #include <QApplication>
+#include <QFontDatabase>
 #include <QFile>
 #include <QString>
 #include <QTimer>
@@ -77,6 +78,7 @@ CheckersPlayerNode::CheckersPlayerNode(int &argc, char **argv)
     RSAKeyGenerator::generateRSAKeyPair(m_publicKey, m_privateKey);
 
     // Set the UI styles
+    QFontDatabase::addApplicationFont(":/fonts/NotoSansJP-Regular.ttf");
     QString stylesPath = (ament_index_cpp::get_package_share_directory("turtle_checkers") +
                           "/styles/checkers_style.qss")
                              .c_str();

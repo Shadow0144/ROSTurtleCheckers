@@ -10,6 +10,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/StringLibrary.hpp"
 
 TitleWidget::TitleWidget()
 {
@@ -23,7 +24,7 @@ TitleWidget::TitleWidget()
     blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
     titleLayout->addWidget(blackTurtleIconLabel);
 
-    auto titleLabel = new QLabel("Turtle Checkers");
+    auto titleLabel = new QLabel(QString::fromStdString(StringLibrary::getTranslatedString("Turtle Checkers")));
     auto titleFont = titleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
     titleLabel->setFont(titleFont);

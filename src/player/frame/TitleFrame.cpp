@@ -13,6 +13,7 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 
 TitleFrame::TitleFrame(
     CheckersPlayerWindow *parentWindow)
@@ -21,7 +22,9 @@ TitleFrame::TitleFrame(
     m_playerWindow = parentWindow;
 
     m_connectedToServer = false;
-    
+
+    new LanguageSelectorWidget(this);
+
     auto mainLayout = new QVBoxLayout(this);
     mainLayout->setAlignment(Qt::AlignCenter);
 
@@ -39,7 +42,7 @@ TitleFrame::TitleFrame(
     m_serverConnectionStatusLabel->setAlignment(Qt::AlignCenter);
     m_serverConnectionStatusLabel->setContentsMargins(0, 10, 0, 0);
     contentLayout->addWidget(m_serverConnectionStatusLabel);
-    
+
     auto menuButtonWidget = new QWidget();
     menuButtonWidget->setContentsMargins(0, 10, 0, 10);
     auto menuButtonLayout = new QHBoxLayout();

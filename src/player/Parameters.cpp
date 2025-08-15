@@ -1,15 +1,76 @@
 #include "player/Parameters.hpp"
 
+#include "ament_index_cpp/get_package_share_directory.hpp" // For getting the settings directory
+
 #include <string>
 #include <memory>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "shared/TurtleLogger.hpp"
+
+const std::string settingsFile = "settings.config";
 
 static std::unique_ptr<Parameters> s_parametersInstance;
 
 void Parameters::createParametersInstance()
 {
     s_parametersInstance = std::make_unique<Parameters>();
+
+    // Get the settings from the file
+    try
+    {
+        std::string fileName = ament_index_cpp::get_package_share_directory("turtle_checkers") + "/" + settingsFile;
+        if (std::filesystem::exists(fileName))
+        {
+            std::ifstream file(fileName);
+            if (file)
+            {
+                std::string language;
+                file >> language;
+                auto languageEnum = std::stoi(language);
+                switch (languageEnum)
+                {
+                case 0:
+                {
+                    Parameters::setLanguage(Language::English);
+                }
+                break;
+                case 1:
+                {
+                    Parameters::setLanguage(Language::Japanese);
+                }
+                break;
+                case 2:
+                {
+                    Parameters::setLanguage(Language::German);
+                }
+                break;
+                default:
+                {
+                    Parameters::setLanguage(Language::English);
+                }
+                break;
+                }
+            }
+            else
+            {
+                TurtleLogger::logError("Error opening settings file");
+            }
+        }
+        else
+        {
+            std::ofstream file(fileName);
+            file << "0"; // English
+            Parameters::setLanguage(Language::English);
+        }
+    }
+    catch (const std::exception &e)
+    {
+        TurtleLogger::logError(std::string("Settings file error: ") + e.what());
+    }
 }
 
 void Parameters::setPlayerName(const std::string &playerName)
@@ -130,4 +191,42 @@ const std::string &Parameters::getLobbyId()
     }
 
     return s_parametersInstance->m_lobbyId;
+}
+
+void Parameters::setLanguage(Language language)
+{
+    if (!s_parametersInstance)
+    {
+        createParametersInstance();
+    }
+
+    s_parametersInstance->m_language = language;
+
+    // Persist the change
+    try
+    {
+        std::ofstream file(ament_index_cpp::get_package_share_directory("turtle_checkers") + "/" + settingsFile, std::ios::trunc);
+        if (file)
+        {
+            file << std::to_string(static_cast<int>(s_parametersInstance->m_language));
+        }
+        else
+        {
+            TurtleLogger::logError("Error opening settings file");
+        }
+    }
+    catch (const std::exception &e)
+    {
+        TurtleLogger::logError(std::string("Settings file error: ") + e.what());
+    }
+}
+
+Language Parameters::getLanguage()
+{
+    if (!s_parametersInstance)
+    {
+        createParametersInstance();
+    }
+
+    return s_parametersInstance->m_language;
 }

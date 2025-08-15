@@ -44,6 +44,13 @@ enum class RematchType
     RandomColors
 };
 
+enum class Language
+{
+    English,
+    Japanese,
+    German
+};
+
 // Constants
 constexpr size_t NUM_PIECES_PER_PLAYER = 1u;
 constexpr size_t NUM_PIECES = 2u * NUM_PIECES_PER_PLAYER;
@@ -140,6 +147,11 @@ constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 80;
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
 constexpr int ICON_HEIGHT_WIDTH = 20;
+
+constexpr int LANGUAGE_SELECT_X = WINDOW_WIDTH - 63;
+constexpr int LANGUAGE_SELECT_Y = 10;
+constexpr int LANGUAGE_ICON_WIDTH = 20;
+constexpr int LANGUAGE_ICON_HEIGHT = 15;
 
 constexpr int BG_RGB[3] = {0u, 0u, 0u};
 constexpr int TEXT_RGB[3] = {255u, 255u, 255u};

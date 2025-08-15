@@ -29,9 +29,12 @@ endif()
 
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
 
+qt5_add_resources(QT_RESOURCES styles/fonts.qrc)
+
 qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/player/TitleWidget.hpp
   include/player/DialogWidget.hpp
+  include/player/LanguageSelectorWidget.hpp
   include/player/LobbyDetailsWidget.hpp
   include/player/MatchDetailsWidget.hpp
   include/player/TileRender.hpp
@@ -54,6 +57,7 @@ qt5_wrap_cpp(CheckersGameWindow_MOCS
 add_executable(checkers_player_node
   src/shared/RSAKeyGenerator.cpp
   src/player/ImageLibrary.cpp
+  src/player/StringLibrary.cpp
   src/shared/Tile.cpp
   src/shared/TurtleLogger.cpp
   src/shared/TurtlePiece.cpp
@@ -68,6 +72,7 @@ add_executable(checkers_player_node
   src/player/CheckersBoardRender.cpp
   src/player/TitleWidget.cpp
   src/player/DialogWidget.cpp
+  src/player/LanguageSelectorWidget.cpp
   src/player/LobbyDetailsWidget.cpp
   src/player/MatchDetailsWidget.cpp
   src/player/frame/ChangeAccountPasswordFrame.cpp
@@ -83,6 +88,7 @@ add_executable(checkers_player_node
   src/player/frame/TitleFrame.cpp
   src/player/CheckersPlayerWindow.cpp
   src/player/CheckersPlayerNode.cpp
+  ${QT_RESOURCES}
   ${CheckersGameWindow_MOCS})
 ament_target_dependencies(checkers_player_node
   ament_index_cpp
@@ -118,6 +124,9 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+install(FILES translations.xml
+  DESTINATION share/${PROJECT_NAME})
 
 install(FILES turtle_checkers_authorization_key.key
   DESTINATION share/${PROJECT_NAME})
