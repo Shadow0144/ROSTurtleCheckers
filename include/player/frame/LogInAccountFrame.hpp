@@ -13,7 +13,8 @@
 #include <memory>
 #include <string>
 
-#include "shared/CheckersConsts.hpp"
+#include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 
 class CheckersPlayerWindow;
 
@@ -28,6 +29,8 @@ public:
 
 	void failedLogIn(const std::string &errorMessage);
 
+	void reloadStrings();
+
 public slots:
 	void validatePlayerNameText(const QString &playerName);
 	void validatePasswordText(const QString &playerPassword);
@@ -38,15 +41,25 @@ private:
 
 	CheckersPlayerWindow *m_playerWindow;
 
+	TitleWidget *m_titleWidget;
+
+	LanguageSelectorWidget *m_languageSelector;
+
+	QLabel *m_playerNameLabel;
+	QLabel *m_playerPasswordLabel;
+	QLabel *m_errorMessageLabel;
+
 	QLineEdit *m_playerNameLineEdit;
 	QLineEdit *m_passwordLineEdit;
 
-	QLabel *m_errorMessageLabel;
-
 	QPushButton *m_logInAccountButton;
+	QPushButton *m_cancelButton;
 
 	bool m_playerNameValid;
 	bool m_playerPasswordValid;
+	bool m_loggingInAccount;
+
+	std::string m_errorMessage;
 };
 
 typedef std::unique_ptr<LogInAccountFrame> LogInAccountFrameUniPtr;

@@ -17,8 +17,6 @@
 #include <string>
 #include <vector>
 
-#include "shared/CheckersConsts.hpp"
-
 class CheckersPlayerWindow;
 
 class StatisticsFrame : public QFrame

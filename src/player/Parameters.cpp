@@ -219,6 +219,12 @@ void Parameters::setLanguage(Language language)
     {
         TurtleLogger::logError(std::string("Settings file error: ") + e.what());
     }
+
+    // Update the UI
+    if (s_parametersInstance->m_languageChangedCallback)
+    {
+        s_parametersInstance->m_languageChangedCallback();
+    }
 }
 
 Language Parameters::getLanguage()
@@ -229,4 +235,14 @@ Language Parameters::getLanguage()
     }
 
     return s_parametersInstance->m_language;
+}
+
+void Parameters::setLanguageChangedCallback(const std::function<void()> &languageChangedCallback)
+{
+    if (!s_parametersInstance)
+    {
+        createParametersInstance();
+    }
+
+    s_parametersInstance->m_languageChangedCallback = languageChangedCallback;
 }

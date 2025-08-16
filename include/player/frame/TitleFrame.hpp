@@ -11,7 +11,8 @@
 
 #include <memory>
 
-#include "shared/CheckersConsts.hpp"
+#include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 
 class CheckersPlayerWindow;
 
@@ -21,10 +22,12 @@ class TitleFrame : public QFrame
 public:
 	TitleFrame(CheckersPlayerWindow *parentWindow);
 	~TitleFrame();
-	
-	void showEvent(QShowEvent* event) override;
+
+	void showEvent(QShowEvent *event) override;
 
 	void setConnectedToServer(bool connected);
+
+	void reloadStrings();
 
 private:
 	void handleCreateAccountButton();
@@ -35,12 +38,15 @@ private:
 
 	bool m_connectedToServer;
 
+	TitleWidget *m_titleWidget;
+
+	LanguageSelectorWidget *m_languageSelector;
+
 	QPushButton *m_createAccountButton;
 	QPushButton *m_logInAccountButton;
+	QPushButton *m_quitButton;
 
 	QLabel *m_serverConnectionStatusLabel;
-	const QString m_connectingString = "Connecting to server...";
-	const QString m_connectedString = "Connected to server!";
 };
 
 typedef std::unique_ptr<TitleFrame> TitleFrameUniPtr;

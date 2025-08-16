@@ -12,8 +12,6 @@
 
 #include <memory>
 
-#include "shared/CheckersConsts.hpp"
-
 class CheckersPlayerWindow;
 
 class LobbyPasswordFrame : public QFrame

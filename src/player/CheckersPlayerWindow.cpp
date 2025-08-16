@@ -49,6 +49,9 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
 
     setMouseTracking(true);
 
+    Parameters::setLanguageChangedCallback([this]()
+                                           { this->reloadStrings(); });
+
     m_windowLayoutWidget = new QWidget(this);
     m_windowLayout = new QStackedLayout(m_windowLayoutWidget);
 
@@ -583,4 +586,11 @@ void CheckersPlayerWindow::handleReturnToLobbyList()
 uint64_t CheckersPlayerWindow::getBoardHash() const
 {
     return m_gameFrame->getBoardHash();
+}
+
+void CheckersPlayerWindow::reloadStrings()
+{
+    m_createAccountFrame->reloadStrings();
+    m_logInAccountFrame->reloadStrings();
+    m_titleFrame->reloadStrings();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 
 #include "shared/CheckersConsts.hpp"
 
@@ -18,7 +19,7 @@ public:
 
     static void setOpponentColor(TurtlePieceColor OpponentColor);
     static TurtlePieceColor getOpponentColor();
-    
+
     static void setLobbyName(const std::string &lobbyName);
     static const std::string &getLobbyName();
 
@@ -27,6 +28,8 @@ public:
 
     static void setLanguage(Language language);
     static Language getLanguage();
+
+    static void setLanguageChangedCallback(const std::function<void()> &languageChangedCallback);
 
 private:
     static void createParametersInstance();
@@ -39,4 +42,6 @@ private:
     std::string m_lobbyId;
 
     Language m_language;
+
+    std::function<void()> m_languageChangedCallback;
 };

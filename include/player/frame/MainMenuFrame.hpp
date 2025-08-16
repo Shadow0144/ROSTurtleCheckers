@@ -11,8 +11,6 @@
 
 #include <memory>
 
-#include "shared/CheckersConsts.hpp"
-
 class CheckersPlayerWindow;
 
 class MainMenuFrame : public QFrame

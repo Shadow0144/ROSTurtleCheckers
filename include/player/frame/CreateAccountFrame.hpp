@@ -13,7 +13,8 @@
 #include <memory>
 #include <string>
 
-#include "shared/CheckersConsts.hpp"
+#include "player/LanguageSelectorWidget.hpp"
+#include "player/TitleWidget.hpp"
 
 class CheckersPlayerWindow;
 
@@ -23,10 +24,12 @@ class CreateAccountFrame : public QFrame
 public:
 	CreateAccountFrame(CheckersPlayerWindow *parentWindow);
 	~CreateAccountFrame();
-	
-	void showEvent(QShowEvent* event) override;
+
+	void showEvent(QShowEvent *event) override;
 
 	void failedCreate(const std::string &errorMessage);
+
+	void reloadStrings();
 
 public slots:
 	void validatePlayerNameText(const QString &playerName);
@@ -38,15 +41,30 @@ private:
 
 	CheckersPlayerWindow *m_playerWindow;
 
+	LanguageSelectorWidget *m_languageSelector;
+
+	TitleWidget *m_titleWidget;
+
 	QLineEdit *m_playerNameLineEdit;
 	QLineEdit *m_passwordLineEdit;
 
+	QLabel *m_playerNameLabel;
+	QLabel *m_playerPasswordLabel;
+	QLabel *m_passwordWarningLabel1;
+	QLabel *m_passwordWarningLabel2;
+	QLabel *m_passwordWarningLabel3;
+	QLabel *m_passwordWarningLabel4;
+	QLabel *m_passwordWarningLabel5;
 	QLabel *m_errorMessageLabel;
 
 	QPushButton *m_createAccountButton;
+	QPushButton *m_cancelButton;
 
 	bool m_playerNameValid;
 	bool m_playerPasswordValid;
+	bool m_creatingAccount;
+
+	std::string m_errorMessage;
 };
 
 typedef std::unique_ptr<CreateAccountFrame> CreateAccountFrameUniPtr;

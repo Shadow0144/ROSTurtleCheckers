@@ -150,6 +150,8 @@ public:
 
     uint64_t getBoardHash() const;
 
+    void reloadStrings();
+
 protected:
     void closeEvent(QCloseEvent *event) override;
 

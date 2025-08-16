@@ -24,12 +24,12 @@ TitleWidget::TitleWidget()
     blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
     titleLayout->addWidget(blackTurtleIconLabel);
 
-    auto titleLabel = new QLabel(QString::fromStdString(StringLibrary::getTranslatedString("Turtle Checkers")));
-    auto titleFont = titleLabel->font();
+    m_titleLabel = new QLabel(StringLibrary::getTranslatedString("Turtle Checkers"));
+    auto titleFont = m_titleLabel->font();
     titleFont.setPointSize(TITLE_FONT_SIZE);
-    titleLabel->setFont(titleFont);
-    titleLabel->setAlignment(Qt::AlignCenter);
-    titleLayout->addWidget(titleLabel);
+    m_titleLabel->setFont(titleFont);
+    m_titleLabel->setAlignment(Qt::AlignCenter);
+    titleLayout->addWidget(m_titleLabel);
 
     auto redTurtleIconLabel = new QLabel();
     auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
@@ -37,4 +37,9 @@ TitleWidget::TitleWidget()
                                                     Qt::KeepAspectRatio, Qt::SmoothTransformation);
     redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
     titleLayout->addWidget(redTurtleIconLabel);
+}
+
+void TitleWidget::reloadStrings()
+{
+    m_titleLabel->setText(StringLibrary::getTranslatedString("Turtle Checkers"));
 }

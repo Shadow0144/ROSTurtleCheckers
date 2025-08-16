@@ -117,12 +117,19 @@ void StringLibrary::loadLibrary(std::ifstream &file)
     }
 }
 
-std::string StringLibrary::getTranslatedString(const std::string &stringTag,
-                                               const std::vector<std::string> &parameters)
+QString StringLibrary::getTranslatedString(const std::string &stringTag,
+                                           const std::vector<std::string> &parameters)
 {
+
     if (!s_libraryInstance)
     {
         createLibraryInstance();
+    }
+
+    if (stringTag.empty())
+    {
+        // Empty string, nothing to translate, return an empty QString
+        return QString();
     }
 
     std::string returnString = "ERR";
@@ -150,5 +157,5 @@ std::string StringLibrary::getTranslatedString(const std::string &stringTag,
         TurtleLogger::logError("Translation of string missing");
     }
 
-    return returnString;
+    return QString::fromStdString(returnString);
 }

@@ -17,25 +17,30 @@
 LanguageSelectorWidget::LanguageSelectorWidget(QWidget *parent)
     : QWidget(parent)
 {
-    auto languageComboBox = new QComboBox(this);
-    languageComboBox->setIconSize(QSize(LANGUAGE_ICON_WIDTH + 6, LANGUAGE_ICON_HEIGHT + 10));
+    m_languageComboBox = new QComboBox(this);
+    m_languageComboBox->setIconSize(QSize(LANGUAGE_ICON_WIDTH + 6, LANGUAGE_ICON_HEIGHT + 10));
     auto flagUSIcon = QPixmap::fromImage(ImageLibrary::getFlagUSImage());
     auto scaledFlagUSIcon = QIcon(flagUSIcon.scaled(LANGUAGE_ICON_WIDTH, LANGUAGE_ICON_HEIGHT,
                                                     Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    languageComboBox->addItem(scaledFlagUSIcon, "  ");
+    m_languageComboBox->addItem(scaledFlagUSIcon, "  ");
     auto flagJPIcon = QPixmap::fromImage(ImageLibrary::getFlagJPImage());
     auto scaledFlagJPIcon = QIcon(flagJPIcon.scaled(LANGUAGE_ICON_WIDTH, LANGUAGE_ICON_HEIGHT,
                                                     Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    languageComboBox->addItem(scaledFlagJPIcon, "  ");
+    m_languageComboBox->addItem(scaledFlagJPIcon, "  ");
     auto flagDEIcon = QPixmap::fromImage(ImageLibrary::getFlagDEImage());
     auto scaledFlagDEIcon = QIcon(flagDEIcon.scaled(LANGUAGE_ICON_WIDTH, LANGUAGE_ICON_HEIGHT,
                                                     Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    languageComboBox->addItem(scaledFlagDEIcon, "  ");
-    languageComboBox->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
-    connect(languageComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+    m_languageComboBox->addItem(scaledFlagDEIcon, "  ");
+    m_languageComboBox->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    connect(m_languageComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LanguageSelectorWidget::onLanguageSelect);
 
     move(LANGUAGE_SELECT_X, LANGUAGE_SELECT_Y);
+}
+
+void LanguageSelectorWidget::setCurrentIndex(int index)
+{
+    m_languageComboBox->setCurrentIndex(index);
 }
 
 void LanguageSelectorWidget::onLanguageSelect(int index)

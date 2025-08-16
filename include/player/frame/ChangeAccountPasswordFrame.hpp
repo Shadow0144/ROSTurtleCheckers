@@ -13,8 +13,6 @@
 #include <memory>
 #include <string>
 
-#include "shared/CheckersConsts.hpp"
-
 class CheckersPlayerWindow;
 
 class ChangeAccountPasswordFrame : public QFrame

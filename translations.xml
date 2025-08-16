@@ -2,7 +2,93 @@
 	<string>
 		<key>Turtle Checkers</key>
 		<en>Turtle Checkers</en>
-		<jp>亀のチェカー</jp>
+		<jp>亀のチェカーズ</jp>
 		<de>Schildkröten-Dame</de>
+	</string>
+	<string>
+		<key>Connecting to server...</key>
+		<en>Connecting to server...</en>
+		<jp>サーバーに接続しておる...</jp>
+		<de>Verbinden mit dem Server...</de>
+	</string>
+	<string>
+		<key>Connected to server!</key>
+		<en>Connected to server!</en>
+		<jp>サーバーに接続した!</jp>
+		<de>Verbunden mit dem Server!</de>
+	</string>
+	<string>
+		<key>Create Account</key>
+		<en>Create Account</en>
+		<jp>アカウント作成</jp>
+		<de>Konto Erstellen</de>
+	</string>
+	<string>
+		<key>Log In</key>
+		<en>Log In</en>
+		<jp>ログイン</jp>
+		<de>Einloggen</de>
+	</string>
+	<string>
+		<key>Quit</key>
+		<en>Quit</en>
+		<jp>終了</jp>
+		<de>Quittieren</de>
+	</string>
+
+	<string>
+		<key>Player name</key>
+		<en>Player name</en>
+		<jp>プレイヤーの名前</jp>
+		<de>Spieler-Name</de>
+	</string>
+	<string>
+		<key>Player password</key>
+		<en>Player name</en>
+		<jp>プレイヤーのパスワード</jp>
+		<de>Spieler-Passwort</de>
+	</string>
+	<string>
+		<key>This application is a learning project for me, thus passwords are NOT robustly secured.</key>
+		<en>This application is a learning project for me, thus passwords are NOT robustly secured.</en>
+		<jp>此のアプリが拙者に勉強の為のプロジェクトであるので、パスワードはがっちり囲われてナイんだ。</jp>
+		<de>Diese Projekt ist ein Lehrproject für mich, und so Passwörter sind NICHT solide gesichert.</de>
+	</string>
+	<string>
+		<key>Do NOT use passwords you use elsewhere.</key>
+		<en>Do NOT use passwords you use elsewhere.</en>
+		<jp>他所に使うパスワードを使わナイで。</jp>
+		<de>Benutz NICHT Passwörter, die du anderswo benutzt.</de>
+	</string>
+	<string>
+		<key>To prevent password reuse, passwords can be a maximum of 3 characters in length.</key>
+		<en>To prevent password reuse, passwords can be a maximum of 3 characters in length.</en>
+		<jp>パスワードの再利用を防ぐ為、パスワードの長さが最大３文字までとなる。</jp>
+		<de>Um die Wiederverwendung von Passwörtern zu verhindern, dürfen Passwörter maximal 3 Zeichen lang sein.</de>
+	</string>
+	<string>
+		<key>You may use alphanumeric characters and/or the following symbols:</key>
+		<en>You may use alphanumeric characters and/or the following symbols:</en>
+		<jp>英数字および・また次の記号を使用出来る：</jp>
+		<de>Du kannst alphanumerische Zeichen und/oder die folgenden Symbole benutzen:</de>
+	</string>
+	<string>
+		<key>Cancel</key>
+		<en>Cancel</en>
+		<jp>キャンセル</jp>
+		<de>Abbrechen</de>
+	</string>
+	<string>
+		<key>Creating...</key>
+		<en>Creating...</en>
+		<jp>作成中。。。</jp>
+		<de>Wird Erstellt...</de>
+	</string>
+
+	<string>
+		<key>Logging In...</key>
+		<en>Logging In...</en>
+		<jp>ログイン中。。。</jp>
+		<de>Wird Einloggen...</de>
 	</string>
 </translations>

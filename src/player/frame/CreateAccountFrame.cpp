@@ -15,9 +15,12 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/Parameters.hpp"
+#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 
 CreateAccountFrame::CreateAccountFrame(
     CheckersPlayerWindow *parentWindow)
@@ -27,15 +30,18 @@ CreateAccountFrame::CreateAccountFrame(
 
     m_playerNameValid = false;
     m_playerPasswordValid = false;
+    m_creatingAccount = false;
+
+    m_languageSelector = new LanguageSelectorWidget(this);
 
     auto createAccountLayout = new QVBoxLayout(this);
     createAccountLayout->setAlignment(Qt::AlignCenter);
 
-    auto titleWidget = new TitleWidget();
-    createAccountLayout->addWidget(titleWidget);
+    m_titleWidget = new TitleWidget();
+    createAccountLayout->addWidget(m_titleWidget);
 
-    auto playerNameLabel = new QLabel("Player name");
-    createAccountLayout->addWidget(playerNameLabel);
+    m_playerNameLabel = new QLabel(StringLibrary::getTranslatedString("Player name"));
+    createAccountLayout->addWidget(m_playerNameLabel);
 
     m_playerNameLineEdit = new QLineEdit();
     m_playerNameLineEdit->setFixedWidth(MENU_LINE_EDIT_WIDTH);
@@ -46,8 +52,8 @@ CreateAccountFrame::CreateAccountFrame(
     connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &CreateAccountFrame::validatePlayerNameText);
     createAccountLayout->addWidget(m_playerNameLineEdit);
 
-    auto playerPasswordLabel = new QLabel("Player password");
-    createAccountLayout->addWidget(playerPasswordLabel);
+    m_playerPasswordLabel = new QLabel(StringLibrary::getTranslatedString("Player password"));
+    createAccountLayout->addWidget(m_playerPasswordLabel);
 
     m_passwordLineEdit = new QLineEdit();
     m_passwordLineEdit->setFixedWidth(MENU_LINE_EDIT_WIDTH);
@@ -59,16 +65,16 @@ CreateAccountFrame::CreateAccountFrame(
     connect(m_passwordLineEdit, &QLineEdit::textChanged, this, &CreateAccountFrame::validatePasswordText);
     createAccountLayout->addWidget(m_passwordLineEdit);
 
-    auto passwordWarningLabel1 = new QLabel("This application is a learning project for me, thus passwords are NOT robustly secured.");
-    auto passwordWarningLabel2 = new QLabel("Do NOT use passwords you use elsewhere.");
-    auto passwordWarningLabel3 = new QLabel("To prevent password reuse, passwords can be a maximum of 3 characters in length.");
-    auto passwordWarningLabel4 = new QLabel("You may use alphanumeric characters and/or the following symbols:");
-    auto passwordWarningLabel5 = new QLabel("\t` ~ ! @ # $ % ^ & * ( ) - _ = + [ ] { } | ; : , . < > ?");
-    createAccountLayout->addWidget(passwordWarningLabel1);
-    createAccountLayout->addWidget(passwordWarningLabel2);
-    createAccountLayout->addWidget(passwordWarningLabel3);
-    createAccountLayout->addWidget(passwordWarningLabel4);
-    createAccountLayout->addWidget(passwordWarningLabel5);
+    m_passwordWarningLabel1 = new QLabel(StringLibrary::getTranslatedString("This application is a learning project for me, thus passwords are NOT robustly secured."));
+    m_passwordWarningLabel2 = new QLabel(StringLibrary::getTranslatedString("Do NOT use passwords you use elsewhere."));
+    m_passwordWarningLabel3 = new QLabel(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
+    m_passwordWarningLabel4 = new QLabel(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
+    m_passwordWarningLabel5 = new QLabel("\t` ~ ! @ # $ % ^ & * ( ) - _ = + [ ] { } | ; : , . < > ?");
+    createAccountLayout->addWidget(m_passwordWarningLabel1);
+    createAccountLayout->addWidget(m_passwordWarningLabel2);
+    createAccountLayout->addWidget(m_passwordWarningLabel3);
+    createAccountLayout->addWidget(m_passwordWarningLabel4);
+    createAccountLayout->addWidget(m_passwordWarningLabel5);
 
     // Add a spacer
     createAccountLayout->addWidget(new QLabel(""));
@@ -87,8 +93,7 @@ CreateAccountFrame::CreateAccountFrame(
     auto createAccountButtonLayout = new QHBoxLayout();
     createAccountButtonLayout->setAlignment(Qt::AlignCenter);
 
-    std::string createAccountString = "Create Account";
-    m_createAccountButton = new QPushButton(createAccountString.c_str());
+    m_createAccountButton = new QPushButton(StringLibrary::getTranslatedString("Create Account"));
     m_createAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_createAccountButton->setEnabled(false);
     connect(m_createAccountButton, &QPushButton::released, this,
@@ -98,12 +103,11 @@ CreateAccountFrame::CreateAccountFrame(
     connect(m_passwordLineEdit, &QLineEdit::returnPressed, m_createAccountButton, &QPushButton::click);
     createAccountButtonLayout->addWidget(m_createAccountButton);
 
-    std::string cancelString = "Cancel";
-    auto cancelButton = new QPushButton(cancelString.c_str());
-    cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    connect(cancelButton, &QPushButton::released, this,
+    m_cancelButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(m_cancelButton, &QPushButton::released, this,
             &CreateAccountFrame::handleCancelButton);
-    createAccountButtonLayout->addWidget(cancelButton);
+    createAccountButtonLayout->addWidget(m_cancelButton);
 
     createAccountLayout->addLayout(createAccountButtonLayout);
 }
@@ -118,30 +122,37 @@ void CreateAccountFrame::showEvent(QShowEvent *event)
 
     m_playerNameValid = false;
     m_playerPasswordValid = false;
+    m_creatingAccount = false;
     m_playerNameLineEdit->clear();
     m_playerNameLineEdit->setProperty("valid", false);
     m_playerNameLineEdit->style()->unpolish(m_playerNameLineEdit);
     m_playerNameLineEdit->style()->polish(m_playerNameLineEdit);
     m_playerNameLineEdit->update();
     m_passwordLineEdit->clear();
+    m_playerNameLineEdit->setEnabled(true);
     m_passwordLineEdit->setProperty("valid", false);
     m_passwordLineEdit->style()->unpolish(m_passwordLineEdit);
     m_passwordLineEdit->style()->polish(m_passwordLineEdit);
     m_passwordLineEdit->update();
-    std::string createAccountString = "Create Account";
-    m_createAccountButton->setText(createAccountString.c_str());
+    m_passwordLineEdit->setEnabled(true);
     m_createAccountButton->setEnabled(false);
     m_errorMessageLabel->setVisible(false);
 
     m_playerNameLineEdit->setFocus();
+
+    m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void CreateAccountFrame::failedCreate(const std::string &errorMessage)
 {
-    std::string createAccountString = "Create Account";
-    m_createAccountButton->setText(createAccountString.c_str());
-    m_errorMessageLabel->setText(errorMessage.c_str());
+    m_errorMessage = errorMessage;
+    m_createAccountButton->setText(StringLibrary::getTranslatedString("Create Account"));
+    m_errorMessageLabel->setText(StringLibrary::getTranslatedString(m_errorMessage));
     m_errorMessageLabel->setVisible(true);
+    m_playerNameLineEdit->setEnabled(true);
+    m_passwordLineEdit->setEnabled(true);
+    m_creatingAccount = false;
 }
 
 void CreateAccountFrame::validatePlayerNameText(const QString &playerName)
@@ -200,9 +211,11 @@ void CreateAccountFrame::validatePasswordText(const QString &playerPassword)
 
 void CreateAccountFrame::handleCreateAccountButton()
 {
-    std::string creatingAccountString = "Creating...";
-    m_createAccountButton->setText(creatingAccountString.c_str());
+    m_creatingAccount = true;
+    m_createAccountButton->setText(StringLibrary::getTranslatedString("Creating..."));
     m_createAccountButton->setEnabled(false);
+    m_playerNameLineEdit->setEnabled(false);
+    m_passwordLineEdit->setEnabled(false);
 
     auto playerName = m_playerNameLineEdit->text().toStdString();
     auto playerPassword = m_passwordLineEdit->text().toStdString();
@@ -212,4 +225,23 @@ void CreateAccountFrame::handleCreateAccountButton()
 void CreateAccountFrame::handleCancelButton()
 {
     m_playerWindow->moveToTitleFrame();
+}
+
+void CreateAccountFrame::reloadStrings()
+{
+    m_titleWidget->reloadStrings();
+
+    m_playerNameLabel->setText(StringLibrary::getTranslatedString("Player name"));
+    m_playerPasswordLabel->setText(StringLibrary::getTranslatedString("Player password"));
+
+    m_passwordWarningLabel1->setText(StringLibrary::getTranslatedString("This application is a learning project for me, thus passwords are NOT robustly secured."));
+    m_passwordWarningLabel2->setText(StringLibrary::getTranslatedString("Do NOT use passwords you use elsewhere."));
+    m_passwordWarningLabel3->setText(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
+    m_passwordWarningLabel4->setText(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
+    // m_passwordWarningLabel5 does not need translating
+
+    m_errorMessageLabel->setText(StringLibrary::getTranslatedString(m_errorMessage));
+
+    m_createAccountButton->setText((m_creatingAccount) ? StringLibrary::getTranslatedString("Creating...") : StringLibrary::getTranslatedString("Create Account"));
+    m_cancelButton->setText(StringLibrary::getTranslatedString("Cancel"));
 }

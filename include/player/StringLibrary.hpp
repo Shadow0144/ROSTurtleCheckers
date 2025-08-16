@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QString>
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -9,8 +11,8 @@
 class StringLibrary
 {
 public:
-    static std::string getTranslatedString(const std::string &stringTag,
-                                           const std::vector<std::string> &parameters = {});
+    static QString getTranslatedString(const std::string &stringTag,
+                                       const std::vector<std::string> &parameters = {});
 
 private:
     static void createLibraryInstance();
