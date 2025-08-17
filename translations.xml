@@ -91,4 +91,35 @@
 		<jp>ログイン中。。。</jp>
 		<de>Wird Einloggen...</de>
 	</string>
+
+	<string>
+		<key>Create Lobby</key>
+		<en>Create Lobby</en>
+		<jp>ロビー作成</jp>
+		<de>Lobby Erstellen</de>
+	</string>
+	<string>
+		<key>Join Lobby</key>
+		<en>Join Lobby</en>
+		<jp>ロビー参加</jp>
+		<de>Lobby Erstellen</de>
+	</string>
+	<string>
+		<key>Statistics</key>
+		<en>Statistics</en>
+		<jp>統計</jp>
+		<de>Statisktik</de>
+	</string>
+	<string>
+		<key>Change Password</key>
+		<en>Change Password</en>
+		<jp>パスワード変更</jp>
+		<de>Passwort Ändern</de>
+	</string>
+	<string>
+		<key>Log Out</key>
+		<en>Log Out</en>
+		<jp>ログアウト</jp>
+		<de>Ausloggen</de>
+	</string>
 </translations>

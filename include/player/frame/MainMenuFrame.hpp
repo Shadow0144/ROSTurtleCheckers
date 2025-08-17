@@ -5,11 +5,13 @@
 // #endif
 
 #include <QFrame>
-#include <QLineEdit>
 #include <QLabel>
 #include <QPushButton>
 
 #include <memory>
+
+#include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 
 class CheckersPlayerWindow;
 
@@ -22,6 +24,8 @@ public:
 
 	void showEvent(QShowEvent *event) override;
 
+	void reloadStrings();
+
 private:
 	void handleCreateLobbyButton();
 	void handleJoinLobbyButton();
@@ -32,12 +36,18 @@ private:
 
 	CheckersPlayerWindow *m_playerWindow;
 
-	QLineEdit *m_playerNameLineEdit;
+	TitleWidget *m_titleWidget;
+
+	LanguageSelectorWidget *m_languageSelector;
 
 	QLabel *m_playerNameLabel;
 
 	QPushButton *m_createLobbyButton;
 	QPushButton *m_joinLobbyButton;
+	QPushButton *m_statisticsButton;
+	QPushButton *m_changeAccountPasswordAccountButton;
+	QPushButton *m_logOutAccountButton;
+	QPushButton *m_quitButton;
 };
 
 typedef std::unique_ptr<MainMenuFrame> MainMenuFrameUniPtr;

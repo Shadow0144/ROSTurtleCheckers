@@ -592,5 +592,6 @@ void CheckersPlayerWindow::reloadStrings()
 {
     m_createAccountFrame->reloadStrings();
     m_logInAccountFrame->reloadStrings();
+    m_mainMenuFrame->reloadStrings();
     m_titleFrame->reloadStrings();
 }

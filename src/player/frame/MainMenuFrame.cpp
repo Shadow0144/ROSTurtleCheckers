@@ -11,11 +11,12 @@
 #include <string>
 #include <iostream>
 
-#include "shared/CheckersConsts.hpp"
-#include "player/TitleWidget.hpp"
 #include "player/CheckersPlayerWindow.hpp"
-#include "player/ImageLibrary.hpp"
+#include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
+#include "player/StringLibrary.hpp"
+#include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 
 MainMenuFrame::MainMenuFrame(
     CheckersPlayerWindow *parentWindow)
@@ -26,8 +27,10 @@ MainMenuFrame::MainMenuFrame(
     auto mainLayout = new QVBoxLayout(this);
     mainLayout->setAlignment(Qt::AlignCenter);
 
-    auto titleWidget = new TitleWidget();
-    mainLayout->addWidget(titleWidget);
+    m_languageSelector = new LanguageSelectorWidget(this);
+
+    m_titleWidget = new TitleWidget();
+    mainLayout->addWidget(m_titleWidget);
 
     m_playerNameLabel = new QLabel("");
     auto playerNameFont = m_playerNameLabel->font();
@@ -38,16 +41,14 @@ MainMenuFrame::MainMenuFrame(
     mainLayout->addWidget(m_playerNameLabel);
 
     auto createLobbyLayout = new QHBoxLayout();
-    std::string createLobbyString = "Create Lobby";
-    m_createLobbyButton = new QPushButton(createLobbyString.c_str());
+    m_createLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Create Lobby"));
     m_createLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_createLobbyButton, &QPushButton::released, this, &MainMenuFrame::handleCreateLobbyButton);
     createLobbyLayout->addWidget(m_createLobbyButton);
     mainLayout->addLayout(createLobbyLayout);
 
     auto joinLobbyLayout = new QHBoxLayout();
-    std::string joinLobbyString = "Join Lobby";
-    m_joinLobbyButton = new QPushButton(joinLobbyString.c_str());
+    m_joinLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Join Lobby"));
     m_joinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_joinLobbyButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     connect(m_joinLobbyButton, &QPushButton::released, this, &MainMenuFrame::handleJoinLobbyButton);
@@ -55,39 +56,35 @@ MainMenuFrame::MainMenuFrame(
     mainLayout->addLayout(joinLobbyLayout);
 
     auto statisticsLayout = new QHBoxLayout();
-    std::string statisticsString = "Statistics";
-    auto statisticsButton = new QPushButton(statisticsString.c_str());
-    statisticsButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    statisticsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    connect(statisticsButton, &QPushButton::released, this, &MainMenuFrame::handleStatisticsButton);
-    statisticsLayout->addWidget(statisticsButton);
+    m_statisticsButton = new QPushButton(StringLibrary::getTranslatedString("Statistics"));
+    m_statisticsButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    m_statisticsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    connect(m_statisticsButton, &QPushButton::released, this, &MainMenuFrame::handleStatisticsButton);
+    statisticsLayout->addWidget(m_statisticsButton);
     mainLayout->addLayout(statisticsLayout);
 
     auto changeAccountPasswordLayout = new QHBoxLayout();
-    std::string changeAccountPasswordAccountString = "Change Password";
-    auto changeAccountPasswordAccountButton = new QPushButton(changeAccountPasswordAccountString.c_str());
-    changeAccountPasswordAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    changeAccountPasswordAccountButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    connect(changeAccountPasswordAccountButton, &QPushButton::released, this, &MainMenuFrame::handleChangeAccountPasswordButton);
-    changeAccountPasswordLayout->addWidget(changeAccountPasswordAccountButton);
+    m_changeAccountPasswordAccountButton = new QPushButton(StringLibrary::getTranslatedString("Change Password"));
+    m_changeAccountPasswordAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    m_changeAccountPasswordAccountButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    connect(m_changeAccountPasswordAccountButton, &QPushButton::released, this, &MainMenuFrame::handleChangeAccountPasswordButton);
+    changeAccountPasswordLayout->addWidget(m_changeAccountPasswordAccountButton);
     mainLayout->addLayout(changeAccountPasswordLayout);
 
     auto logOutLayout = new QHBoxLayout();
-    std::string logOutAccountString = "Log Out";
-    auto logOutAccountButton = new QPushButton(logOutAccountString.c_str());
-    logOutAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    logOutAccountButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    connect(logOutAccountButton, &QPushButton::released, this, &MainMenuFrame::handleLogOutAccountButton);
-    logOutLayout->addWidget(logOutAccountButton);
+    m_logOutAccountButton = new QPushButton(StringLibrary::getTranslatedString("Log Out"));
+    m_logOutAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    m_logOutAccountButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    connect(m_logOutAccountButton, &QPushButton::released, this, &MainMenuFrame::handleLogOutAccountButton);
+    logOutLayout->addWidget(m_logOutAccountButton);
     mainLayout->addLayout(logOutLayout);
 
     auto quitLayout = new QHBoxLayout();
-    std::string quitString = "Quit";
-    auto quitButton = new QPushButton(quitString.c_str());
-    quitButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    quitButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    connect(quitButton, &QPushButton::released, this, &MainMenuFrame::handleQuitButton);
-    quitLayout->addWidget(quitButton);
+    m_quitButton = new QPushButton(StringLibrary::getTranslatedString("Quit"));
+    m_quitButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    m_quitButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    connect(m_quitButton, &QPushButton::released, this, &MainMenuFrame::handleQuitButton);
+    quitLayout->addWidget(m_quitButton);
     mainLayout->addLayout(quitLayout);
 }
 
@@ -130,4 +127,16 @@ void MainMenuFrame::handleLogOutAccountButton()
 void MainMenuFrame::handleQuitButton()
 {
     m_playerWindow->close();
+}
+
+void MainMenuFrame::reloadStrings()
+{
+    m_titleWidget->reloadStrings();
+
+    m_createLobbyButton->setText(StringLibrary::getTranslatedString("Create Lobby"));
+    m_joinLobbyButton->setText(StringLibrary::getTranslatedString("Join Lobby"));
+    m_statisticsButton->setText(StringLibrary::getTranslatedString("Statistics"));
+    m_changeAccountPasswordAccountButton->setText(StringLibrary::getTranslatedString("Change Password"));
+    m_logOutAccountButton->setText(StringLibrary::getTranslatedString("Log Out"));
+    m_quitButton->setText(StringLibrary::getTranslatedString("Quit"));
 }

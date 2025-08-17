@@ -10,9 +10,9 @@
 #include <string>
 #include <iostream>
 
+#include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
-#include "player/CheckersPlayerWindow.hpp"
 #include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
