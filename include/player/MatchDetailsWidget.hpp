@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QLabel>
 
 #include <string>
 #include <vector>
@@ -17,4 +18,13 @@ public:
                        const std::string &blackPlayerName,
                        const std::string &redPlayerName,
                        Winner winner);
+
+    void reloadStrings();
+
+private:
+    Winner m_winner;
+
+    std::string m_winningPlayerName;
+
+    QLabel *m_winnerLabel;
 };

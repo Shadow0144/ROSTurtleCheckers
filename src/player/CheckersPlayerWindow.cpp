@@ -590,8 +590,10 @@ uint64_t CheckersPlayerWindow::getBoardHash() const
 
 void CheckersPlayerWindow::reloadStrings()
 {
+    m_changeAccountPasswordFrame->reloadStrings();
     m_createAccountFrame->reloadStrings();
     m_logInAccountFrame->reloadStrings();
     m_mainMenuFrame->reloadStrings();
+    m_statisticsFrame->reloadStrings();
     m_titleFrame->reloadStrings();
 }

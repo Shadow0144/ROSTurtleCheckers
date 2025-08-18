@@ -18,7 +18,6 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/StringLibrary.hpp"
-#include "player/ImageLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 
@@ -32,10 +31,10 @@ CreateAccountFrame::CreateAccountFrame(
     m_playerPasswordValid = false;
     m_creatingAccount = false;
 
-    m_languageSelector = new LanguageSelectorWidget(this);
-
     auto createAccountLayout = new QVBoxLayout(this);
     createAccountLayout->setAlignment(Qt::AlignCenter);
+
+    m_languageSelector = new LanguageSelectorWidget(this);
 
     m_titleWidget = new TitleWidget();
     createAccountLayout->addWidget(m_titleWidget);
@@ -70,11 +69,13 @@ CreateAccountFrame::CreateAccountFrame(
     m_passwordWarningLabel3 = new QLabel(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
     m_passwordWarningLabel4 = new QLabel(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
     m_passwordWarningLabel5 = new QLabel("\t` ~ ! @ # $ % ^ & * ( ) - _ = + [ ] { } | ; : , . < > ?");
+    m_passwordWarningLabel6 = new QLabel(StringLibrary::getTranslatedString("Warning: Lost passwords cannot be recovered or changed!"));
     createAccountLayout->addWidget(m_passwordWarningLabel1);
     createAccountLayout->addWidget(m_passwordWarningLabel2);
     createAccountLayout->addWidget(m_passwordWarningLabel3);
     createAccountLayout->addWidget(m_passwordWarningLabel4);
     createAccountLayout->addWidget(m_passwordWarningLabel5);
+    createAccountLayout->addWidget(m_passwordWarningLabel6);
 
     // Add a spacer
     createAccountLayout->addWidget(new QLabel(""));
@@ -239,6 +240,7 @@ void CreateAccountFrame::reloadStrings()
     m_passwordWarningLabel3->setText(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
     m_passwordWarningLabel4->setText(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
     // m_passwordWarningLabel5 does not need translating
+    m_passwordWarningLabel6->setText(StringLibrary::getTranslatedString("Warning: Lost passwords cannot be recovered or changed!"));
 
     m_errorMessageLabel->setText(StringLibrary::getTranslatedString(m_errorMessage));
 

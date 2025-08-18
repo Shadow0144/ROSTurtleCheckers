@@ -4,7 +4,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QVariant>
-#include <QPushButton>
 #include <QString>
 #include <QStyle>
 
@@ -14,6 +13,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/StringLibrary.hpp"
 
 MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
                                        const std::string &playerName,
@@ -23,6 +23,8 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
                                        Winner winner)
     : QWidget(parent)
 {
+    m_winner = winner;
+
     setProperty("details", QVariant(true));
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     // Update the style
@@ -53,20 +55,22 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
 
     auto winnerLayout = new QHBoxLayout();
     auto winnerIconLabel = new QLabel();
-    auto winnerLabel = new QLabel();
-    winnerLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    winnerLabel->setFixedWidth(MATCH_LIST_PLAYER_NAME_WIDTH);
+    m_winnerLabel = new QLabel();
+    m_winnerLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_winnerLabel->setFixedWidth(MATCH_LIST_PLAYER_NAME_WIDTH);
 
-    switch (winner)
+    switch (m_winner)
     {
     case Winner::None:
     {
-        winnerLabel->setText("No winner");
+        m_winningPlayerName = "";
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
     }
     break;
     case Winner::Black:
     {
-        winnerLabel->setText(QString::fromStdString(blackPlayerName + " won"));
+        m_winningPlayerName = blackPlayerName;
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
         if (playerName == blackPlayerName)
         {
             winnerIconLabel->setPixmap(scaledWinIcon);
@@ -79,7 +83,8 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     break;
     case Winner::Red:
     {
-        winnerLabel->setText(QString::fromStdString(redPlayerName + " won"));
+        m_winningPlayerName = redPlayerName;
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
         if (playerName == blackPlayerName)
         {
             winnerIconLabel->setPixmap(scaledLoseIcon);
@@ -92,7 +97,8 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     break;
     case Winner::Draw:
     {
-        winnerLabel->setText("Draw");
+        m_winningPlayerName = "";
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("Draw"));
         if (playerName == blackPlayerName)
         {
             winnerIconLabel->setPixmap(scaledDrawIcon);
@@ -103,10 +109,16 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
         }
     }
     break;
+    default:
+    {
+        m_winningPlayerName = "";
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
+    }
+    break;
     }
 
     winnerLayout->addWidget(winnerIconLabel);
-    winnerLayout->addWidget(winnerLabel);
+    winnerLayout->addWidget(m_winnerLabel);
     matchLayout->addLayout(winnerLayout);
 
     auto blackPlayerLayout = new QHBoxLayout();
@@ -140,4 +152,36 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     redPlayerLayout->addWidget(redPlayerNameLabel);
 
     matchLayout->addLayout(redPlayerLayout);
+}
+
+void MatchDetailsWidget::reloadStrings()
+{
+    switch (m_winner)
+    {
+    case Winner::None:
+    {
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
+    }
+    break;
+    case Winner::Black:
+    {
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
+    }
+    break;
+    case Winner::Red:
+    {
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
+    }
+    break;
+    case Winner::Draw:
+    {
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("Draw"));
+    }
+    break;
+    default:
+    {
+        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
+    }
+    break;
+    }
 }

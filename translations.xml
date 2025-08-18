@@ -73,6 +73,12 @@
 		<de>Du kannst alphanumerische Zeichen und/oder die folgenden Symbole benutzen:</de>
 	</string>
 	<string>
+		<key>Warning: Lost passwords cannot be recovered or changed!</key>
+		<en>Warning: Lost passwords cannot be recovered or changed!</en>
+		<jp>注意：紛失したパスワードは復元または変更できない！</jp>
+		<de>Warnung: Verlorene Passwörter können nicht wiederhergestellt oder geändert werden!</de>
+	</string>
+	<string>
 		<key>Cancel</key>
 		<en>Cancel</en>
 		<jp>キャンセル</jp>
@@ -121,5 +127,91 @@
 		<en>Log Out</en>
 		<jp>ログアウト</jp>
 		<de>Ausloggen</de>
+	</string>
+
+	<string>
+		<key>Current password</key>
+		<en>Current password</en>
+		<jp>現在のパスワード</jp>
+		<de>Aktuelles Passwort</de>
+	</string>
+	<string>
+		<key>New password</key>
+		<en>New password</en>
+		<jp>新しいパスワード</jp>
+		<de>Neues Passwort</de>
+	</string>
+	<string>
+		<key>Changing...</key>
+		<en>Changing...</en>
+		<jp>変更中</jp>
+		<de>Wird Ändert...</de>
+	</string>
+	<string>
+		<key>Password changed successfully</key>
+		<en>Password changed successfully</en>
+		<jp>パスワード効果的に変更された</jp>
+		<de>Passwort wird erfolgreich geändert</de>
+	</string>
+	
+	<string>
+		<key>Player: </key>
+		<en>Player: </en>
+		<jp>プレイヤー：　</jp>
+		<de>Spieler: </de>
+	</string>
+	<string>
+		<key>Search</key>
+		<en>Search</en>
+		<jp>検索</jp>
+		<de>Suchen</de>
+	</string>
+	<string>
+		<key>Matches played: </key>
+		<en>Matches played: </en>
+		<jp>勝負した：　</jp>
+		<de>Spiele gespielt: </de>
+	</string>
+	<string>
+		<key>Matches won: </key>
+		<en>Matches won: </en>
+		<jp>勝負勝った：　</jp>
+		<de>Spiele gewonnen: </de>
+	</string>
+	<string>
+		<key>Matches lost: </key>
+		<en>Matches lost: </en>
+		<jp>勝負負けた：　</jp>
+		<de>Spiele verloren: </de>
+	</string>
+	<string>
+		<key>Matches drawn: </key>
+		<en>Matches drawn: </en>
+		<jp>勝負引き分けた：　</jp>
+		<de>Spiele unentschieden: </de>
+	</string>
+	<string>
+		<key>Back</key>
+		<en>Back</en>
+		<jp>戻</jp>
+		<de>Zurück</de>
+	</string>
+	<string>
+		<key>No winner</key>
+		<en>No winner</en>
+		<jp>勝者なし</jp>
+		<de>Kein Winner</de>
+	</string>
+	<string>
+		<key>%s won</key>
+		<en>%s won</en>
+		<jp>%s勝った</jp>
+		<de>%s gewonnen</de>
+	</string>
+	<string>
+		<key>Draw</key>
+		<en>Draw</en>
+		<jp>引き分け</jp>
+		<de>Unentschiede</de>
 	</string>
 </translations>

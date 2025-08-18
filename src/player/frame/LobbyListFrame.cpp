@@ -47,7 +47,7 @@ LobbyListFrame::LobbyListFrame(
 
     m_lobbyListScrollArea = new QScrollArea();
     m_lobbyListScrollArea->setWidgetResizable(true);
-    m_lobbyListScrollArea->setFixedSize(LOBBY_SCROLL_W, LOBBY_SCROLL_H);
+    m_lobbyListScrollArea->setFixedSize(LOBBY_LIST_SCROLL_W, LOBBY_LIST_SCROLL_H);
     m_lobbyListScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
     m_lobbyListLayoutWidget = nullptr;

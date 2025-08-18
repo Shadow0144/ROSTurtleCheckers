@@ -79,8 +79,8 @@ constexpr int LOBBY_NAME_FONT_SIZE = 16;
 constexpr int MENU_LINE_EDIT_WIDTH = 550;
 constexpr int MENU_BUTTON_WIDTH = 150;
 
-constexpr int LOBBY_SCROLL_W = 700;
-constexpr int LOBBY_SCROLL_H = 300;
+constexpr int LOBBY_LIST_SCROLL_W = 700;
+constexpr int LOBBY_LIST_SCROLL_H = 270;
 constexpr int LOBBY_LIST_LOBBY_NAME_WIDTH = 150;
 constexpr int LOBBY_LIST_PLAYER_NAME_WIDTH = 150;
 

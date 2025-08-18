@@ -55,6 +55,7 @@ private:
 	QLabel *m_passwordWarningLabel3;
 	QLabel *m_passwordWarningLabel4;
 	QLabel *m_passwordWarningLabel5;
+	QLabel *m_passwordWarningLabel6;
 	QLabel *m_errorMessageLabel;
 
 	QPushButton *m_createAccountButton;

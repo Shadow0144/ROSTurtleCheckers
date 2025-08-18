@@ -25,10 +25,10 @@ TitleFrame::TitleFrame(
 
     m_connectedToServer = false;
 
-    m_languageSelector = new LanguageSelectorWidget(this);
-
     auto mainLayout = new QVBoxLayout(this);
     mainLayout->setAlignment(Qt::AlignCenter);
+
+    m_languageSelector = new LanguageSelectorWidget(this);
 
     m_titleWidget = new TitleWidget();
     m_titleWidget->setContentsMargins(0, 20, 0, 20);

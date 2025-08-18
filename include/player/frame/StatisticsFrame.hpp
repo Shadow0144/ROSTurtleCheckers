@@ -6,16 +6,17 @@
 
 #include <QFrame>
 #include <QPushButton>
-#include <QRadioButton>
 #include <QScrollArea>
 #include <QLabel>
 #include <QLineEdit>
-#include <QString>
-#include <QProgressBar>
 
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
+#include "player/MatchDetailsWidget.hpp"
 
 class CheckersPlayerWindow;
 
@@ -38,6 +39,8 @@ public:
                            uint64_t matchesLost,
                            uint64_t matchesDrawn);
 
+    void reloadStrings();
+
 private:
     void handleSearchPlayerButton();
     void handleBackButton();
@@ -47,14 +50,29 @@ private:
 
     CheckersPlayerWindow *m_playerWindow;
 
+    TitleWidget *m_titleWidget;
+
+    LanguageSelectorWidget *m_languageSelector;
+
     QLineEdit *m_playerNameLineEdit;
+
     QPushButton *m_searchPlayerButton;
+
+    QLabel *m_playerNameLabel;
     QLabel *m_matchesPlayedLabel;
+    QLabel *m_matchesPlayedNumberLabel;
     QLabel *m_matchesWonLabel;
+    QLabel *m_matchesWonNumberLabel;
     QLabel *m_matchesLostLabel;
+    QLabel *m_matchesLostNumberLabel;
     QLabel *m_matchesDrawnLabel;
+    QLabel *m_matchesDrawnNumberLabel;
 
     QScrollArea *m_matchListScrollArea;
+
+    std::vector<MatchDetailsWidget *> m_matchDetailsWidgets;
+
+    QPushButton *m_backButton;
 
     std::vector<std::string> m_lobbyNameIds;
     std::vector<std::string> m_blackPlayerNames;
