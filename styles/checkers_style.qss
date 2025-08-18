@@ -1,9 +1,11 @@
 * { font-family: "Noto Sans JP"; }
 
-QWidget { background-color: black; }
+QWidget { }
 QWidget[dialog="true"] { border: 2px solid white; }
 QWidget[framed="true"] { border: 2px solid gray; }
 QWidget[details="true"] { border: 1px solid white; }
+
+QFrame { background-color: black; }
 
 QLabel { color: white; }
 QLabel:disabled { color: dimGray; }
@@ -17,7 +19,7 @@ QPushButton:hover { color: cyan; border: 1px solid cyan; }
 QPushButton:focus { }
 QPushButton:disabled { color: dimGray; border: 1px solid dimGray; }
 
-QLineEdit { color: white; border: 1px solid gray; }
+QLineEdit { color: white; background-color: black; border: 1px solid gray; }
 QLineEdit[valid="false"] { color: white; border: 1px solid red; }
 QLineEdit[valid="true"] { color: white; border: 1px solid aqua; }
 QLineEdit[in_use="false"] { color: white; border: 1px solid gray; }
@@ -53,5 +55,6 @@ QComboBox QAbstractItemView {
     border: 1px solid white;
 }
 
-QScrollArea { border: 1px solid white; }
+QScrollArea { color: white; border: 1px solid white; }
+QScrollArea QWidget { background-color: black; }
 QScrollArea:disabled { border: 1px solid gray; }
