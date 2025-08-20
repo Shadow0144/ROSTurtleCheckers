@@ -17,11 +17,13 @@
 #include <string>
 #include <iostream>
 
+#include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
-#include "player/TitleWidget.hpp"
-#include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/StringLibrary.hpp"
+#include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 
 CreateLobbyFrame::CreateLobbyFrame(
     CheckersPlayerWindow *parentWindow)
@@ -34,11 +36,13 @@ CreateLobbyFrame::CreateLobbyFrame(
     auto createLobbyLayout = new QVBoxLayout(this);
     createLobbyLayout->setAlignment(Qt::AlignCenter);
 
-    auto titleWidget = new TitleWidget();
-    createLobbyLayout->addWidget(titleWidget);
+    m_languageSelector = new LanguageSelectorWidget(this);
 
-    auto lobbyNameLabel = new QLabel("Lobby name");
-    createLobbyLayout->addWidget(lobbyNameLabel);
+    m_titleWidget = new TitleWidget();
+    createLobbyLayout->addWidget(m_titleWidget);
+
+    m_lobbyNameLabel = new QLabel(StringLibrary::getTranslatedString("Lobby name"));
+    createLobbyLayout->addWidget(m_lobbyNameLabel);
 
     m_lobbyNameLineEdit = new QLineEdit();
     m_lobbyNameLineEdit->setFixedWidth(MENU_LINE_EDIT_WIDTH);
@@ -49,8 +53,8 @@ CreateLobbyFrame::CreateLobbyFrame(
     connect(m_lobbyNameLineEdit, &QLineEdit::textChanged, this, &CreateLobbyFrame::validateLobbyNameText);
     createLobbyLayout->addWidget(m_lobbyNameLineEdit);
 
-    auto lobbyPasswordLabel = new QLabel("Lobby password");
-    createLobbyLayout->addWidget(lobbyPasswordLabel);
+    m_lobbyPasswordLabel = new QLabel(StringLibrary::getTranslatedString("Lobby password"));
+    createLobbyLayout->addWidget(m_lobbyPasswordLabel);
 
     m_lobbyPasswordLineEdit = new QLineEdit();
     m_lobbyPasswordLineEdit->setFixedWidth(MENU_LINE_EDIT_WIDTH);
@@ -88,8 +92,7 @@ CreateLobbyFrame::CreateLobbyFrame(
     auto createLobbyButtonLayout = new QHBoxLayout();
     createLobbyButtonLayout->setAlignment(Qt::AlignCenter);
 
-    std::string commitCreateLobbyString = "Create Lobby";
-    m_createLobbyButton = new QPushButton(commitCreateLobbyString.c_str());
+    m_createLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Create Lobby"));
     m_createLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_createLobbyButton->setEnabled(false);
     connect(m_createLobbyButton, &QPushButton::released, this,
@@ -99,12 +102,11 @@ CreateLobbyFrame::CreateLobbyFrame(
     connect(m_lobbyPasswordLineEdit, &QLineEdit::returnPressed, m_createLobbyButton, &QPushButton::click);
     createLobbyButtonLayout->addWidget(m_createLobbyButton);
 
-    std::string cancelCreateLobbyString = "Cancel";
-    auto cancelCreateLobbyButton = new QPushButton(cancelCreateLobbyString.c_str());
-    cancelCreateLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    connect(cancelCreateLobbyButton, &QPushButton::released, this,
+    m_cancelCreateLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelCreateLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(m_cancelCreateLobbyButton, &QPushButton::released, this,
             &CreateLobbyFrame::handleCancelButton);
-    createLobbyButtonLayout->addWidget(cancelCreateLobbyButton);
+    createLobbyButtonLayout->addWidget(m_cancelCreateLobbyButton);
 
     createLobbyLayout->addLayout(createLobbyButtonLayout);
 }
@@ -115,8 +117,8 @@ CreateLobbyFrame::~CreateLobbyFrame()
 
 void CreateLobbyFrame::showEvent(QShowEvent *event)
 {
-	(void)event; // NO LINT
-    
+    (void)event; // NO LINT
+
     m_lobbyNameLineEdit->clear();
     m_lobbyNameLineEdit->setProperty("valid", false);
     m_lobbyNameLineEdit->style()->unpolish(m_lobbyNameLineEdit);
@@ -131,6 +133,9 @@ void CreateLobbyFrame::showEvent(QShowEvent *event)
     m_randomRadioButton->setChecked(true);
 
     m_lobbyNameLineEdit->setFocus();
+
+    m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void CreateLobbyFrame::validateLobbyNameText(const QString &lobbyName)
@@ -205,4 +210,15 @@ void CreateLobbyFrame::onRedTurtleToggled(bool checked)
         m_playerDesiredColor = TurtlePieceColor::Red;
         Parameters::setPlayerColor(m_playerDesiredColor);
     }
+}
+
+void CreateLobbyFrame::reloadStrings()
+{
+    m_titleWidget->reloadStrings();
+
+    m_lobbyNameLabel->setText(StringLibrary::getTranslatedString("Lobby name"));
+    m_lobbyPasswordLabel->setText(StringLibrary::getTranslatedString("Lobby password"));
+
+    m_createLobbyButton->setText(StringLibrary::getTranslatedString("Create Lobby"));
+    m_cancelCreateLobbyButton->setText(StringLibrary::getTranslatedString("Cancel"));
 }

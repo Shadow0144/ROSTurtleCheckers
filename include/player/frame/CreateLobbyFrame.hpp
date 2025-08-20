@@ -5,6 +5,7 @@
 // #endif
 
 #include <QFrame>
+#include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QRadioButton>
@@ -13,6 +14,8 @@
 #include <memory>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/LanguageSelectorWidget.hpp"
+#include "player/TitleWidget.hpp"
 
 class CheckersPlayerWindow;
 
@@ -22,8 +25,10 @@ class CreateLobbyFrame : public QFrame
 public:
 	CreateLobbyFrame(CheckersPlayerWindow *parentWindow);
 	~CreateLobbyFrame();
-	
-	void showEvent(QShowEvent* event) override;
+
+	void showEvent(QShowEvent *event) override;
+
+	void reloadStrings();
 
 public slots:
 	void validateLobbyNameText(const QString &lobbyName);
@@ -39,10 +44,18 @@ private:
 
 	CheckersPlayerWindow *m_playerWindow;
 
+	LanguageSelectorWidget *m_languageSelector;
+
+	TitleWidget *m_titleWidget;
+
+	QLabel *m_lobbyNameLabel;
+	QLabel *m_lobbyPasswordLabel;
+
 	QLineEdit *m_lobbyNameLineEdit;
 	QLineEdit *m_lobbyPasswordLineEdit;
 
 	QPushButton *m_createLobbyButton;
+	QPushButton *m_cancelCreateLobbyButton;
 
 	QRadioButton *m_blackRadioButton;
 	QRadioButton *m_randomRadioButton;

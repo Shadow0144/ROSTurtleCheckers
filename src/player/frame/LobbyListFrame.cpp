@@ -19,12 +19,15 @@
 #include <vector>
 #include <iostream>
 
+#include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
-#include "player/TitleWidget.hpp"
-#include "player/CheckersPlayerWindow.hpp"
-#include "player/LobbyDetailsWidget.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/StringLibrary.hpp"
+#include "shared/TurtleLogger.hpp"
+#include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
+#include "player/LobbyDetailsWidget.hpp"
 
 LobbyListFrame::LobbyListFrame(
     CheckersPlayerWindow *parentWindow)
@@ -36,8 +39,10 @@ LobbyListFrame::LobbyListFrame(
     auto mainLayout = new QVBoxLayout(this);
     mainLayout->setAlignment(Qt::AlignCenter);
 
-    auto titleWidget = new TitleWidget();
-    mainLayout->addWidget(titleWidget);
+    m_languageSelector = new LanguageSelectorWidget(this);
+
+    m_titleWidget = new TitleWidget();
+    mainLayout->addWidget(m_titleWidget);
 
     auto contentWidget = new QWidget();
     auto contentLayout = new QVBoxLayout();
@@ -86,21 +91,22 @@ LobbyListFrame::LobbyListFrame(
     menuButtonWidget->setLayout(menuButtonLayout);
     menuButtonLayout->setAlignment(Qt::AlignCenter);
 
-    std::string refreshjoinLobbyString = "Refresh";
-    auto refreshJoinLobbyButton = new QPushButton(refreshjoinLobbyString.c_str());
-    refreshJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    connect(refreshJoinLobbyButton, &QPushButton::released, this,
+    m_refreshJoinLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Refresh"));
+    m_refreshJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(m_refreshJoinLobbyButton, &QPushButton::released, this,
             &LobbyListFrame::handleRefreshJoinLobbyButton);
-    menuButtonLayout->addWidget(refreshJoinLobbyButton);
+    menuButtonLayout->addWidget(m_refreshJoinLobbyButton);
 
-    std::string canceljoinLobbyString = "Cancel";
-    auto cancelJoinLobbyButton = new QPushButton(canceljoinLobbyString.c_str());
-    cancelJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    connect(cancelJoinLobbyButton, &QPushButton::released, this,
+    m_cancelJoinLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(m_cancelJoinLobbyButton, &QPushButton::released, this,
             &LobbyListFrame::handleCancelJoinLobbyButton);
-    menuButtonLayout->addWidget(cancelJoinLobbyButton);
+    menuButtonLayout->addWidget(m_cancelJoinLobbyButton);
 
     mainLayout->addWidget(menuButtonWidget);
+
+    // Needs to be in front of the title widget
+    m_languageSelector->raise();
 }
 
 LobbyListFrame::~LobbyListFrame()
@@ -119,6 +125,9 @@ void LobbyListFrame::showEvent(QShowEvent *event)
 
     m_playerWindow->getLobbyList();
     m_randomRadioButton->setChecked(true);
+
+    m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void LobbyListFrame::displayLobbyList(const std::vector<std::string> &lobbyNames,
@@ -202,25 +211,42 @@ void LobbyListFrame::buildLobbyList()
     const auto numLobbies = m_lobbyNames.size();
     if (m_lobbyIds.size() != numLobbies)
     {
-        std::cerr << "Lobby name vector does not match size of lobby id vector" << std::endl;
+        TurtleLogger::logError("Lobby name vector does not match size of lobby id vector");
     }
+    m_lobbyDetailsWidgets.clear();
     for (size_t i = 0u; i < numLobbies; i++)
     {
         // Add a lobby details widget
-        lobbyListLayout->addWidget(new LobbyDetailsWidget(this,
-                                                          m_lobbyNames[i],
-                                                          m_lobbyIds[i],
-                                                          m_blackPlayerNames[i],
-                                                          m_redPlayerNames[i],
-                                                          m_hasPasswords[i],
-                                                          [i, this]()
-                                                          { this->handleCommitJoinLobbyButton(i); }));
+        auto lobbyDetailsWidget = new LobbyDetailsWidget(this,
+                                                         m_lobbyNames[i],
+                                                         m_lobbyIds[i],
+                                                         m_blackPlayerNames[i],
+                                                         m_redPlayerNames[i],
+                                                         m_hasPasswords[i],
+                                                         [i, this]()
+                                                         { this->handleCommitJoinLobbyButton(i); });
+        m_lobbyDetailsWidgets.push_back(lobbyDetailsWidget);
+        lobbyListLayout->addWidget(lobbyDetailsWidget);
     }
 
     auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);
     lobbyListLayout->addItem(spacer);
 
+    // This will delete the previous widget, layout, and children of them
     m_lobbyListScrollArea->setWidget(m_lobbyListLayoutWidget);
 
     update();
+}
+
+void LobbyListFrame::reloadStrings()
+{
+    m_titleWidget->reloadStrings();
+
+    m_refreshJoinLobbyButton->setText(StringLibrary::getTranslatedString("Refresh"));
+    m_cancelJoinLobbyButton->setText(StringLibrary::getTranslatedString("Cancel"));
+
+    for (auto &lobbyDetailsWidget : m_lobbyDetailsWidgets)
+    {
+        lobbyDetailsWidget->reloadStrings();
+    }
 }

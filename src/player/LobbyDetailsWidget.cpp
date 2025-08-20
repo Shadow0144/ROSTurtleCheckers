@@ -14,6 +14,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/StringLibrary.hpp"
 
 LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
                                        const std::string &lobbyName,
@@ -24,6 +25,9 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
                                        const std::function<void()> &onJoinFunction)
     : QWidget(parent)
 {
+    m_blackPlayerName = blackPlayerName;
+    m_redPlayerName = redPlayerName;
+
     setProperty("details", QVariant(true));
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     // Update the style
@@ -53,15 +57,14 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
     blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
     lobbyLayout->addWidget(blackTurtleIconLabel);
 
-    std::string openString = "Open";
-    bool blackPlayerJoined = !blackPlayerName.empty();
-    bool redPlayerJoined = !redPlayerName.empty();
+    bool blackPlayerJoined = !m_blackPlayerName.empty();
+    bool redPlayerJoined = !m_redPlayerName.empty();
 
-    auto blackPlayerNameLabel = new QLabel(blackPlayerJoined ? blackPlayerName.c_str() : openString.c_str());
-    blackPlayerNameLabel->setEnabled(blackPlayerJoined);
-    blackPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    blackPlayerNameLabel->setFixedWidth(LOBBY_LIST_PLAYER_NAME_WIDTH);
-    lobbyLayout->addWidget(blackPlayerNameLabel);
+    m_blackPlayerNameLabel = new QLabel(blackPlayerJoined ? m_blackPlayerName.c_str() : StringLibrary::getTranslatedString("Open"));
+    m_blackPlayerNameLabel->setEnabled(blackPlayerJoined);
+    m_blackPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_blackPlayerNameLabel->setFixedWidth(LOBBY_LIST_PLAYER_NAME_WIDTH);
+    lobbyLayout->addWidget(m_blackPlayerNameLabel);
 
     auto redTurtleIconLabel = new QLabel();
     auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
@@ -70,11 +73,11 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
     redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
     lobbyLayout->addWidget(redTurtleIconLabel);
 
-    auto redPlayerNameLabel = new QLabel(redPlayerJoined ? redPlayerName.c_str() : openString.c_str());
-    redPlayerNameLabel->setEnabled(redPlayerJoined);
-    redPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    redPlayerNameLabel->setFixedWidth(LOBBY_LIST_PLAYER_NAME_WIDTH);
-    lobbyLayout->addWidget(redPlayerNameLabel);
+    m_redPlayerNameLabel = new QLabel(redPlayerJoined ? m_redPlayerName.c_str() : StringLibrary::getTranslatedString("Open"));
+    m_redPlayerNameLabel->setEnabled(redPlayerJoined);
+    m_redPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_redPlayerNameLabel->setFixedWidth(LOBBY_LIST_PLAYER_NAME_WIDTH);
+    lobbyLayout->addWidget(m_redPlayerNameLabel);
 
     auto lockIconLabel = new QLabel();
     auto lockIcon = QPixmap::fromImage(ImageLibrary::getLockImage());
@@ -87,17 +90,24 @@ LobbyDetailsWidget::LobbyDetailsWidget(QWidget *parent,
     lockIconLabel->setVisible(hasPassword);
     lobbyLayout->addWidget(lockIconLabel);
 
-    std::string joinLobbyString = "Join";
-    auto joinLobbyButton = new QPushButton(joinLobbyString.c_str());
+    m_joinLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Join"));
     if (!blackPlayerJoined || !redPlayerJoined)
     {
-        joinLobbyButton->setEnabled(true);
+        m_joinLobbyButton->setEnabled(true);
     }
     else
     {
         // Lobby is full
-        joinLobbyButton->setEnabled(false);
+        m_joinLobbyButton->setEnabled(false);
     }
-    connect(joinLobbyButton, &QPushButton::released, parent, onJoinFunction);
-    lobbyLayout->addWidget(joinLobbyButton);
+    connect(m_joinLobbyButton, &QPushButton::released, parent, onJoinFunction);
+    lobbyLayout->addWidget(m_joinLobbyButton);
+}
+
+void LobbyDetailsWidget::reloadStrings()
+{
+    m_blackPlayerNameLabel->setText(m_blackPlayerName.empty() ? StringLibrary::getTranslatedString("Open") : m_blackPlayerName.c_str());
+    m_redPlayerNameLabel->setText(m_redPlayerName.empty() ? StringLibrary::getTranslatedString("Open") : m_redPlayerName.c_str());
+
+    m_joinLobbyButton->setText(StringLibrary::getTranslatedString("Join"));
 }

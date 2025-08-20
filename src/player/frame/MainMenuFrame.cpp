@@ -97,6 +97,9 @@ void MainMenuFrame::showEvent(QShowEvent *event)
     (void)event; // NO LINT
 
     m_playerNameLabel->setText(Parameters::getPlayerName().c_str());
+
+    m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void MainMenuFrame::handleCreateLobbyButton()

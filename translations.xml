@@ -108,7 +108,7 @@
 		<key>Join Lobby</key>
 		<en>Join Lobby</en>
 		<jp>ロビー参加</jp>
-		<de>Lobby Erstellen</de>
+		<de>Lobby Beitreten</de>
 	</string>
 	<string>
 		<key>Statistics</key>
@@ -213,5 +213,45 @@
 		<en>Draw</en>
 		<jp>引き分け</jp>
 		<de>Unentschiede</de>
+	</string>
+	
+	<string>
+		<key>Refresh</key>
+		<en>Refresh</en>
+		<jp>再新</jp>
+		<de>Aktualisieren</de>
+	</string>
+
+	<string>
+		<key>Open</key>
+		<en>Open</en>
+		<jp>空</jp>
+		<de>Aktualisieren</de>
+	</string>
+	<string>
+		<key>Join</key>
+		<en>Join</en>
+		<jp>参加</jp>
+		<de>Mitmachen</de>
+	</string>
+
+	<string>
+		<key>Lobby name</key>
+		<en>Lobby name</en>
+		<jp>ロビー名前</jp>
+		<de>Lobby-Name</de>
+	</string>
+	<string>
+		<key>Lobby password</key>
+		<en>Lobby password</en>
+		<jp>ロビーパスワード</jp>
+		<de>Lobby-Passwort</de>
+	</string>
+	
+	<string>
+		<key>Incorrect password</key>
+		<en>Incorrect password</en>
+		<jp>間違ったパスワード</jp>
+		<de>Falsches Passwort</de>
 	</string>
 </translations>

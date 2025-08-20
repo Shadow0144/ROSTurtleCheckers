@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QWidget>
+#include <QLabel>
+#include <QPushButton>
 
 #include <string>
 #include <vector>
@@ -16,4 +18,15 @@ public:
                        const std::string &redPlayerName,
                        bool hasPassword,
                        const std::function<void()> &onJoinFunction);
+
+    void reloadStrings();
+
+private:
+    std::string m_blackPlayerName;
+    std::string m_redPlayerName;
+
+    QLabel *m_blackPlayerNameLabel;
+    QLabel *m_redPlayerNameLabel;
+
+    QPushButton *m_joinLobbyButton;
 };

@@ -14,6 +14,9 @@
 #include <vector>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/LanguageSelectorWidget.hpp"
+#include "player/TitleWidget.hpp"
+#include "player/LobbyDetailsWidget.hpp"
 
 class CheckersPlayerWindow;
 
@@ -24,7 +27,7 @@ public:
 	LobbyListFrame(CheckersPlayerWindow *parentWindow);
 	~LobbyListFrame();
 
-	void showEvent(QShowEvent* event) override;
+	void showEvent(QShowEvent *event) override;
 
 	void displayLobbyList(const std::vector<std::string> &lobbyNames,
 						  const std::vector<std::string> &lobbyIds,
@@ -42,6 +45,8 @@ public:
 	void playerLeftLobby(const std::string &playerName);
 	void setPlayerReady(const std::string &playerName, bool ready);
 
+	void reloadStrings();
+
 private:
 	void handleJoinLobbyButton();
 	void handleRefreshJoinLobbyButton();
@@ -56,12 +61,16 @@ private:
 
 	CheckersPlayerWindow *m_playerWindow;
 
+	LanguageSelectorWidget *m_languageSelector;
+
+	TitleWidget *m_titleWidget;
+
 	QWidget *m_lobbyListLayoutWidget;
 
 	QScrollArea *m_lobbyListScrollArea;
 
-	QPushButton *m_joinLobbyButton;
-	QPushButton *m_commitJoinLobbyButton;
+	QPushButton *m_refreshJoinLobbyButton;
+	QPushButton *m_cancelJoinLobbyButton;
 
 	QRadioButton *m_blackRadioButton;
 	QRadioButton *m_randomRadioButton;
@@ -74,6 +83,8 @@ private:
 	std::vector<bool> m_hasPasswords;
 	std::vector<std::string> m_blackPlayerNames;
 	std::vector<std::string> m_redPlayerNames;
+
+	std::vector<LobbyDetailsWidget *> m_lobbyDetailsWidgets;
 };
 
 typedef std::unique_ptr<LobbyListFrame> LobbyListFrameUniPtr;

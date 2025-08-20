@@ -79,6 +79,7 @@ void TitleFrame::showEvent(QShowEvent *event)
     (void)event; // NO LINT
 
     m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void TitleFrame::setConnectedToServer(bool connected)

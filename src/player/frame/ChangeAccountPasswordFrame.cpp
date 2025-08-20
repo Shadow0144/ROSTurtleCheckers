@@ -154,6 +154,9 @@ void ChangeAccountPasswordFrame::showEvent(QShowEvent *event)
     m_messageLabel->setVisible(false);
 
     m_previousPasswordLineEdit->setFocus();
+
+    m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void ChangeAccountPasswordFrame::succeededChange()

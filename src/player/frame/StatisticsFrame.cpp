@@ -129,6 +129,9 @@ void StatisticsFrame::showEvent(QShowEvent *event)
     const auto playerName = Parameters::getPlayerName();
     m_playerNameLineEdit->setText(playerName.c_str());
     m_playerWindow->requestStatistics(playerName);
+
+    m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void StatisticsFrame::buildProgressBar()

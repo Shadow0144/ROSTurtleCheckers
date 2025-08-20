@@ -12,6 +12,9 @@
 
 #include <memory>
 
+#include "player/LanguageSelectorWidget.hpp"
+#include "player/TitleWidget.hpp"
+
 class CheckersPlayerWindow;
 
 class LobbyPasswordFrame : public QFrame
@@ -25,6 +28,8 @@ public:
 
 	void setPasswordIncorrect();
 
+	void reloadStrings();
+
 public slots:
 	void validatePasswordText(const QString &lobbyPassword);
 
@@ -34,13 +39,19 @@ private:
 
 	CheckersPlayerWindow *m_playerWindow;
 
-	QLineEdit *m_lobbyPasswordLineEdit;
+	LanguageSelectorWidget *m_languageSelector;
 
-	QPushButton *m_confirmPasswordButton;
+	TitleWidget *m_titleWidget;
 
 	QLabel *m_lobbyNameLabel;
 	QLabel *m_lobbyIdLabel;
+	QLabel *m_lobbyPasswordLabel;
 	QLabel *m_passwordIncorrectLabel;
+
+	QLineEdit *m_lobbyPasswordLineEdit;
+
+	QPushButton *m_confirmPasswordButton;
+	QPushButton *m_cancelJoinLobbyButton;
 };
 
 typedef std::unique_ptr<LobbyPasswordFrame> LobbyPasswordFrameUniPtr;
