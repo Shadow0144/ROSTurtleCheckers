@@ -199,7 +199,7 @@
 	<string>
 		<key>No winner</key>
 		<en>No winner</en>
-		<jp>勝者なし</jp>
+		<jp>勝者無し</jp>
 		<de>Kein Winner</de>
 	</string>
 	<string>
@@ -253,5 +253,84 @@
 		<en>Incorrect password</en>
 		<jp>間違ったパスワード</jp>
 		<de>Falsches Passwort</de>
+	</string>
+	
+	<string>
+		<key>The match will start when both players are ready!</key>
+		<en>The match will start when both players are ready!</en>
+		<jp>両選手の準備したら、試合が始まる！</jp>
+		<de>Das Spiel beginnt wenn beide Spieler bereit sind!</de>
+	</string>
+	<string>
+		<key>Ready</key>
+		<en>Ready</en>
+		<jp>レディー</jp>
+		<de>Bereit</de>
+	</string>
+	<string>
+		<key>Match timer:</key>
+		<en>Ready</en>
+		<jp>試合タイマー:</jp>
+		<de>Spielzeitmesser:</de>
+	</string>
+	<string>
+		<key>No timer</key>
+		<en>No timer</en>
+		<jp>タイマー無し</jp>
+		<de>Kein Zeitmesser</de>
+	</string>
+	<string>
+		<key>5 minutes</key>
+		<en>5 minutes</en>
+		<jp>五分</jp>
+		<de>5 Minuten</de>
+	</string>
+	<string>
+		<key>10 minutes</key>
+		<en>10 minutes</en>
+		<jp>十分</jp>
+		<de>10 Minuten</de>
+	</string>
+	<string>
+		<key>Leave Lobby</key>
+		<en>Leave Lobby</en>
+		<jp>ロビー退出</jp>
+		<de>Lobby Verlassen</de>
+	</string>
+	<string>
+		<key>Report player and leave lobby?</key>
+		<en>Report player and leave lobby?</en>
+		<jp>プレイヤーを報告してロビーを退出するか？</jp>
+		<de>Spieler melden und Lobby verlassen?</de>
+	</string>
+	<string>
+		<key>Report</key>
+		<en>Report</en>
+		<jp>報告</jp>
+		<de>Melden</de>
+	</string>
+	<string>
+		<key>The match will start in... %s...</key>
+		<en>The match will start in... %s...</en>
+		<jp>試合は。。。 %s。。。 に始まる。。。</jp>
+		<de>Das Spiel beginnt in... %s...</de>
+	</string>
+	<string>
+		<key>Chat</key>
+		<en>Chat</en>
+		<jp>プレイヤーを報告</jp>
+		<de>Chat</de>
+	</string>
+	<string>
+		<key>Report Player</key>
+		<en>Report Player</en>
+		<jp>チャット</jp>
+		<de>Spieler Melden</de>
+	</string>
+	<string>
+		<key>Send</key>
+		<en>Send</en>
+		<jp>送信</jp>
+		<de>Senden</de>
 	</string>
 </translations>

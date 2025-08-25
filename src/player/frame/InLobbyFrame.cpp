@@ -17,12 +17,14 @@
 #include <string>
 #include <iostream>
 
+#include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
+#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
-#include "player/CheckersPlayerWindow.hpp"
 #include "player/ImageLibrary.hpp"
 
 InLobbyFrame::InLobbyFrame(
@@ -50,8 +52,10 @@ InLobbyFrame::InLobbyFrame(
                                       IN_LOBBY_LAYOUT_MARGINS);
     m_inLobbyWidget->setLayout(inLobbyLayout);
 
-    auto titleWidget = new TitleWidget();
-    inLobbyLayout->addWidget(titleWidget);
+    m_languageSelector = new LanguageSelectorWidget(this);
+
+    m_titleWidget = new TitleWidget();
+    inLobbyLayout->addWidget(m_titleWidget);
 
     auto lobbyNameLayout = new QHBoxLayout();
     lobbyNameLayout->setAlignment(Qt::AlignLeft);
@@ -74,14 +78,10 @@ InLobbyFrame::InLobbyFrame(
     m_gameStartTimerLabel = new QLabel();
     m_gameStartTimerLabel->setProperty("highlight", true);
     m_gameStartTimerLabel->setMargin(10);
-    m_gameStartTimerLabel->setText("The match will start when both players are ready!");
+    m_gameStartTimerLabel->setText(StringLibrary::getTranslatedString("The match will start when both players are ready!"));
     lobbyNameLayout->addWidget(m_gameStartTimerLabel);
 
     inLobbyLayout->addLayout(lobbyNameLayout);
-
-    std::string readyInLobbyString = "Ready";
-
-    std::string openString = "Open";
 
     // Black player layout
 
@@ -102,7 +102,7 @@ InLobbyFrame::InLobbyFrame(
     m_blackPlayerLobbyOwnerLabel->setVisible(false);
     blackPlayerLayout->addWidget(m_blackPlayerLobbyOwnerLabel);
 
-    m_blackReadyInLobbyCheckBox = new QCheckBox(readyInLobbyString.c_str());
+    m_blackReadyInLobbyCheckBox = new QCheckBox(StringLibrary::getTranslatedString("Ready"));
     m_blackReadyInLobbyCheckBox->setEnabled(false);
     connect(m_blackReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
             &InLobbyFrame::handleBlackReadyButtonToggled);
@@ -115,7 +115,7 @@ InLobbyFrame::InLobbyFrame(
     blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
     blackPlayerLayout->addWidget(blackTurtleIconLabel);
 
-    m_blackPlayerNameLabel = new QLabel(openString.c_str());
+    m_blackPlayerNameLabel = new QLabel(StringLibrary::getTranslatedString("Open"));
     m_blackPlayerNameLabel->setEnabled(false);
     m_blackPlayerNameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     blackPlayerLayout->addWidget(m_blackPlayerNameLabel);
@@ -154,7 +154,7 @@ InLobbyFrame::InLobbyFrame(
     m_redPlayerLobbyOwnerLabel->setVisible(false);
     redPlayerLayout->addWidget(m_redPlayerLobbyOwnerLabel);
 
-    m_redReadyInLobbyCheckBox = new QCheckBox(readyInLobbyString.c_str());
+    m_redReadyInLobbyCheckBox = new QCheckBox(StringLibrary::getTranslatedString("Ready"));
     m_redReadyInLobbyCheckBox->setEnabled(false);
     connect(m_redReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
             &InLobbyFrame::handleRedReadyButtonToggled);
@@ -167,7 +167,7 @@ InLobbyFrame::InLobbyFrame(
     redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
     redPlayerLayout->addWidget(redTurtleIconLabel);
 
-    m_redPlayerNameLabel = new QLabel(openString.c_str());
+    m_redPlayerNameLabel = new QLabel(StringLibrary::getTranslatedString("Open"));
     m_redPlayerNameLabel->setEnabled(false);
     m_redPlayerNameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     redPlayerLayout->addWidget(m_redPlayerNameLabel);
@@ -190,13 +190,13 @@ InLobbyFrame::InLobbyFrame(
 
     auto timerLayout = new QHBoxLayout();
 
-    auto timerLabel = new QLabel("Match timer:");
-    timerLayout->addWidget(timerLabel);
+    m_timerLabel = new QLabel(StringLibrary::getTranslatedString("Match timer:"));
+    timerLayout->addWidget(m_timerLabel);
 
     m_timerComboBox = new QComboBox();
-    m_timerComboBox->addItem("No timer");
-    m_timerComboBox->addItem("5 minutes");
-    m_timerComboBox->addItem("10 minutes");
+    m_timerComboBox->addItem(StringLibrary::getTranslatedString("No timer"));
+    m_timerComboBox->addItem(StringLibrary::getTranslatedString("5 minutes"));
+    m_timerComboBox->addItem(StringLibrary::getTranslatedString("10 minutes"));
     m_timerComboBox->setEnabled(false);
     m_timerComboBox->setCurrentIndex(0);
     connect(m_timerComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
@@ -212,12 +212,11 @@ InLobbyFrame::InLobbyFrame(
 
     auto inLobbyButtonLayout = new QHBoxLayout();
 
-    std::string leaveLobbyInLobbyString = "Leave Lobby";
-    auto leaveLobbyInLobbyButton = new QPushButton(leaveLobbyInLobbyString.c_str());
-    leaveLobbyInLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    connect(leaveLobbyInLobbyButton, &QPushButton::released, this,
+    m_leaveLobbyInLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Leave Lobby"));
+    m_leaveLobbyInLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(m_leaveLobbyInLobbyButton, &QPushButton::released, this,
             &InLobbyFrame::handleLeaveLobbyButton);
-    inLobbyButtonLayout->addWidget(leaveLobbyInLobbyButton);
+    inLobbyButtonLayout->addWidget(m_leaveLobbyInLobbyButton);
 
     inLobbyLayout->addLayout(inLobbyButtonLayout);
 
@@ -241,6 +240,9 @@ void InLobbyFrame::showEvent(QShowEvent *event)
     m_lobbyNameLabel->setText(Parameters::getLobbyName().c_str());
     std::string lobbyIdWithHash = "#" + Parameters::getLobbyId();
     m_lobbyIdLabel->setText(lobbyIdWithHash.c_str());
+
+    m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+    reloadStrings();
 }
 
 void InLobbyFrame::hideEvent(QHideEvent *event)
@@ -263,8 +265,9 @@ void InLobbyFrame::updateGameStartTimer()
         {
             m_secondsBeforeStart = std::chrono::seconds(0u);
         }
-        std::string gameStartTimerString = "The match will start in... " + std::to_string(m_secondsBeforeStart.count()) + "...";
-        m_gameStartTimerLabel->setText(QString::fromStdString(gameStartTimerString));
+        m_gameStartTimerLabel->setText(
+            StringLibrary::getTranslatedString("The match will start in... %s...",
+                                               {std::to_string(m_secondsBeforeStart.count())}));
     }
 }
 
@@ -418,14 +421,14 @@ void InLobbyFrame::playerLeftLobby(const std::string &playerName)
 
     if (playerName == m_blackPlayerName)
     {
-        m_blackPlayerNameLabel->setText("Open");
+        m_blackPlayerNameLabel->setText(StringLibrary::getTranslatedString("Open"));
         m_blackPlayerNameLabel->setEnabled(false);
         m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         m_blackPlayerName.clear();
     }
     else if (playerName == m_redPlayerName)
     {
-        m_redPlayerNameLabel->setText("Open");
+        m_redPlayerNameLabel->setText(StringLibrary::getTranslatedString("Open"));
         m_redPlayerNameLabel->setEnabled(false);
         m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
         m_redPlayerName.clear();
@@ -545,8 +548,9 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
         m_blackPlayerKickButton->setEnabled(false);
         m_redPlayerKickButton->setEnabled(false);
         m_secondsBeforeStart = MAX_SECONDS_BEFORE_START;
-        std::string gameStartTimerString = "The match will start in... " + std::to_string(m_secondsBeforeStart.count()) + "...";
-        m_gameStartTimerLabel->setText(QString::fromStdString(gameStartTimerString));
+        m_gameStartTimerLabel->setText(
+            StringLibrary::getTranslatedString("The match will start in... %s...",
+                                               {std::to_string(m_secondsBeforeStart.count())}));
         m_gameStartTimer->start();
     }
     else
@@ -559,7 +563,7 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
             m_blackPlayerKickButton->setEnabled(m_lobbyOwnerColor == TurtlePieceColor::Red);
             m_redPlayerKickButton->setEnabled(m_lobbyOwnerColor == TurtlePieceColor::Black);
         }
-        m_gameStartTimerLabel->setText("The match will start when both players are ready!");
+        m_gameStartTimerLabel->setText(StringLibrary::getTranslatedString("The match will start when both players are ready!"));
         m_gameStartTimer->stop();
     }
 }
@@ -700,4 +704,38 @@ void InLobbyFrame::handleTimerIndexChanged(int index)
             m_playerWindow->setTimer(m_timer.count());
         }
     }
+}
+
+void InLobbyFrame::reloadStrings()
+{
+    m_titleWidget->reloadStrings();
+
+    if (m_blackPlayerReady && m_redPlayerReady)
+    {
+        m_gameStartTimerLabel->setText(
+            StringLibrary::getTranslatedString("The match will start in... %s...",
+                                               {std::to_string(m_secondsBeforeStart.count())}));
+    }
+    else
+    {
+        m_gameStartTimerLabel->setText(StringLibrary::getTranslatedString("The match will start when both players are ready!"));
+    }
+
+    m_blackPlayerNameLabel->setText(m_blackPlayerName.empty() ? StringLibrary::getTranslatedString("Open") : m_blackPlayerName.c_str());
+    m_redPlayerNameLabel->setText(m_redPlayerName.empty() ? StringLibrary::getTranslatedString("Open") : m_redPlayerName.c_str());
+
+    m_blackReadyInLobbyCheckBox->setText(StringLibrary::getTranslatedString("Ready"));
+    m_redReadyInLobbyCheckBox->setText(StringLibrary::getTranslatedString("Ready"));
+
+    m_timerLabel->setText(StringLibrary::getTranslatedString("Match timer:"));
+
+    m_timerComboBox->setItemText(0, StringLibrary::getTranslatedString("No timer"));
+    m_timerComboBox->setItemText(1, StringLibrary::getTranslatedString("5 minutes"));
+    m_timerComboBox->setItemText(2, StringLibrary::getTranslatedString("10 minutes"));
+
+    m_chatBox->reloadStrings();
+
+    m_leaveLobbyInLobbyButton->setText(StringLibrary::getTranslatedString("Leave Lobby"));
+
+    m_reportPlayerConfirmDialog->reloadStrings();
 }

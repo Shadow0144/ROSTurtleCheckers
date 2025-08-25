@@ -17,6 +17,8 @@
 #include <chrono>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/LanguageSelectorWidget.hpp"
+#include "player/TitleWidget.hpp"
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 
@@ -57,6 +59,8 @@ public:
     void reportPlayer(const std::string &chatMessages);
     void sendChatMessage(const std::string &chatMessage);
 
+    void reloadStrings();
+
 private:
     void handleBlackKickButton();
     void handleRedKickButton();
@@ -75,6 +79,10 @@ private:
 
     CheckersPlayerWindow *m_playerWindow;
 
+    LanguageSelectorWidget *m_languageSelector;
+
+    TitleWidget *m_titleWidget;
+
     QWidget *m_inLobbyWidget;
 
     QCheckBox *m_blackReadyInLobbyCheckBox;
@@ -87,6 +95,7 @@ private:
     QLabel *m_blackPlayerNameLabel;
     QLabel *m_redPlayerNameLabel;
     QLabel *m_gameStartTimerLabel;
+    QLabel *m_timerLabel;
 
     std::chrono::seconds m_secondsBeforeStart;
     const std::chrono::seconds MAX_SECONDS_BEFORE_START{3u};
@@ -94,6 +103,7 @@ private:
 
     QPushButton *m_blackPlayerKickButton;
     QPushButton *m_redPlayerKickButton;
+    QPushButton *m_leaveLobbyInLobbyButton;
 
     QComboBox *m_timerComboBox;
 
