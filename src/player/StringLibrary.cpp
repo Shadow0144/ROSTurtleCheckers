@@ -154,7 +154,7 @@ QString StringLibrary::getTranslatedString(const std::string &stringTag,
     }
     else
     {
-        TurtleLogger::logError("Translation of string missing");
+        TurtleLogger::logError("Translation of string missing: " + stringTag);
     }
 
     return QString::fromStdString(returnString);
