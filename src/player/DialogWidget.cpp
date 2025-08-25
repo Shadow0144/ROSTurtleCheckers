@@ -13,51 +13,64 @@
 #include <functional>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/StringLibrary.hpp"
 
 DialogWidget::DialogWidget(QWidget *parent,
                            int centerX,
                            int centerY,
-                           const std::string &headerString,
+                           const std::string &headerText,
                            const std::string &confirmText,
                            const std::function<void()> &onConfirmFunction,
                            const std::string &cancelText,
                            const std::function<void()> &onCancelFunction)
     : QWidget(parent)
 {
+    m_headerText = headerText;
+    m_confirmText = confirmText;
+    m_cancelText = cancelText;
+
+    m_headerLabel = nullptr;
+    m_confirmButton = nullptr;
+    m_cancelButton = nullptr;
+
     setProperty("dialog", QVariant(true));
     auto dialogLayout = new QVBoxLayout();
     setLayout(dialogLayout);
 
-    if (!headerString.empty())
+    if (!headerText.empty())
     {
-        auto headerLabel = new QLabel(QString::fromStdString(headerString));
-        headerLabel->setAlignment(Qt::AlignCenter);
-        headerLabel->setContentsMargins(0, 5, 0, 5);
-        dialogLayout->addWidget(headerLabel);
+        m_headerLabel = new QLabel(StringLibrary::getTranslatedString(m_headerText));
+        m_headerLabel->setAlignment(Qt::AlignCenter);
+        m_headerLabel->setContentsMargins(0, 5, 0, 5);
+        dialogLayout->addWidget(m_headerLabel);
+    }
+    else
+    {
+        m_headerLabel = nullptr;
     }
 
-    if (!confirmText.empty() || !cancelText.empty())
+    if (!m_confirmText.empty() || !m_cancelText.empty())
     {
         auto buttonsLayoutWidget = new QWidget();
         auto buttonsLayout = new QHBoxLayout();
         buttonsLayoutWidget->setLayout(buttonsLayout);
 
-        if (!confirmText.empty())
+        if (!m_confirmText.empty())
         {
-            auto confirmButton = new QPushButton();
-            confirmButton->setText(QString::fromStdString(confirmText));
-            confirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
-            connect(confirmButton, &QPushButton::released, this, onConfirmFunction);
-            buttonsLayout->addWidget(confirmButton);
+            m_confirmButton = new QPushButton();
+            m_confirmButton->setText(StringLibrary::getTranslatedString(m_confirmText));
+            m_confirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
+            connect(m_confirmButton, &QPushButton::released, this, onConfirmFunction);
+            buttonsLayout->addWidget(m_confirmButton);
         }
 
-        if (!cancelText.empty())
+        if (!m_cancelText.empty())
         {
-            auto cancelButton = new QPushButton();
-            cancelButton->setText(QString::fromStdString(cancelText));
-            cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
-            connect(cancelButton, &QPushButton::released, this, onCancelFunction);
-            buttonsLayout->addWidget(cancelButton);
+            m_cancelButton = new QPushButton();
+            m_cancelButton->setText(StringLibrary::getTranslatedString(m_cancelText));
+            m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
+            connect(m_cancelButton, &QPushButton::released, this, onCancelFunction);
+            buttonsLayout->addWidget(m_cancelButton);
         }
 
         dialogLayout->addWidget(buttonsLayoutWidget);
@@ -68,4 +81,22 @@ DialogWidget::DialogWidget(QWidget *parent,
     adjustSize();
     move(centerX - (width() / 2), centerY - (height() / 2));
     hide(); // Hidden by default
+}
+
+void DialogWidget::reloadStrings()
+{
+    if (m_headerLabel)
+    {
+        m_headerLabel->setText(StringLibrary::getTranslatedString(m_headerText));
+    }
+
+    if (m_confirmButton)
+    {
+        m_confirmButton->setText(StringLibrary::getTranslatedString(m_confirmText));
+    }
+
+    if (m_cancelButton)
+    {
+        m_cancelButton->setText(StringLibrary::getTranslatedString(m_cancelText));
+    }
 }
