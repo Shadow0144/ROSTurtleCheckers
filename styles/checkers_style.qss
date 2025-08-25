@@ -1,7 +1,7 @@
 * { font-family: "Noto Sans JP"; }
 
 QWidget { }
-QWidget[dialog="true"] { border: 2px solid white; }
+QWidget[dialog="true"] { background-color: black; border: 2px solid white; }
 QWidget[framed="true"] { border: 2px solid gray; }
 QWidget[details="true"] { border: 1px solid white; }
 
