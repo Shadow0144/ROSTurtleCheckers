@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/StringLibrary.hpp"
 
 ChatBox::ChatBox(QWidget *parent,
                  int chatWidth,
@@ -38,15 +39,15 @@ ChatBox::ChatBox(QWidget *parent,
     chatTitleLayout->setAlignment(Qt::AlignBottom);
     chatTitleWidget->setLayout(chatTitleLayout);
 
-    auto chatLabel = new QLabel("Chat");
-    auto chatFont = chatLabel->font();
+    m_chatLabel = new QLabel(StringLibrary::getTranslatedString("Chat"));
+    auto chatFont = m_chatLabel->font();
     chatFont.setPointSize(CHAT_HEADER_FONT_SIZE);
-    chatLabel->setFont(chatFont);
-    chatTitleLayout->addWidget(chatLabel);
+    m_chatLabel->setFont(chatFont);
+    chatTitleLayout->addWidget(m_chatLabel);
 
     chatTitleLayout->addStretch(1);
 
-    m_reportPlayerButton = new QPushButton("Report Player");
+    m_reportPlayerButton = new QPushButton(StringLibrary::getTranslatedString("Report Player"));
     connect(m_reportPlayerButton, &QPushButton::released, this, &ChatBox::handleReportPlayerButton);
     chatTitleLayout->addWidget(m_reportPlayerButton);
 
@@ -84,7 +85,7 @@ ChatBox::ChatBox(QWidget *parent,
 
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
-    m_sendButton = new QPushButton("Send");
+    m_sendButton = new QPushButton(StringLibrary::getTranslatedString("Send"));
     connect(m_sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
     connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, m_sendButton, &QPushButton::click);
     m_sendButton->setDefault(true);
@@ -152,4 +153,11 @@ void ChatBox::clear()
 void ChatBox::setReportPlayerButtonEnabled(bool isEnabled)
 {
     m_reportPlayerButton->setEnabled(isEnabled);
+}
+
+void ChatBox::reloadStrings()
+{
+    m_chatLabel->setText(StringLibrary::getTranslatedString("Chat"));
+    m_reportPlayerButton->setText(StringLibrary::getTranslatedString("Report Player"));
+    m_sendButton->setText(StringLibrary::getTranslatedString("Send"));
 }
