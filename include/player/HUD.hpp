@@ -52,13 +52,13 @@ private:
     QPen m_victoryPen;
     QRect m_victoryTextCenteringRect;
     QPointF m_victoryImagePosition;
-    
+
     QRect m_blackRemainingTextRightingRect;
     QRect m_redRemainingTextRightingRect;
 
     QPen m_timerPen;
     QPen m_activeTimerPen;
-    
+
     QPointF m_blackTurtleIconPosition;
     QPointF m_redTurtleIconPosition;
 };

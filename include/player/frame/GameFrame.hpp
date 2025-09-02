@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 #include "player/CheckersBoardRender.hpp"
 #include "player/TileRender.hpp"
 #include "player/TurtlePieceRender.hpp"
@@ -77,6 +78,8 @@ public:
 					 std::vector<uint64_t> turtlePieceColorPerTile,
 					 std::vector<bool> turtlePieceIsKingedPerTile);
 
+	void reloadStrings();
+
 protected:
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;
@@ -125,6 +128,8 @@ private:
 	GameState m_gameState;
 
 	Winner m_winner;
+
+	LanguageSelectorWidget *m_languageSelector;
 
 	CheckersBoardRenderPtr m_board;
 	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces

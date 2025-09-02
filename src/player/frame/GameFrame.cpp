@@ -21,8 +21,11 @@
 #include <vector>
 #include <iostream>
 
+#include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
+#include "player/StringLibrary.hpp"
+#include "player/LanguageSelectorWidget.hpp"
 #include "player/CheckersBoardRender.hpp"
 #include "player/TileRender.hpp"
 #include "player/TurtlePieceRender.hpp"
@@ -31,7 +34,6 @@
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 #include "player/Parameters.hpp"
-#include "player/CheckersPlayerWindow.hpp"
 
 GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	: QFrame(parentWindow, Qt::WindowFlags())
@@ -51,6 +53,8 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	m_board = std::make_shared<CheckersBoardRender>();
 
+	m_languageSelector = new LanguageSelectorWidget(this);
+
 	m_hud = std::make_shared<HUD>();
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 	m_hud->setGameState(GameState::Connecting);
@@ -69,19 +73,19 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 									 0);
 
 	m_offerDrawButton = new QPushButton();
-	m_offerDrawButton->setText("Offer Draw");
+	m_offerDrawButton->setText(StringLibrary::getTranslatedString("Offer Draw"));
 	connect(m_offerDrawButton, &QPushButton::released, this, &GameFrame::handleOfferDrawButton);
 	buttonLayout->addWidget(m_offerDrawButton);
 
-	m_forfitButton = new QPushButton();
-	m_forfitButton->setText("Forfit");
-	connect(m_forfitButton, &QPushButton::released, this, &GameFrame::handleForfitButton);
-	buttonLayout->addWidget(m_forfitButton);
+	m_forfeitButton = new QPushButton();
+	m_forfeitButton->setText(StringLibrary::getTranslatedString("Forfeit"));
+	connect(m_forfeitButton, &QPushButton::released, this, &GameFrame::handleForfeitButton);
+	buttonLayout->addWidget(m_forfeitButton);
 
 	// Offer draw confirm dialog
 	m_offerDrawConfirmDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
 												"",
-												"Offer draw", {[this]()
+												"Offer Draw", {[this]()
 															   { this->handleAcceptOfferDrawButton(); }},
 												"Cancel", {[this]()
 														   { this->handleCancelOfferDrawButton(); }});
@@ -95,18 +99,18 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	// Draw offered accept or decline dialog
 	m_offeredDrawDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
 										   "",
-										   "Accept draw", {[this]()
+										   "Accept Draw", {[this]()
 														   { this->handleAcceptDrawButton(); }},
-										   "Decline draw", {[this]()
+										   "Decline Draw", {[this]()
 															{ this->handleDeclineDrawButton(); }});
 
-	// Forfit confirm dialog
-	m_forfitConfirmDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
-											 "",
-											 "Forfit", {[this]()
-														{ this->handleForfitConfirmButton(); }},
-											 "Cancel", {[this]()
-														{ this->handleForfitCancelButton(); }});
+	// Forfeit confirm dialog
+	m_forfeitConfirmDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
+											  "",
+											  "Forfeit", {[this]()
+														  { this->handleForfeitConfirmButton(); }},
+											  "Cancel", {[this]()
+														 { this->handleForfeitCancelButton(); }});
 
 	// Report player confirm dialog
 	m_reportPlayerConfirmDialog = new DialogWidget(this, BOARD_CENTER_X, BOARD_CENTER_Y,
@@ -119,9 +123,12 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	// Leave game dialog
 	m_leaveGameDialog = new DialogWidget(this, BOARD_CENTER_X, VICTORY_BUTTONS_Y,
 										 "",
-										 "Leave game", {[this]()
+										 "Leave Game", {[this]()
 														{ this->handleLeaveGameButton(); }},
 										 "", {[]() {}});
+
+    // Needs to be in front of everything
+    m_languageSelector->raise();
 }
 
 GameFrame::~GameFrame()
@@ -133,6 +140,9 @@ void GameFrame::showEvent(QShowEvent *event)
 	(void)event; // NO LINT
 
 	m_redrawTimer->start(1000);
+
+	m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
+	reloadStrings();
 }
 
 void GameFrame::hideEvent(QHideEvent *event)
@@ -554,6 +564,23 @@ void GameFrame::displayDialog(bool dialogDisplayed, DialogWidget *dialog)
 	{
 		dialog->show();
 	}
+}
+
+void GameFrame::reloadStrings()
+{
+	// HUD reloads strings when it redraws itself every frame
+
+	m_chatBox->reloadStrings();
+
+	m_offerDrawButton->setText(StringLibrary::getTranslatedString("Offer Draw"));
+	m_forfeitButton->setText(StringLibrary::getTranslatedString("Forfeit"));
+
+	m_offerDrawConfirmDialog->reloadStrings();
+	m_offeringDrawDialog->reloadStrings();
+	m_offeredDrawDialog->reloadStrings();
+	m_forfeitConfirmDialog->reloadStrings();
+	m_leaveGameDialog->reloadStrings();
+	m_reportPlayerConfirmDialog->reloadStrings();
 }
 
 void GameFrame::paintEvent(QPaintEvent *event)

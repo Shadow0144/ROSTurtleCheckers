@@ -333,4 +333,96 @@
 		<jp>送信</jp>
 		<de>Senden</de>
 	</string>
+	
+	<string>
+		<key>Offer Draw</key>
+		<en>Offer Draw</en>
+		<jp>引き分け申し出</jp>
+		<de>Unentschieden Anbieten</de>
+	</string>
+	<string>
+		<key>Forfeit</key>
+		<en>Forfeit</en>
+		<jp>喪失</jp>
+		<de>Verlieren</de>
+	</string>
+	<string>
+		<key>Offering draw...</key>
+		<en>Offering draw...</en>
+		<jp>引き分け申し出中。。。</jp>
+		<de>Unentschieden wird gezeihen...</de>
+	</string>
+	<string>
+		<key>Accept Draw</key>
+		<en>Accept Draw</en>
+		<jp>引き分け受け入れ</jp>
+		<de>Unentschieden Akzeptieren</de>
+	</string>
+	<string>
+		<key>Decline Draw</key>
+		<en>Decline Draw</en>
+		<jp>引き分け断り</jp>
+		<de>Unentschieden Ablehnen</de>
+	</string>
+	<string>
+		<key>Leave Game</key>
+		<en>Leave Game</en>
+		<jp>ゲーム退出</jp>
+		<de>Spiel Verlassen</de>
+	</string>
+	
+	<string>
+		<key>Connecting</key>
+		<en>Connecting</en>
+		<jp>接続しておる</jp>
+		<de>Verbinden</de>
+	</string>
+	<string>
+		<key>Waiting for opponent to connect</key>
+		<en>Waiting for opponent to connect</en>
+		<jp>相手の接続を待ち中</jp>
+		<de>Warten auf die Verbindung des Gegners</de>
+	</string>
+	<string>
+		<key>Your move</key>
+		<en>Your move</en>
+		<jp>君の番</jp>
+		<de>Dein Umzug</de>
+	</string>
+	<string>
+		<key>Opponent's move</key>
+		<en>Opponent's move</en>
+		<jp>相手の番</jp>
+		<de>Umzug des Gegners</de>
+	</string>
+	<string>
+		<key>Draw!</key>
+		<en>Draw!</en>
+		<jp>引き分け！</jp>
+		<de>Unentschiede!</de>
+	</string>
+	<string>
+		<key>You win!</key>
+		<en>You win!</en>
+		<jp>勝った！</jp>
+		<de>Du gewinnst!</de>
+	</string>
+	<string>
+		<key>Winner!</key>
+		<en>Winner!</en>
+		<jp>勝者！</jp>
+		<de>Gewinner!</de>
+	</string>
+	<string>
+		<key>You lose!</key>
+		<en>You lose!</en>
+		<jp>負けた！</jp>
+		<de>Du verlierst!</de>
+	</string>
+	<string>
+		<key>Loser!</key>
+		<en>Loser!</en>
+		<jp>負者！</jp>
+		<de>Verlierer/in!</de>
+	</string>
 </translations>

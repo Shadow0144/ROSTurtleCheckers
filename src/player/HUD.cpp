@@ -12,6 +12,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/StringLibrary.hpp"
 
 HUD::HUD()
 {
@@ -122,23 +123,23 @@ void HUD::paint(QPainter &painter)
     {
     case GameState::Connecting:
     {
-        painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Connecting");
+        painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Connecting"));
     }
     break;
     case GameState::Connected:
     {
-        painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Waiting for opponent to connect");
+        painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Waiting for opponent to connect"));
     }
     break;
     case GameState::BlackMove:
     {
         if (m_playerColor == TurtlePieceColor::Black)
         {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Your move");
+            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Your move"));
         }
         else
         {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Opponent's move");
+            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Opponent's move"));
         }
 
         if (m_usingTimers)
@@ -160,11 +161,11 @@ void HUD::paint(QPainter &painter)
     {
         if (m_playerColor == TurtlePieceColor::Red)
         {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Your move");
+            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Your move"));
         }
         else
         {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Opponent's move");
+            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Opponent's move"));
         }
 
         painter.setPen(m_timerPen);
@@ -186,28 +187,28 @@ void HUD::paint(QPainter &painter)
     {
         if (m_winner == Winner::Draw)
         {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "Draw!");
+            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Draw!"));
             painter.setFont(m_victoryFont);
             painter.setPen(m_victoryPen);
-            painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Draw!");
+            painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Draw!"));
             painter.drawImage(m_victoryImagePosition, ImageLibrary::getDrawImage());
         }
         else if (m_winner == Winner::Black)
         {
             if (m_playerColor == TurtlePieceColor::Black)
             {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You win!"));
                 painter.setFont(m_victoryFont);
                 painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Winner!");
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Winner!"));
                 painter.drawImage(m_victoryImagePosition, ImageLibrary::getWinnerImage());
             }
             else
             {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You lose!"));
                 painter.setFont(m_victoryFont);
                 painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Loser!");
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Loser!"));
                 painter.drawImage(m_victoryImagePosition, ImageLibrary::getLoserImage());
             }
         }
@@ -215,18 +216,18 @@ void HUD::paint(QPainter &painter)
         {
             if (m_playerColor == TurtlePieceColor::Red)
             {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You win!");
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You win!"));
                 painter.setFont(m_victoryFont);
                 painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Winner!");
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Winner!"));
                 painter.drawImage(m_victoryImagePosition, ImageLibrary::getWinnerImage());
             }
             else
             {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, "You lose!");
+                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You lose!"));
                 painter.setFont(m_victoryFont);
                 painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, "Loser!");
+                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Loser!"));
                 painter.drawImage(m_victoryImagePosition, ImageLibrary::getLoserImage());
             }
         }
