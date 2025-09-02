@@ -7,7 +7,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/forfit.hpp"
+#include "turtle_checkers_interfaces/msg/forfeit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
@@ -123,8 +123,8 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
 
     m_chatMessageSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::ChatMessage>(
         m_lobbyName + "/id" + m_lobbyId + "/ChatMessage", 10, std::bind(&CheckersGameLobby::chatMessageCallback, this, std::placeholders::_1));
-    m_forfitSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::Forfit>(
-        m_lobbyName + "/id" + m_lobbyId + "/Forfit", 10, std::bind(&CheckersGameLobby::forfitCallback, this, std::placeholders::_1));
+    m_forfeitSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::Forfeit>(
+        m_lobbyName + "/id" + m_lobbyId + "/Forfeit", 10, std::bind(&CheckersGameLobby::forfeitCallback, this, std::placeholders::_1));
     m_kickPlayerSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::KickPlayer>(
         m_lobbyName + "/id" + m_lobbyId + "/KickPlayer", 10, std::bind(&CheckersGameLobby::kickPlayerCallback, this, std::placeholders::_1));
     m_offerDrawSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::OfferDraw>(
@@ -582,12 +582,12 @@ void CheckersGameLobby::chatMessageCallback(const turtle_checkers_interfaces::ms
     m_updateChatPublisher->publish(updateChatMessage);
 }
 
-void CheckersGameLobby::forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message)
+void CheckersGameLobby::forfeitCallback(const turtle_checkers_interfaces::msg::Forfeit::SharedPtr message)
 {
     std::lock_guard<std::mutex> lock(m_timerMutex);
 
     if (!RSAKeyGenerator::checksumSignatureMatches(
-            std::hash<turtle_checkers_interfaces::msg::Forfit>{}(*message),
+            std::hash<turtle_checkers_interfaces::msg::Forfeit>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
     {
         std::cerr << "Checksum failed" << std::endl;

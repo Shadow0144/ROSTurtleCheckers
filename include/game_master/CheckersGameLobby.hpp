@@ -13,7 +13,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/forfit.hpp"
+#include "turtle_checkers_interfaces/msg/forfeit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/offer_draw.hpp"
@@ -78,7 +78,7 @@ public:
 
 private:
     void chatMessageCallback(const turtle_checkers_interfaces::msg::ChatMessage::SharedPtr message);
-    void forfitCallback(const turtle_checkers_interfaces::msg::Forfit::SharedPtr message);
+    void forfeitCallback(const turtle_checkers_interfaces::msg::Forfeit::SharedPtr message);
     void kickPlayerCallback(const turtle_checkers_interfaces::msg::KickPlayer::SharedPtr message);
     void offerDrawCallback(const turtle_checkers_interfaces::msg::OfferDraw::SharedPtr message);
     void playerReadyCallback(const turtle_checkers_interfaces::msg::PlayerReady::SharedPtr message);
@@ -118,7 +118,7 @@ private:
     rclcpp::Publisher<turtle_checkers_interfaces::msg::UpdateTimer>::SharedPtr m_updateTimerPublisher;
 
     rclcpp::Subscription<turtle_checkers_interfaces::msg::ChatMessage>::SharedPtr m_chatMessageSubscription;
-    rclcpp::Subscription<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitSubscription;
+    rclcpp::Subscription<turtle_checkers_interfaces::msg::Forfeit>::SharedPtr m_forfeitSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::OfferDraw>::SharedPtr m_offerDrawSubscription;
     rclcpp::Subscription<turtle_checkers_interfaces::msg::PlayerReady>::SharedPtr m_playerReadySubscription;

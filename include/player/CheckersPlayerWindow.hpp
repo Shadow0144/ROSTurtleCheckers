@@ -133,7 +133,7 @@ public:
 
     void offerDraw();
     void declineDraw();
-    void forfit();
+    void forfeit();
 
     void drawDeclined();
     void drawOffered();

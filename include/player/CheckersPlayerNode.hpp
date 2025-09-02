@@ -7,7 +7,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/forfit.hpp"
+#include "turtle_checkers_interfaces/msg/forfeit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
@@ -95,7 +95,7 @@ public:
 
     void offerDraw();
     void declineDraw();
-    void forfit();
+    void forfeit();
 
     std::shared_ptr<rclcpp::Node> &getNodeHandle();
 
@@ -148,7 +148,7 @@ private:
 
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ChatMessage>::SharedPtr m_chatMessagePublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::ClientHeartbeat>::SharedPtr m_clientHeartbeatPublisher;
-    rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfit>::SharedPtr m_forfitPublisher;
+    rclcpp::Publisher<turtle_checkers_interfaces::msg::Forfeit>::SharedPtr m_forfeitPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::KickPlayer>::SharedPtr m_kickPlayerPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LeaveLobby>::SharedPtr m_leaveLobbyPublisher;
     rclcpp::Publisher<turtle_checkers_interfaces::msg::LogOutAccount>::SharedPtr m_logOutAccountPublisher;

@@ -12,7 +12,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/forfit.hpp"
+#include "turtle_checkers_interfaces/msg/forfeit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
@@ -178,8 +178,8 @@ void CheckersPlayerNode::createLobbyInterfaces(const std::string &lobbyName, con
 
     m_chatMessagePublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::ChatMessage>(
         lobbyName + "/id" + lobbyId + "/ChatMessage", 10);
-    m_forfitPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Forfit>(
-        lobbyName + "/id" + lobbyId + "/Forfit", 10);
+    m_forfeitPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::Forfeit>(
+        lobbyName + "/id" + lobbyId + "/Forfeit", 10);
     m_kickPlayerPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::KickPlayer>(
         lobbyName + "/id" + lobbyId + "/KickPlayer", 10);
     m_offerDrawPublisher = m_playerNode->create_publisher<turtle_checkers_interfaces::msg::OfferDraw>(
@@ -1131,16 +1131,16 @@ void CheckersPlayerNode::declineDraw()
     m_offerDrawPublisher->publish(message);
 }
 
-void CheckersPlayerNode::forfit()
+void CheckersPlayerNode::forfeit()
 {
-    auto message = turtle_checkers_interfaces::msg::Forfit();
+    auto message = turtle_checkers_interfaces::msg::Forfeit();
     message.lobby_name = Parameters::getLobbyName();
     message.lobby_id = Parameters::getLobbyId();
     message.player_name = Parameters::getPlayerName();
     message.checksum_sig = RSAKeyGenerator::createChecksumSignature(
-        std::hash<turtle_checkers_interfaces::msg::Forfit>{}(message),
+        std::hash<turtle_checkers_interfaces::msg::Forfeit>{}(message),
         m_publicKey, m_privateKey);
-    m_forfitPublisher->publish(message);
+    m_forfeitPublisher->publish(message);
 }
 
 void CheckersPlayerNode::sendHeartbeat()

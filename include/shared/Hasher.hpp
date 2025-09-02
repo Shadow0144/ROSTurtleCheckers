@@ -5,7 +5,7 @@
 #include "turtle_checkers_interfaces/msg/declare_winner.hpp"
 #include "turtle_checkers_interfaces/msg/draw_declined.hpp"
 #include "turtle_checkers_interfaces/msg/draw_offered.hpp"
-#include "turtle_checkers_interfaces/msg/forfit.hpp"
+#include "turtle_checkers_interfaces/msg/forfeit.hpp"
 #include "turtle_checkers_interfaces/msg/game_start.hpp"
 #include "turtle_checkers_interfaces/msg/kick_player.hpp"
 #include "turtle_checkers_interfaces/msg/leave_lobby.hpp"
@@ -144,9 +144,9 @@ struct std::hash<turtle_checkers_interfaces::msg::DrawOffered>
 };
 
 template <>
-struct std::hash<turtle_checkers_interfaces::msg::Forfit>
+struct std::hash<turtle_checkers_interfaces::msg::Forfeit>
 {
-    size_t operator()(const turtle_checkers_interfaces::msg::Forfit &message) const noexcept
+    size_t operator()(const turtle_checkers_interfaces::msg::Forfeit &message) const noexcept
     {
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<std::string>{}(message.lobby_name));

@@ -466,18 +466,18 @@ void GameFrame::handleDeclineDrawButton()
 	m_playerWindow->declineDraw();
 }
 
-void GameFrame::handleForfitButton()
+void GameFrame::handleForfeitButton()
 {
-	displayDialog(true, m_forfitConfirmDialog);
+	displayDialog(true, m_forfeitConfirmDialog);
 }
 
-void GameFrame::handleForfitConfirmButton()
+void GameFrame::handleForfeitConfirmButton()
 {
 	displayDialog(false);
-	m_playerWindow->forfit();
+	m_playerWindow->forfeit();
 }
 
-void GameFrame::handleForfitCancelButton()
+void GameFrame::handleForfeitCancelButton()
 {
 	displayDialog(false);
 }
@@ -543,11 +543,11 @@ void GameFrame::displayDialog(bool dialogDisplayed, DialogWidget *dialog)
 	m_showingDialog = dialogDisplayed;
 	m_chatBox->setEnabled(!m_showingDialog);
 	m_offerDrawButton->setEnabled(!m_showingDialog);
-	m_forfitButton->setEnabled(!m_showingDialog);
+	m_forfeitButton->setEnabled(!m_showingDialog);
 	m_offerDrawConfirmDialog->hide();
 	m_offeringDrawDialog->hide();
 	m_offeredDrawDialog->hide();
-	m_forfitConfirmDialog->hide();
+	m_forfeitConfirmDialog->hide();
 	m_leaveGameDialog->hide();
 	m_reportPlayerConfirmDialog->hide();
 	if (dialogDisplayed && dialog)

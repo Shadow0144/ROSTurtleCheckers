@@ -95,9 +95,9 @@ private:
 	void handleAcceptDrawButton();	// Accepts an incoming draw offer
 	void handleDeclineDrawButton(); // Declines a draw offer
 
-	void handleForfitButton();		  // Creates a confirmation popup
-	void handleForfitConfirmButton(); // Commits to the forfit
-	void handleForfitCancelButton();  // Cancels the popup
+	void handleForfeitButton();		  // Creates a confirmation popup
+	void handleForfeitConfirmButton(); // Commits to the forfeit
+	void handleForfeitCancelButton();  // Cancels the popup
 
 	void handleReportPlayerConfirmButton(); // Commits to the report
 	void handleReportPlayerCancelButton();	// Cancels the popup
@@ -112,13 +112,13 @@ private:
 	QWidget *m_gameWidget;
 
 	QPushButton *m_offerDrawButton;
-	QPushButton *m_forfitButton;
+	QPushButton *m_forfeitButton;
 
 	bool m_showingDialog;
 	DialogWidget *m_offerDrawConfirmDialog;
 	DialogWidget *m_offeringDrawDialog;
 	DialogWidget *m_offeredDrawDialog;
-	DialogWidget *m_forfitConfirmDialog;
+	DialogWidget *m_forfeitConfirmDialog;
 	DialogWidget *m_reportPlayerConfirmDialog;
 	DialogWidget *m_leaveGameDialog;
 

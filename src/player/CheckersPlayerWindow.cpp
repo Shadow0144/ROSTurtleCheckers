@@ -517,11 +517,11 @@ void CheckersPlayerWindow::declineDraw()
     }
 }
 
-void CheckersPlayerWindow::forfit()
+void CheckersPlayerWindow::forfeit()
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->forfit();
+        playerNode->forfeit();
     }
 }
 
