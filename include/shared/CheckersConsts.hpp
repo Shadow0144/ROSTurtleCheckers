@@ -23,12 +23,14 @@ enum class Winner
 
 enum class VictoryCondition
 {
+    None,
     TimeExpired,
     EliminatedPieces,
     PlayerHasNoMoves,
     PlayersHaveNoMoves,
     DrawAccepted,
-    PlayerForfitted
+    PlayerForfitted,
+    PlayerDisconnected
 };
 
 enum class TurtlePieceColor
@@ -82,7 +84,7 @@ constexpr int MENU_LINE_EDIT_WIDTH = 550;
 constexpr int MENU_BUTTON_WIDTH = 150;
 
 constexpr int LOBBY_LIST_SCROLL_W = 700;
-constexpr int LOBBY_LIST_SCROLL_H = 320;
+constexpr int LOBBY_LIST_SCROLL_H = 340;
 constexpr int LOBBY_LIST_LOBBY_NAME_WIDTH = 150;
 constexpr int LOBBY_LIST_PLAYER_NAME_WIDTH = 150;
 
@@ -90,8 +92,6 @@ constexpr int STATISTICS_SCROLL_W = 740;
 constexpr int STATISTICS_SCROLL_H = 200;
 constexpr int MATCH_LIST_LOBBY_NAME_WIDTH = 130;
 constexpr int MATCH_LIST_PLAYER_NAME_WIDTH = 130;
-
-constexpr int IN_LOBBY_LAYOUT_MARGINS = 24;
 
 constexpr int GRAVEYARD_OFFSET_X = 9;
 constexpr int GRAVEYARD_WIDTH = TILE_WIDTH;
@@ -103,7 +103,7 @@ constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
 constexpr int BOARD_LEFT = GRAVEYARD_OFFSET_X + GRAVEYARD_WIDTH;
 constexpr int BOARD_TOP = 40;
 
-constexpr int BUTTON_DOCK_HEIGHT = 64;
+constexpr int BUTTON_DOCK_HEIGHT = 50;
 
 constexpr int HUD_HEIGHT = BOARD_TOP;
 constexpr int HUD_WIDTH = (2 * FULL_GRAVEYARD_WIDTH) + BOARD_WIDTH;
@@ -126,13 +126,13 @@ constexpr int CHAT_BOX_MARGIN_W = 20;
 constexpr int CHAT_BOX_MARGIN_H = 110;
 constexpr int REPORT_PLAYER_MARGINS = 5;
 
-constexpr int CHAT_BOX_IN_LOBBY_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) - (2 * IN_LOBBY_LAYOUT_MARGINS) + 233;
-constexpr int CHAT_BOX_IN_LOBBY_HEIGHT = 170;
+constexpr int CHAT_BOX_IN_LOBBY_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + 215;
+constexpr int CHAT_BOX_IN_LOBBY_HEIGHT = 200;
 
 constexpr int CHAT_BOX_IN_GAME_X = (2 * GRAVEYARD_WIDTH) + BOARD_WIDTH + GRAVEYARD_OFFSET_X;
 constexpr int CHAT_BOX_IN_GAME_Y = 0;
 constexpr int CHAT_BOX_IN_GAME_WIDTH = 240;
-constexpr int CHAT_BOX_IN_GAME_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
+constexpr int CHAT_BOX_IN_GAME_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT + 13;
 
 constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + GRAVEYARD_OFFSET_X + CHAT_BOX_IN_GAME_WIDTH;
 constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;

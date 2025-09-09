@@ -333,6 +333,12 @@
 		<jp>送信</jp>
 		<de>Senden</de>
 	</string>
+	<string>
+		<key>></key>
+		<en>></en>
+		<jp>></jp>
+		<de>></de>
+	</string>
 	
 	<string>
 		<key>Offer Draw</key>

@@ -4,7 +4,6 @@
 #include <sqlite3.h>
 
 #include <string>
-#include <iostream>
 #include <filesystem>
 #include <random>
 
@@ -33,6 +32,7 @@ constexpr size_t LOBBY_NAME_ID_INDEX = 1u;
 constexpr size_t BLACK_PLAYER_NAME_INDEX = 2u;
 constexpr size_t RED_PLAYER_NAME_INDEX = 3u;
 constexpr size_t WINNER_INDEX = 4u;
+constexpr size_t VICTORY_CONDITION_INDEX = 4u;
 
 DatabaseHandler::DatabaseHandler(const std::string &databaseDir)
 {
@@ -69,7 +69,8 @@ DatabaseHandler::DatabaseHandler(const std::string &databaseDir)
                                           "lobby_name_id TEXT NOT NULL,"
                                           "black_player_name TEXT NOT NULL,"
                                           "red_player_name TEXT NOT NULL,"
-                                          "winner INTEGER);";
+                                          "winner INTEGER,"
+                                          "victory_condition INTEGER);";
 
         errMsg = nullptr;
         result = sqlite3_exec(m_db, matches_table_create_query, nullptr, nullptr, &errMsg);
@@ -387,7 +388,7 @@ bool DatabaseHandler::changePassword(const std::string &playerName, size_t hashe
 
 bool DatabaseHandler::addMatch(const std::string &lobbyName, const std::string &lobbyId,
                                const std::string &blackPlayerName, const std::string &redPlayerName,
-                               int winner)
+                               int winner, int victoryCondition)
 {
     if (!m_db)
     {
@@ -397,8 +398,8 @@ bool DatabaseHandler::addMatch(const std::string &lobbyName, const std::string &
     }
 
     // Prepare the query
-    auto query = "INSERT INTO matches (lobby_name_id, black_player_name, red_player_name, winner) "
-                 "VALUES (?, ?, ?, ?);";
+    auto query = "INSERT INTO matches (lobby_name_id, black_player_name, red_player_name, winner, victory_condition) "
+                 "VALUES (?, ?, ?, ?, ?);";
     sqlite3_stmt *stmt = nullptr;
     if (sqlite3_prepare_v2(m_db, query, -1, &stmt, nullptr) != SQLITE_OK)
     {
@@ -414,6 +415,7 @@ bool DatabaseHandler::addMatch(const std::string &lobbyName, const std::string &
     sqlite3_bind_text(stmt, 2, blackPlayerName.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 3, redPlayerName.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(stmt, 4, winner);
+    sqlite3_bind_int(stmt, 5, victoryCondition);
 
     // Run the query
     if (sqlite3_step(stmt) != SQLITE_DONE)
@@ -467,8 +469,10 @@ PlayerStatistics DatabaseHandler::getPlayerStatistics(const std::string &playerN
 
         auto winner = sqlite3_column_int(stmt, WINNER_INDEX);
 
+        auto victoryCondition = sqlite3_column_int(stmt, VICTORY_CONDITION_INDEX);
+
         playerStatistics.matchInfoList.push_back(
-            PlayerStatistics::MatchInfo{lobbyNameId, blackPlayerName, redPlayerName, winner});
+            PlayerStatistics::MatchInfo{lobbyNameId, blackPlayerName, redPlayerName, winner, victoryCondition});
     }
 
     // Free the resources

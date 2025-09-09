@@ -13,12 +13,12 @@
 #include <QSpacerItem>
 #include <QSizePolicy>
 #include <QProgressBar>
+#include <QSpacerItem>
 
 #include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
@@ -41,6 +41,9 @@ LobbyListFrame::LobbyListFrame(
 
     m_languageSelector = new LanguageSelectorWidget(this);
 
+    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    lobbyListLayout->addItem(spacer);
+
     m_titleWidget = new TitleWidget();
     lobbyListLayout->addWidget(m_titleWidget);
 
@@ -53,7 +56,10 @@ LobbyListFrame::LobbyListFrame(
 
     lobbyListLayout->addWidget(m_lobbyListScrollArea);
 
+    auto lobbyListButtonWidget = new QWidget();
     auto lobbyListButtonLayout = new QHBoxLayout();
+    lobbyListButtonWidget->setLayout(lobbyListButtonLayout);
+    lobbyListButtonWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     lobbyListButtonLayout->setAlignment(Qt::AlignCenter);
 
     m_refreshButton = new QPushButton(StringLibrary::getTranslatedString("Refresh"));
@@ -68,7 +74,10 @@ LobbyListFrame::LobbyListFrame(
             &LobbyListFrame::handleCancelButton);
     lobbyListButtonLayout->addWidget(m_cancelButton);
 
-    lobbyListLayout->addLayout(lobbyListButtonLayout);
+    lobbyListLayout->addWidget(lobbyListButtonWidget);
+
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    lobbyListLayout->addItem(spacer);
 
     // Needs to be in front of the title widget
     m_languageSelector->raise();

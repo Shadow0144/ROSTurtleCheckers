@@ -3,6 +3,8 @@
 #include <QVector>
 #include <QString>
 
+#include <string>
+#include <memory>
 #include <vector>
 
 #include "shared/CheckersConsts.hpp"

@@ -3,7 +3,6 @@
 #include <QMainWindow>
 
 #include <chrono>
-#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"

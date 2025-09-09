@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <fstream>
 #include <regex>
-#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/TurtleLogger.hpp"

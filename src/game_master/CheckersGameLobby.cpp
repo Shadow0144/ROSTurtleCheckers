@@ -37,6 +37,7 @@
 
 #include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
+#include "shared/TurtleLogger.hpp"
 #include "game_master/MasterBoard.hpp"
 #include "game_master/DatabaseHandler.hpp"
 
@@ -410,7 +411,7 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
             std::hash<turtle_checkers_interfaces::srv::RequestPieceMove::Request::SharedPtr>{}(request),
             getPlayerPublicKey(request->source_tile_index), request->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -487,6 +488,7 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
             m_timerThreadRunning = false;
             m_gameState = GameState::GameFinished;
             message.game_state = 4; // Game over
+            const auto victoryCondition = static_cast<int>(m_board->getVictoryCondition());
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
             winnerMessage.lobby_name = m_lobbyName;
             winnerMessage.lobby_id = m_lobbyId;
@@ -500,7 +502,8 @@ void CheckersGameLobby::requestPieceMoveRequest(const std::shared_ptr<turtle_che
             {
                 databaseHandler->addMatch(m_lobbyName, m_lobbyId,
                                           m_blackPlayerName, m_redPlayerName,
-                                          winnerMessage.winner);
+                                          winnerMessage.winner,
+                                          victoryCondition);
             }
         }
         else if (m_gameState == GameState::BlackMove)
@@ -563,7 +566,7 @@ void CheckersGameLobby::chatMessageCallback(const turtle_checkers_interfaces::ms
             std::hash<turtle_checkers_interfaces::msg::ChatMessage>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -590,7 +593,7 @@ void CheckersGameLobby::forfeitCallback(const turtle_checkers_interfaces::msg::F
             std::hash<turtle_checkers_interfaces::msg::Forfeit>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -610,6 +613,7 @@ void CheckersGameLobby::forfeitCallback(const turtle_checkers_interfaces::msg::F
 
     m_timerThreadRunning = false;
     m_gameState = GameState::GameFinished;
+    const auto victoryCondition = static_cast<int>(VictoryCondition::PlayerForfitted);
     auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
     winnerMessage.lobby_name = m_lobbyName;
     winnerMessage.lobby_id = m_lobbyId;
@@ -623,7 +627,8 @@ void CheckersGameLobby::forfeitCallback(const turtle_checkers_interfaces::msg::F
     {
         databaseHandler->addMatch(m_lobbyName, m_lobbyId,
                                   m_blackPlayerName, m_redPlayerName,
-                                  winnerMessage.winner);
+                                  winnerMessage.winner,
+                                  victoryCondition);
     }
 }
 
@@ -643,7 +648,7 @@ void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg:
             std::hash<turtle_checkers_interfaces::msg::OfferDraw>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -664,6 +669,7 @@ void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg:
             // Both have accepted, create a draw
             m_timerThreadRunning = false;
             m_gameState = GameState::GameFinished;
+            const auto victoryCondition = static_cast<int>(VictoryCondition::DrawAccepted);
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
             winnerMessage.lobby_name = m_lobbyName;
             winnerMessage.lobby_id = m_lobbyId;
@@ -677,7 +683,8 @@ void CheckersGameLobby::offerDrawCallback(const turtle_checkers_interfaces::msg:
             {
                 databaseHandler->addMatch(m_lobbyName, m_lobbyId,
                                           m_blackPlayerName, m_redPlayerName,
-                                          winnerMessage.winner);
+                                          winnerMessage.winner,
+                                          victoryCondition);
             }
         }
 
@@ -706,7 +713,7 @@ void CheckersGameLobby::playerReadyCallback(const turtle_checkers_interfaces::ms
             std::hash<turtle_checkers_interfaces::msg::PlayerReady>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -746,7 +753,7 @@ void CheckersGameLobby::timerChangedCallback(const turtle_checkers_interfaces::m
             std::hash<turtle_checkers_interfaces::msg::TimerChanged>{}(*message),
             getPlayerPublicKey(message->player_name), message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -779,6 +786,7 @@ void CheckersGameLobby::checkTimers()
             // Black has run out of time
             m_timerThreadRunning = false;
             m_gameState = GameState::GameFinished;
+            const auto victoryCondition = static_cast<int>(VictoryCondition::TimeExpired);
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
             winnerMessage.lobby_name = m_lobbyName;
             winnerMessage.lobby_id = m_lobbyId;
@@ -792,7 +800,8 @@ void CheckersGameLobby::checkTimers()
             {
                 databaseHandler->addMatch(m_lobbyName, m_lobbyId,
                                           m_blackPlayerName, m_redPlayerName,
-                                          winnerMessage.winner);
+                                          winnerMessage.winner,
+                                          victoryCondition);
             }
         }
         else if (m_gameState == GameState::RedMove && timePassed > m_redTimeRemaining)
@@ -800,6 +809,7 @@ void CheckersGameLobby::checkTimers()
             // Red has run out of time
             m_timerThreadRunning = false;
             m_gameState = GameState::GameFinished;
+            const auto victoryCondition = static_cast<int>(VictoryCondition::TimeExpired);
             auto winnerMessage = turtle_checkers_interfaces::msg::DeclareWinner();
             winnerMessage.lobby_name = m_lobbyName;
             winnerMessage.lobby_id = m_lobbyId;
@@ -813,7 +823,8 @@ void CheckersGameLobby::checkTimers()
             {
                 databaseHandler->addMatch(m_lobbyName, m_lobbyId,
                                           m_blackPlayerName, m_redPlayerName,
-                                          winnerMessage.winner);
+                                          winnerMessage.winner,
+                                          victoryCondition);
             }
         }
     }

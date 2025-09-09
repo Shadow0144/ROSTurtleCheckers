@@ -16,7 +16,8 @@
 #include <chrono>
 #include <functional>
 #include <iomanip>
-#include <iostream>
+#include <memory>
+#include <string>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/StringLibrary.hpp"
@@ -42,7 +43,7 @@ ChatBox::ChatBox(QWidget *parent,
 
     auto reportPlayerWidget = new QWidget();
     auto reportPlayerLayout = new QHBoxLayout();
-    reportPlayerLayout->setContentsMargins(9, 10, 0, 0);
+    reportPlayerLayout->setContentsMargins(9, 0, 0, 1);
     reportPlayerLayout->setSpacing(0);
     reportPlayerLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     reportPlayerWidget->setLayout(reportPlayerLayout);
@@ -84,7 +85,7 @@ ChatBox::ChatBox(QWidget *parent,
     auto chatEntryLayout = new QHBoxLayout();
     chatEntryWidget->setLayout(chatEntryLayout);
     chatEntryWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-    chatEntryLayout->setContentsMargins(0, 9, 2, 9);
+    chatEntryLayout->setContentsMargins(0, 3, 2, 9);
     chatEntryLayout->setSpacing(6);
 
     m_chatEntryLineEdit = new QLineEdit();
@@ -97,7 +98,7 @@ ChatBox::ChatBox(QWidget *parent,
 
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
-    m_sendButton = new QPushButton(StringLibrary::getTranslatedString("Send"));
+    m_sendButton = new QPushButton(StringLibrary::getTranslatedString(">"));
     connect(m_sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
     connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, m_sendButton, &QPushButton::click);
     m_sendButton->setDefault(true);
@@ -172,5 +173,5 @@ void ChatBox::setReportPlayerButtonEnabled(bool isEnabled)
 void ChatBox::reloadStrings()
 {
     m_reportPlayerButton->setText(StringLibrary::getTranslatedString("Report Player"));
-    m_sendButton->setText(StringLibrary::getTranslatedString("Send"));
+    m_sendButton->setText(StringLibrary::getTranslatedString(">"));
 }

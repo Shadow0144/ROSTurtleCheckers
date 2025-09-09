@@ -1,7 +1,5 @@
 #include "game_master/MasterBoard.hpp"
 
-#include <iostream>
-
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
 #include "game_master/TileFactory.hpp"
@@ -10,6 +8,7 @@
 MasterBoard::MasterBoard()
 {
     m_winner = Winner::None;
+    m_victoryCondition = VictoryCondition::None;
 
     m_blackPiecesRemaining = NUM_PIECES_PER_PLAYER;
     m_redPiecesRemaining = NUM_PIECES_PER_PLAYER;
@@ -206,6 +205,11 @@ Winner MasterBoard::getWinner() const
     return m_winner;
 }
 
+VictoryCondition MasterBoard::getVictoryCondition() const
+{
+    return m_victoryCondition;
+}
+
 bool MasterBoard::getMustJump() const
 {
     return m_mustJump;
@@ -244,10 +248,12 @@ void MasterBoard::addTileToJumpedTileIndices(int tileIndex)
     if (m_blackPiecesRemaining == 0u)
     {
         m_winner = Winner::Red;
+        m_victoryCondition = VictoryCondition::EliminatedPieces;
     }
     else if (m_redPiecesRemaining == 0u)
     {
         m_winner = Winner::Black;
+        m_victoryCondition = VictoryCondition::EliminatedPieces;
     }
 }
 
@@ -306,14 +312,17 @@ void MasterBoard::checkPlayersCanMove(bool isBlackTurn, std::vector<size_t> &mov
     if (!blackPlayerHasMoves && !redPlayerHasMoves)
     {
         m_winner = Winner::Draw;
+        m_victoryCondition = VictoryCondition::PlayersHaveNoMoves;
     }
     else if (!blackPlayerHasMoves)
     {
         m_winner = Winner::Red;
+        m_victoryCondition = VictoryCondition::PlayerHasNoMoves;
     }
     else if (!redPlayerHasMoves)
     {
         m_winner = Winner::Black;
+        m_victoryCondition = VictoryCondition::PlayerHasNoMoves;
     }
 }
 

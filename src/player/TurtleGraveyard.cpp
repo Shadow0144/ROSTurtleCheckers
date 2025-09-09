@@ -5,7 +5,8 @@
 #include <QPoint>
 
 #include <algorithm>
-#include <iostream>
+#include <memory>
+#include <vector>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/TurtlePieceRender.hpp"

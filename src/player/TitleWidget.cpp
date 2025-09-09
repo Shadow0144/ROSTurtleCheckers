@@ -1,5 +1,7 @@
 #include "player/TitleWidget.hpp"
 
+#include <string>
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>

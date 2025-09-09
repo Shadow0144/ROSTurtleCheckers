@@ -10,10 +10,10 @@
 #include <string>
 #include <chrono>
 #include <vector>
-#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
+#include "shared/TurtleLogger.hpp"
 #include "player/Parameters.hpp"
 #include "player/TileRenderFactory.hpp"
 #include "player/TurtlePieceRenderFactory.hpp"
@@ -159,7 +159,7 @@ void CheckersBoardRender::resyncBoard(std::vector<std::string> turtlePieceNamePe
         turtlePieceColorPerTile.size() != tileCount ||
         turtlePieceIsKingedPerTile.size() != tileCount)
     {
-        std::cerr << "Resync failed: Malformed vectors" << std::endl;
+        TurtleLogger::logError("Resync failed: Malformed vectors");
         return;
     }
 

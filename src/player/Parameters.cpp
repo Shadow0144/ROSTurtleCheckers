@@ -6,7 +6,6 @@
 #include <memory>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/TurtleLogger.hpp"

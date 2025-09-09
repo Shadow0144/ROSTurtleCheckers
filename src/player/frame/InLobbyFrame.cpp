@@ -15,7 +15,6 @@
 #include <ctime>
 #include <memory>
 #include <string>
-#include <iostream>
 
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
@@ -48,15 +47,15 @@ InLobbyFrame::InLobbyFrame(
 
     m_inLobbyWidget = new QWidget();
     auto inLobbyLayout = new QVBoxLayout();
-    inLobbyLayout->setAlignment(Qt::AlignCenter);
-    inLobbyLayout->setContentsMargins(IN_LOBBY_LAYOUT_MARGINS,
-                                      IN_LOBBY_LAYOUT_MARGINS,
-                                      IN_LOBBY_LAYOUT_MARGINS,
-                                      IN_LOBBY_LAYOUT_MARGINS);
     m_inLobbyWidget->setLayout(inLobbyLayout);
+    inLobbyLayout->setAlignment(Qt::AlignCenter);
+    inLobbyLayout->setSpacing(0);
     wrapperLayout->addWidget(m_inLobbyWidget);
 
     m_languageSelector = new LanguageSelectorWidget(this);
+
+    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    inLobbyLayout->addItem(spacer);
 
     m_titleWidget = new TitleWidget();
     inLobbyLayout->addWidget(m_titleWidget);
@@ -77,7 +76,7 @@ InLobbyFrame::InLobbyFrame(
     m_lobbyIdLabel->setFont(lobbyIdFont);
     lobbyNameLayout->addWidget(m_lobbyIdLabel);
 
-    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
     lobbyNameLayout->addItem(spacer);
 
     m_gameStartTimerLabel = new QLabel();
@@ -201,8 +200,9 @@ InLobbyFrame::InLobbyFrame(
 
     inLobbyLayout->addWidget(playersWidget);
 
+    auto timerWidget = new QWidget();
     auto timerLayout = new QHBoxLayout();
-    timerLayout->setContentsMargins(9, 0, 9, 0);
+    timerWidget->setLayout(timerLayout);
 
     m_timerLabel = new QLabel(StringLibrary::getTranslatedString("Match timer:"));
     timerLayout->addWidget(m_timerLabel);
@@ -217,14 +217,16 @@ InLobbyFrame::InLobbyFrame(
             &InLobbyFrame::handleTimerIndexChanged);
     timerLayout->addWidget(m_timerComboBox);
 
-    inLobbyLayout->addLayout(timerLayout);
+    inLobbyLayout->addWidget(timerWidget);
 
     m_chatBox = new ChatBox(nullptr, CHAT_BOX_IN_LOBBY_WIDTH, CHAT_BOX_IN_LOBBY_HEIGHT, [this](const std::string &chatMessages)
                             { this->reportPlayer(chatMessages); }, [this](const std::string &chatMessage)
                             { this->sendChatMessage(chatMessage); });
     inLobbyLayout->addWidget(m_chatBox);
 
+    auto inLobbyButtonWidget = new QWidget();
     auto inLobbyButtonLayout = new QHBoxLayout();
+    inLobbyButtonWidget->setLayout(inLobbyButtonLayout);
 
     m_leaveLobbyInLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Leave Lobby"));
     m_leaveLobbyInLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
@@ -232,7 +234,10 @@ InLobbyFrame::InLobbyFrame(
             &InLobbyFrame::handleLeaveLobbyButton);
     inLobbyButtonLayout->addWidget(m_leaveLobbyInLobbyButton);
 
-    inLobbyLayout->addLayout(inLobbyButtonLayout);
+    inLobbyLayout->addWidget(inLobbyButtonWidget);
+
+    spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    inLobbyLayout->addItem(spacer);
 
     // Report player confirm dialog
     m_reportPlayerConfirmDialog = new DialogWidget(this, WINDOW_CENTER_X, WINDOW_CENTER_Y,

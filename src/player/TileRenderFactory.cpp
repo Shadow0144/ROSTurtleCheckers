@@ -1,5 +1,6 @@
 #include "player/TileRenderFactory.hpp"
 
+#include <memory>
 #include <vector>
 
 #include "shared/CheckersConsts.hpp"

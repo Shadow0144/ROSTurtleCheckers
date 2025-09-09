@@ -3,7 +3,7 @@
 #include <QPainter>
 #include <QRgb>
 
-#include <iostream>
+#include <memory>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"

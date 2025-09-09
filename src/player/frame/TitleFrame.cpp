@@ -8,7 +8,6 @@
 
 #include <memory>
 #include <string>
-#include <iostream>
 
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"

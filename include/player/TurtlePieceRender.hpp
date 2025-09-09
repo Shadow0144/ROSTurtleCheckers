@@ -5,6 +5,9 @@
 #include <QImage>
 #include <QPainter>
 
+#include <string>
+#include <memory>
+
 #include "shared/CheckersConsts.hpp"
 #include "shared/TurtlePiece.hpp"
 

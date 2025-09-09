@@ -5,7 +5,8 @@
 #include <QImage>
 #include <QPainter>
 
-#include <iostream>
+#include <string>
+#include <memory>
 
 #include "shared/Hasher.hpp"
 #include "player/ImageLibrary.hpp"

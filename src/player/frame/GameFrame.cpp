@@ -19,7 +19,6 @@
 #include <string>
 #include <chrono>
 #include <vector>
-#include <iostream>
 
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
@@ -63,6 +62,7 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 	m_chatBox = std::make_shared<ChatBox>(this, CHAT_BOX_IN_GAME_WIDTH, CHAT_BOX_IN_GAME_HEIGHT, [this](const std::string &chatMessages)
 										  { this->reportPlayer(chatMessages); }, [this](const std::string &chatMessage)
 										  { this->sendChatMessage(chatMessage); });
+    m_chatBox->setContentsMargins(0, 10, 0, 0); // Need to increase the margins here a bit
 	m_chatBox->setGeometry(CHAT_BOX_IN_GAME_X, CHAT_BOX_IN_GAME_Y,
 						   CHAT_BOX_IN_GAME_WIDTH, CHAT_BOX_IN_GAME_HEIGHT);
 

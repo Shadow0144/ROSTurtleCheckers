@@ -8,7 +8,6 @@
 #include <QFont>
 
 #include <memory>
-#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"

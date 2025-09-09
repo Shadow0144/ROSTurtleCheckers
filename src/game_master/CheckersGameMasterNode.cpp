@@ -197,7 +197,7 @@ void CheckersGameMasterNode::clientHeartbeatCallback(const turtle_checkers_inter
             std::hash<turtle_checkers_interfaces::msg::ClientHeartbeat>{}(*message),
             playerPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -225,7 +225,7 @@ void CheckersGameMasterNode::leaveLobbyCallback(const turtle_checkers_interfaces
                 std::hash<turtle_checkers_interfaces::msg::LeaveLobby>{}(*message),
                 playerPublicKey, message->checksum_sig))
         {
-            std::cerr << "Checksum failed" << std::endl;
+            TurtleLogger::logWarn("Checksum failed");
             return; // Checksum did not match with the public key
         }
 
@@ -250,7 +250,7 @@ void CheckersGameMasterNode::logOutAccountCallback(const turtle_checkers_interfa
                 std::hash<turtle_checkers_interfaces::msg::LogOutAccount>{}(*message),
                 playerPublicKey, message->checksum_sig))
         {
-            std::cerr << "Checksum failed" << std::endl;
+            TurtleLogger::logWarn("Checksum failed");
             return; // Checksum did not match with the public key
         }
 
@@ -266,7 +266,7 @@ void CheckersGameMasterNode::reportPlayerCallback(const turtle_checkers_interfac
 {
     if (m_reportEmailAddress.empty())
     {
-        std::cerr << "Report email address not configured in report_email.config" << std::endl;
+        TurtleLogger::logError("Report email address not configured in report_email.config");
         return; // No where to send a report to, exit
     }
 
@@ -284,7 +284,7 @@ void CheckersGameMasterNode::reportPlayerCallback(const turtle_checkers_interfac
             std::hash<turtle_checkers_interfaces::msg::ReportPlayer>{}(*message),
             playerPublicKey, message->checksum_sig))
     {
-        std::cerr << "Checksum failed" << std::endl;
+        TurtleLogger::logWarn("Checksum failed");
         return; // Checksum did not match with the public key
     }
 
@@ -302,7 +302,7 @@ void CheckersGameMasterNode::reportPlayerCallback(const turtle_checkers_interfac
 
     if (result != 0)
     {
-        std::cerr << "Failed to send report email" << std::endl;
+        TurtleLogger::logError("Failed to send report email");
     }
 }
 

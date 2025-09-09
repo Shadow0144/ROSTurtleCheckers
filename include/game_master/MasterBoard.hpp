@@ -15,6 +15,7 @@ public:
     MasterBoard();
 
     Winner getWinner() const;
+    VictoryCondition getVictoryCondition() const;
 
     bool getMustJump() const;
     void setMustJump(bool mustJump);
@@ -52,6 +53,7 @@ private:
     std::vector<size_t> m_jumpedPieceTileIndices; // Slain turtles are only removed at the end of a turn (i.e. not during an extended jumping session)
 
     Winner m_winner;
+    VictoryCondition m_victoryCondition;
 
     // Game parameters
     bool m_mustJump = false; // If jumps available, a player must choose one over a regular move

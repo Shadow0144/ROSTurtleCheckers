@@ -19,6 +19,7 @@ struct PlayerStatistics
         std::string blackPlayerName;
         std::string redPlayerName;
         int winner;
+        int victoryCondition;
     };
     std::vector<MatchInfo> matchInfoList;
     int matchesPlayed;
@@ -47,7 +48,7 @@ public:
 
     bool addMatch(const std::string &lobbyName, const std::string &lobbyId,
                   const std::string &blackPlayerName, const std::string &redPlayerName,
-                  int winner);
+                  int winner, int victoryCondition);
 
     PlayerStatistics getPlayerStatistics(const std::string &playerName);
 

@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
-#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/StringLibrary.hpp"
