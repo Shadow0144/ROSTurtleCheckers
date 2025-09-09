@@ -212,7 +212,7 @@
 		<key>Draw</key>
 		<en>Draw</en>
 		<jp>引き分け</jp>
-		<de>Unentschiede</de>
+		<de>Remis</de>
 	</string>
 	
 	<string>
@@ -269,7 +269,7 @@
 	</string>
 	<string>
 		<key>Match timer:</key>
-		<en>Ready</en>
+		<en>Match timer:</en>
 		<jp>試合タイマー:</jp>
 		<de>Spielzeitmesser:</de>
 	</string>
@@ -338,7 +338,7 @@
 		<key>Offer Draw</key>
 		<en>Offer Draw</en>
 		<jp>引き分け申し出</jp>
-		<de>Unentschieden Anbieten</de>
+		<de>Remis Anbieten</de>
 	</string>
 	<string>
 		<key>Forfeit</key>
@@ -350,19 +350,19 @@
 		<key>Offering draw...</key>
 		<en>Offering draw...</en>
 		<jp>引き分け申し出中。。。</jp>
-		<de>Unentschieden wird gezeihen...</de>
+		<de>Remis wird gezeihen...</de>
 	</string>
 	<string>
 		<key>Accept Draw</key>
 		<en>Accept Draw</en>
 		<jp>引き分け受け入れ</jp>
-		<de>Unentschieden Akzeptieren</de>
+		<de>Remis Akzeptieren</de>
 	</string>
 	<string>
 		<key>Decline Draw</key>
 		<en>Decline Draw</en>
 		<jp>引き分け断り</jp>
-		<de>Unentschieden Ablehnen</de>
+		<de>Remis Ablehnen</de>
 	</string>
 	<string>
 		<key>Leave Game</key>
@@ -399,7 +399,7 @@
 		<key>Draw!</key>
 		<en>Draw!</en>
 		<jp>引き分け！</jp>
-		<de>Unentschiede!</de>
+		<de>Remis!</de>
 	</string>
 	<string>
 		<key>You win!</key>
@@ -424,5 +424,115 @@
 		<en>Loser!</en>
 		<jp>負者！</jp>
 		<de>Verlierer/in!</de>
+	</string>
+
+	<string>
+		<key>Lost connection to server</key>
+		<en>Lost connection to server</en>
+		<jp>サーバーとの接続失った</jp>
+		<de>Verbindung zum Server unterbrochen</de>
+	</string>
+	<string>
+		<key>You have been logged out by the server</key>
+		<en>You have been logged out by the server</en>
+		<jp>サーバーによってログアウトされた</jp>
+		<de>Du wurdest vom Server abgemeldet</de>
+	</string>
+	<string>
+		<key>You have been kicked from the lobby</key>
+		<en>You have been kicked from the lobby</en>
+		<jp>ロビーから追い出された</jp>
+		<de>Du wurdest aus der Lobby geworfen</de>
+	</string>
+	<string>
+		<key>You have been banned</key>
+		<en>You have been banned</en>
+		<jp>アク禁と成った</jp>
+		<de>Du wurdest gesperrt</de>
+	</string>
+	<string>
+		<key>Return to title</key>
+		<en>Return to title</en>
+		<jp>タイトルに戻る</jp>
+		<de>Zurück zum Titel</de>
+	</string>
+	<string>
+		<key>Return to lobby list</key>
+		<en>Return to lobby list</en>
+		<jp>ロビー一覧表に戻る</jp>
+		<de>Zurück zur Lobby-Liste</de>
+	</string>
+
+    <string>
+		<key>Player not logged in</key>
+		<en>Player not logged in</eｎn>
+		<jp>プレイヤーがログインしておらない</jp>
+		<de>Spieler nicht angemeldet</de>
+	</string>
+    <string>
+		<key>Player already logged in</key>
+		<en>Player already logged in</en>
+		<jp>プレイヤーは既にログインしておる</jp>
+		<de>Spieler bereits angemeldet</de>
+	</string>
+    <string>
+		<key>Username already taken</key>
+		<en>Username already taken</en>
+		<jp>ユーザー名が既に使用されておる</jp>
+		<de>Benutzername bereits vergeben</de>
+	</string>
+    <string>
+		<key>Username not found</key>
+		<en>Username not found</en>
+		<jp>ユーザー名が見つからない</jp>
+		<de>Benutzername nicht gefunden</de>
+	</string>
+    <string>
+		<key>This account has been banned</key>
+		<en>This account has been banned</en>
+		<jp>此のアカウントがアク禁と成った</jp>
+		<de>Dieses Konto wurde gesperrt</de>
+	</string>
+    <string>
+		<key>Lobby name currently unavailable</key>
+		<en>Lobby name currently unavailable</en>
+		<jp>ロビー名が現在利用できない</jp>
+		<de>Lobbyname derzeit nicht verfügbar</de>
+	</string>
+    <string>
+		<key>Lobby already exists</key>
+		<en>Lobby already exists</en>
+		<jp>ロビー名が既に存在ずる</jp>
+		<de>Lobby bereits existiert</de>
+	</string>
+    <string>
+		<key>Lobby not found</key>
+		<en>Lobby not found</en>
+		<jp>ロビーが見つからない</jp>
+		<de>Lobby nicht gefunden</de>
+	</string>
+    <string>
+		<key>Lobby is full</key>
+		<en>Lobby is full</en>
+		<jp>ロビーが満員である</jp>
+		<de>Lobby ist voll</de>
+	</string>
+    <string>
+		<key>Player is already connected to lobby</key>
+		<en>Player is already connected to lobby</en>
+		<jp>プレイヤーが既にロビーに接続されておる</jp>
+		<de>Der Spieler ist bereits mit der Lobby verbunden</de>
+	</string>
+    <string>
+		<key>Database error</key>
+		<en>Database error</en>
+		<jp>データベースのエラー</jp>
+		<de>Datenbankfehler</de>
+	</string>
+    <string>
+		<key>An error occurred on the server</key>
+		<en>An error occurred on the server</en>
+		<jp>サーバーでエラーが発生した</jp>
+		<de>Auf dem Server ist ein Fehler aufgetreten</de>
 	</string>
 </translations>

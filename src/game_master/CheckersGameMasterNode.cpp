@@ -33,6 +33,7 @@
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
+#include "shared/ErrorCode.hpp"
 #include "shared/TurtleLogger.hpp"
 #include "game_master/CheckersGameLobby.hpp"
 #include "game_master/DatabaseHandler.hpp"
@@ -355,24 +356,34 @@ void CheckersGameMasterNode::changeAccountPasswordRequest(const std::shared_ptr<
     if (playerPublicKey == 0u)
     {
         // Not logged in
-        response->error_msg = "Player not logged in";
+        response->error_code = static_cast<uint64_t>(ErrorCode::Code::PLAYER_NOT_LOGGED_IN);
     }
     else
     {
         auto hashedPreviousPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_previous_player_password, m_privateKey, m_publicKey);
         bool previousPasswordCorrect = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPreviousPlayerPassword);
-        response->error_msg = m_databaseHandler->getErrorMessage();
 
         if (previousPasswordCorrect) // Previous password is correct, update with the new one
         {
             auto hashedNewPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_new_player_password, m_privateKey, m_publicKey);
             response->changed = m_databaseHandler->changePassword(request->player_name, hashedNewPlayerPassword);
-            response->error_msg = m_databaseHandler->getErrorMessage();
+            if (!m_databaseHandler->getErrorMessage().empty())
+            {
+                response->error_code = static_cast<uint64_t>(ErrorCode::Code::SERVERSIDE_ERROR);
+            }
+            else
+            {
+                response->error_code = static_cast<uint64_t>(ErrorCode::Code::NONE);
+            }
 
             if (response->changed)
             {
                 TurtleLogger::logInfo("Player " + request->player_name + " has changed their password");
             }
+        }
+        else
+        {
+            response->error_code = static_cast<uint64_t>(ErrorCode::Code::INCORRECT_PASSWORD);
         }
     }
 
@@ -395,7 +406,14 @@ void CheckersGameMasterNode::createAccountRequest(const std::shared_ptr<turtle_c
     response->player_name = request->player_name;
     auto hashedPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_player_password, m_privateKey, m_publicKey);
     response->created = m_databaseHandler->addPlayer(request->player_name, hashedPlayerPassword);
-    response->error_msg = m_databaseHandler->getErrorMessage();
+    if (!m_databaseHandler->getErrorMessage().empty())
+    {
+        response->error_code = static_cast<uint64_t>(ErrorCode::Code::SERVERSIDE_ERROR);
+    }
+    else
+    {
+        response->error_code = static_cast<uint64_t>(ErrorCode::Code::NONE);
+    }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
         std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::SharedPtr>{}(response),
@@ -424,7 +442,7 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
     {
         // Already logged in
         response->logged_in = false;
-        response->error_msg = "Player already logged in";
+        response->error_code = static_cast<uint64_t>(ErrorCode::Code::PLAYER_ALREADY_LOGGED_IN);
     }
     else
     {
@@ -433,13 +451,20 @@ void CheckersGameMasterNode::logInAccountRequest(const std::shared_ptr<turtle_ch
         {
             // Already logged in
             response->logged_in = false;
-            response->error_msg = "Player is banned";
+            response->error_code = static_cast<uint64_t>(ErrorCode::Code::PLAYER_IS_BANNED);
         }
         else
         {
             auto hashedPlayerPassword = RSAKeyGenerator::unencrypt(request->encrypted_hashed_player_password, m_privateKey, m_publicKey);
             response->logged_in = m_databaseHandler->checkPasswordCorrect(request->player_name, hashedPlayerPassword);
-            response->error_msg = m_databaseHandler->getErrorMessage();
+            if (!m_databaseHandler->getErrorMessage().empty())
+            {
+                response->error_code = static_cast<uint64_t>(ErrorCode::Code::SERVERSIDE_ERROR);
+            }
+            else
+            {
+                response->error_code = static_cast<uint64_t>(ErrorCode::Code::NONE);
+            }
 
             if (response->logged_in) // If logging in succeeded, add to the list
             {
@@ -499,7 +524,7 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
                                              static_cast<TurtlePieceColor>(request->desired_player_color));
                 checkersGameLobby->setLobbyOwner(request->player_name);
                 response->created = true;
-                response->error_msg = "";
+                response->error_code = static_cast<uint64_t>(ErrorCode::Code::NONE);
                 response->lobby_name = lobbyName;
                 response->lobby_id = lobbyId;
                 response->black_player_name = checkersGameLobby->getBlackPlayerName();
@@ -511,16 +536,14 @@ void CheckersGameMasterNode::createLobbyRequest(const std::shared_ptr<turtle_che
 
         if (!response->created)
         {
-            std::string lobbyAlreadyExistsError = "Lobby already exists.";
-            response->error_msg = lobbyAlreadyExistsError;
-            TurtleLogger::logWarn(lobbyAlreadyExistsError);
+            response->error_code = static_cast<uint64_t>(ErrorCode::Code::LOBBY_NAME_UNAVAILABLE);
+            TurtleLogger::logWarn("Lobby name currently unavailable");
         }
     }
     else
     {
-        std::string playerPublicKeyMissingError = "Player public key missing.";
-        response->error_msg = playerPublicKeyMissingError;
-        TurtleLogger::logWarn(playerPublicKeyMissingError);
+        response->error_code = static_cast<uint64_t>(ErrorCode::Code::SERVERSIDE_ERROR);
+        TurtleLogger::logWarn("Player public key missing");
     }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(
@@ -598,10 +621,9 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
                     if (!checkersGameLobby->containsPlayer(request->player_name))
                     {
                         checkersGameLobby->addPlayer(request->player_name,
-                                                     playerPublicKey,
-                                                     static_cast<TurtlePieceColor>(request->desired_player_color));
+                                                     playerPublicKey);
                         response->joined = true;
-                        response->error_msg = "";
+                        response->error_code = static_cast<uint64_t>(ErrorCode::Code::NONE);
                         response->lobby_name = request->lobby_name;
                         response->lobby_id = request->lobby_id;
                         response->black_player_name = checkersGameLobby->getBlackPlayerName();
@@ -612,37 +634,32 @@ void CheckersGameMasterNode::joinLobbyRequest(const std::shared_ptr<turtle_check
                     }
                     else
                     {
-                        std::string playerAlreadyInLobbyError = "Player " + request->player_name + " already connected to this lobby.";
-                        response->error_msg = playerAlreadyInLobbyError;
-                        TurtleLogger::logWarn(playerAlreadyInLobbyError);
+                        response->error_code = static_cast<uint64_t>(ErrorCode::Code::PLAYER_ALREADY_IN_LOBBY);
+                        TurtleLogger::logWarn("Player " + request->player_name + " already connected to this lobby");
                     }
                 }
                 else
                 {
-                    std::string lobbyFullError = "Lobby is full.";
-                    response->error_msg = lobbyFullError;
-                    TurtleLogger::logWarn(lobbyFullError);
+                    response->error_code = static_cast<uint64_t>(ErrorCode::Code::LOBBY_IS_FULL);
+                    TurtleLogger::logWarn("Lobby is full");
                 }
             }
             else
             {
-                std::string incorrectPasswordError = "Incorrect password.";
-                response->error_msg = incorrectPasswordError;
-                TurtleLogger::logInfo(incorrectPasswordError);
+                response->error_code = static_cast<uint64_t>(ErrorCode::Code::INCORRECT_PASSWORD);
+                TurtleLogger::logInfo("Incorrect password");
             }
         }
         else
         {
-            std::string lobbyDoesNotExistError = "Lobby does not exist.";
-            response->error_msg = lobbyDoesNotExistError;
-            TurtleLogger::logWarn(lobbyDoesNotExistError);
+            response->error_code = static_cast<uint64_t>(ErrorCode::Code::LOBBY_DOES_NOT_EXIST);
+            TurtleLogger::logWarn("Lobby does not exist");
         }
     }
     else
     {
-        std::string playerPublicKeyMissingError = "Player public key missing.";
-        response->error_msg = playerPublicKeyMissingError;
-        TurtleLogger::logWarn(playerPublicKeyMissingError);
+        response->error_code = static_cast<uint64_t>(ErrorCode::Code::SERVERSIDE_ERROR);
+        TurtleLogger::logWarn("Player public key missing");
     }
 
     response->checksum_sig = RSAKeyGenerator::createChecksumSignature(

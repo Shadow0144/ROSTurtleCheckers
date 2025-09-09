@@ -84,7 +84,7 @@ ChatBox::ChatBox(QWidget *parent,
     auto chatEntryLayout = new QHBoxLayout();
     chatEntryWidget->setLayout(chatEntryLayout);
     chatEntryWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-    chatEntryLayout->setContentsMargins(0, 9, 0, 9);
+    chatEntryLayout->setContentsMargins(0, 9, 2, 9);
     chatEntryLayout->setSpacing(6);
 
     m_chatEntryLineEdit = new QLineEdit();
@@ -98,8 +98,6 @@ ChatBox::ChatBox(QWidget *parent,
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
     m_sendButton = new QPushButton(StringLibrary::getTranslatedString("Send"));
-    m_sendButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    m_sendButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
     connect(m_sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
     connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, m_sendButton, &QPushButton::click);
     m_sendButton->setDefault(true);

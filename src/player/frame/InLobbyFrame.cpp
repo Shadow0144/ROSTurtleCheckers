@@ -43,7 +43,10 @@ InLobbyFrame::InLobbyFrame(
     connect(m_gameStartTimer, &QTimer::timeout, this, [this]()
             { this->updateGameStartTimer(); });
 
-    m_inLobbyWidget = new QWidget(this);
+    auto wrapperLayout = new QVBoxLayout(this);
+    wrapperLayout->setAlignment(Qt::AlignCenter);
+
+    m_inLobbyWidget = new QWidget();
     auto inLobbyLayout = new QVBoxLayout();
     inLobbyLayout->setAlignment(Qt::AlignCenter);
     inLobbyLayout->setContentsMargins(IN_LOBBY_LAYOUT_MARGINS,
@@ -51,6 +54,7 @@ InLobbyFrame::InLobbyFrame(
                                       IN_LOBBY_LAYOUT_MARGINS,
                                       IN_LOBBY_LAYOUT_MARGINS);
     m_inLobbyWidget->setLayout(inLobbyLayout);
+    wrapperLayout->addWidget(m_inLobbyWidget);
 
     m_languageSelector = new LanguageSelectorWidget(this);
 
@@ -59,6 +63,7 @@ InLobbyFrame::InLobbyFrame(
 
     auto lobbyNameLayout = new QHBoxLayout();
     lobbyNameLayout->setAlignment(Qt::AlignLeft);
+    lobbyNameLayout->setContentsMargins(9, 0, 9, 0);
 
     m_lobbyNameLabel = new QLabel("");
     auto lobbyNameFont = m_lobbyNameLabel->font();
@@ -82,6 +87,11 @@ InLobbyFrame::InLobbyFrame(
     lobbyNameLayout->addWidget(m_gameStartTimerLabel);
 
     inLobbyLayout->addLayout(lobbyNameLayout);
+
+    auto playersWidget = new QWidget();
+    auto playersLayout = new QVBoxLayout();
+    playersWidget->setLayout(playersLayout);
+    playersLayout->setContentsMargins(9, 0, 9, 0);
 
     // Black player layout
 
@@ -134,7 +144,7 @@ InLobbyFrame::InLobbyFrame(
             &InLobbyFrame::handleBlackKickButton);
     blackPlayerLayout->addWidget(m_blackPlayerKickButton);
 
-    inLobbyLayout->addWidget(blackPlayerWidget);
+    playersLayout->addWidget(blackPlayerWidget);
 
     // Red player layout
 
@@ -142,6 +152,7 @@ InLobbyFrame::InLobbyFrame(
     auto redPlayerLayout = new QHBoxLayout();
     redPlayerWidget->setLayout(redPlayerLayout);
     redPlayerWidget->setProperty("framed", true);
+    redPlayerLayout->setAlignment(Qt::AlignLeft);
 
     m_redPlayerLobbyOwnerLabel = new QLabel();
     auto redPlayerLobbyOwnerIcon = QPixmap::fromImage(ImageLibrary::getLobbyOwnerImage());
@@ -186,9 +197,12 @@ InLobbyFrame::InLobbyFrame(
             &InLobbyFrame::handleRedKickButton);
     redPlayerLayout->addWidget(m_redPlayerKickButton);
 
-    inLobbyLayout->addWidget(redPlayerWidget);
+    playersLayout->addWidget(redPlayerWidget);
+
+    inLobbyLayout->addWidget(playersWidget);
 
     auto timerLayout = new QHBoxLayout();
+    timerLayout->setContentsMargins(9, 0, 9, 0);
 
     m_timerLabel = new QLabel(StringLibrary::getTranslatedString("Match timer:"));
     timerLayout->addWidget(m_timerLabel);
@@ -205,7 +219,7 @@ InLobbyFrame::InLobbyFrame(
 
     inLobbyLayout->addLayout(timerLayout);
 
-    m_chatBox = new ChatBox(nullptr, CHAT_IN_LOBBY_WIDTH, CHAT_IN_LOBBY_HEIGHT, [this](const std::string &chatMessages)
+    m_chatBox = new ChatBox(nullptr, CHAT_BOX_IN_LOBBY_WIDTH, CHAT_BOX_IN_LOBBY_HEIGHT, [this](const std::string &chatMessages)
                             { this->reportPlayer(chatMessages); }, [this](const std::string &chatMessage)
                             { this->sendChatMessage(chatMessage); });
     inLobbyLayout->addWidget(m_chatBox);
@@ -323,10 +337,12 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
         if (m_blackPlayerReady)
         {
             m_blackReadyInLobbyCheckBox->setCheckState(Qt::Checked);
+            m_timerComboBox->setEnabled(false);
         }
         else
         {
             m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+            m_timerComboBox->setEnabled(true);
         }
     }
     else
@@ -348,10 +364,12 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
         if (m_redPlayerReady)
         {
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Checked);
+            m_timerComboBox->setEnabled(false);
         }
         else
         {
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+            m_timerComboBox->setEnabled(true);
         }
     }
     else

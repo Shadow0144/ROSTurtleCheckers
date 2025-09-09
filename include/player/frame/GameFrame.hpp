@@ -27,6 +27,7 @@
 #include "player/TurtlePieceRender.hpp"
 #include "player/TurtleGraveyard.hpp"
 #include "player/HUD.hpp"
+#include "player/GameWinnerOverlayWidget.hpp"
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 
@@ -98,7 +99,7 @@ private:
 	void handleAcceptDrawButton();	// Accepts an incoming draw offer
 	void handleDeclineDrawButton(); // Declines a draw offer
 
-	void handleForfeitButton();		  // Creates a confirmation popup
+	void handleForfeitButton();		   // Creates a confirmation popup
 	void handleForfeitConfirmButton(); // Commits to the forfeit
 	void handleForfeitCancelButton();  // Cancels the popup
 
@@ -106,7 +107,6 @@ private:
 	void handleReportPlayerCancelButton();	// Cancels the popup
 
 	void handleLeaveGameButton();	 // Leaves the lobby
-	void handleOfferRematchButton(); // Creates a new lobby
 
 	void displayDialog(bool dialogDisplayed, DialogWidget *dialog = nullptr);
 
@@ -132,10 +132,11 @@ private:
 	LanguageSelectorWidget *m_languageSelector;
 
 	CheckersBoardRenderPtr m_board;
-	TurtleGraveyardPtr m_blackPlayerGraveyard; // Black player's graveyard containing the slain red pieces
-	TurtleGraveyardPtr m_redPlayerGraveyard;   // Red player's graveyard containing the slain black pieces
+	TurtleGraveyardPtr m_leftGraveyard;
+	TurtleGraveyardPtr m_rightGraveyard;
 	HUDPtr m_hud;
-	ChatBox *m_chatBox;
+	GameWinnerOverlayWidgetPtr m_gameWinnerOverlayWidget;
+	ChatBoxPtr m_chatBox;
 
 	std::string m_reportingChatMessages;
 

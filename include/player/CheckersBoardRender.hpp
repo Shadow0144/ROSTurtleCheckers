@@ -24,7 +24,7 @@ class CheckersBoardRender
 public:
     CheckersBoardRender();
 
-    void createBoard(TurtlePieceColor playerColor);
+    void createBoard();
 
     void clearSelections();
     void clearMovedTiles();

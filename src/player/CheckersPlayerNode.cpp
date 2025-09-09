@@ -58,6 +58,7 @@
 #include "shared/Hasher.hpp"
 #include "shared/RSAKeyGenerator.hpp"
 #include "shared/TurtleLogger.hpp"
+#include "shared/ErrorCode.hpp"
 #include "player/Parameters.hpp"
 #include "player/CheckersPlayerWindow.hpp"
 
@@ -827,7 +828,7 @@ void CheckersPlayerNode::changeAccountPasswordResponse(rclcpp::Client<turtle_che
     }
     else
     {
-        m_checkersPlayerWindow->failedAccountPasswordChange(result->error_msg);
+        m_checkersPlayerWindow->failedAccountPasswordChange(ErrorCode::getErrorString(result->error_code));
     }
 
     m_checkersPlayerWindow->update();
@@ -865,8 +866,8 @@ void CheckersPlayerNode::createAccountResponse(rclcpp::Client<turtle_checkers_in
     }
     else
     {
-        m_checkersPlayerWindow->failedCreate(result->error_msg);
-        TurtleLogger::logWarn(result->error_msg);
+        m_checkersPlayerWindow->failedCreate(ErrorCode::getErrorString(result->error_code));
+        TurtleLogger::logWarn(ErrorCode::getErrorString(result->error_code));
     }
 }
 
@@ -905,7 +906,7 @@ void CheckersPlayerNode::createLobbyResponse(rclcpp::Client<turtle_checkers_inte
     }
     else
     {
-        TurtleLogger::logWarn(result->error_msg);
+        TurtleLogger::logWarn(ErrorCode::getErrorString(result->error_code));
     }
 }
 
@@ -978,11 +979,11 @@ void CheckersPlayerNode::joinLobbyResponse(rclcpp::Client<turtle_checkers_interf
     }
     else
     {
-        if (result->error_msg == "Incorrect password.") // TODO
+        if (static_cast<ErrorCode::Code>(result->error_code) == ErrorCode::Code::INCORRECT_PASSWORD)
         {
             m_checkersPlayerWindow->setPasswordIncorrect();
         }
-        TurtleLogger::logWarn(result->error_msg);
+        TurtleLogger::logWarn(ErrorCode::getErrorString(result->error_code));
     }
 }
 
@@ -1004,8 +1005,8 @@ void CheckersPlayerNode::logInAccountResponse(rclcpp::Client<turtle_checkers_int
     }
     else
     {
-        m_checkersPlayerWindow->failedLogIn(result->error_msg);
-        TurtleLogger::logWarn(result->error_msg);
+        m_checkersPlayerWindow->failedLogIn(ErrorCode::getErrorString(result->error_code));
+        TurtleLogger::logWarn(ErrorCode::getErrorString(result->error_code));
     }
 }
 

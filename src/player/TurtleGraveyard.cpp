@@ -1,66 +1,64 @@
 #include "player/TurtleGraveyard.hpp"
 
-#include <QColor>
-#include <QPointF>
-#include <QRgb>
+#include <QWidget>
+#include <QLabel>
+#include <QPoint>
+
+#include <algorithm>
+#include <iostream>
 
 #include "shared/CheckersConsts.hpp"
 #include "player/TurtlePieceRender.hpp"
 
-TurtleGraveyard::TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePieceColor viewingPlayerColor)
+TurtleGraveyard::TurtleGraveyard(QWidget *parent, int x, bool left)
+    : QWidget(parent)
 {
-    if (owningPlayerColor == viewingPlayerColor)
+    const auto padding = GRAVEYARD_PADDING;
+    m_turtlePieceSize = std::min(PIECE_SIZE, (BOARD_HEIGHT / (NUM_PIECES_PER_PLAYER + 1)) - (2 * padding));
+
+    m_x = x;
+    m_y = BOARD_TOP;
+    m_left = left;
+
+    setGeometry(m_x, m_y, GRAVEYARD_WIDTH, BOARD_HEIGHT);
+
+    if (left) // Left
     {
-        m_left = GRAVEYARD_WIDTH + BOARD_WIDTH;
-        m_nextPosition = QPointF(m_left - TILE_HALF_WIDTH - TILE_WIDTH + GRAVEYARD_WIDTH, WINDOW_HEIGHT - TILE_HALF_HEIGHT - BUTTON_DOCK_HEIGHT);
-        m_initialRowPosition = m_nextPosition;
-        m_positionRowIncrement = QPointF(0, -TILE_HEIGHT);
-        m_positionColIncrement = QPointF(TILE_WIDTH, 0);
+        m_turtleCenterInitialY = BOARD_TOP + TILE_HALF_HEIGHT + padding;
+        m_turtleCenterYStep = std::min(TILE_HEIGHT, static_cast<int>(m_turtlePieceSize + padding));
     }
-    else
+    else // Right
     {
-        m_left = 0;
-        m_nextPosition = QPointF(TILE_HALF_WIDTH + TILE_WIDTH, HUD_HEIGHT + TILE_HALF_HEIGHT);
-        m_initialRowPosition = m_nextPosition;
-        m_positionRowIncrement = QPointF(0, TILE_HEIGHT);
-        m_positionColIncrement = QPointF(-TILE_WIDTH, 0);
+        m_turtleCenterInitialY = (BOARD_TOP + BOARD_HEIGHT) - TILE_HALF_HEIGHT - padding;
+        m_turtleCenterYStep = -std::min(TILE_HEIGHT, static_cast<int>(m_turtlePieceSize + padding));
     }
-    m_turtlesInColumn = 0u;
+    m_turtleCenterX = m_x + (GRAVEYARD_WIDTH) / 2;
+    m_turtleCenterY = m_turtleCenterInitialY;
 }
 
 void TurtleGraveyard::addTurtlePiece(TurtlePieceRenderPtr &turtlePieceRender)
 {
     if (turtlePieceRender)
     {
-        m_slainTurtles.push_back(turtlePieceRender);
-        turtlePieceRender->setIsDead(true);
-        turtlePieceRender->setCenterPosition(m_nextPosition);
-        m_nextPosition += m_positionRowIncrement;
-        m_turtlesInColumn++;
-        if (m_turtlesInColumn == NUM_PLAYABLE_ROWS)
-        {
-            m_nextPosition.setY(m_initialRowPosition.y());
-            m_nextPosition += m_positionColIncrement;
-            m_turtlesInColumn = 0u;
-        }
+        turtlePieceRender->setCenterPosition(QPoint(m_turtleCenterX, m_turtleCenterY));
+        m_turtlePieceRenders.push_back(turtlePieceRender);
+        m_turtleCenterY += m_turtleCenterYStep;
     }
 }
 
 void TurtleGraveyard::clear()
 {
-    m_slainTurtles.clear();
+    m_turtlePieceRenders.clear();
+    m_turtleCenterY = m_turtleCenterInitialY;
 }
 
-void TurtleGraveyard::paint(QPainter &painter) const
+void TurtleGraveyard::paint(QPainter &painter)
 {
-    int r = GRAVEYARD_BG_RGB[0];
-    int g = GRAVEYARD_BG_RGB[1];
-    int b = GRAVEYARD_BG_RGB[2];
-    QRgb graveyardColor = qRgb(r, g, b);
-    painter.fillRect(m_left, HUD_HEIGHT, GRAVEYARD_WIDTH, BOARD_HEIGHT, graveyardColor);
+    QRgb backgroundColor = qRgb(GRAVEYARD_BG_RGB[0], GRAVEYARD_BG_RGB[1], GRAVEYARD_BG_RGB[2]);
+    painter.fillRect(m_x, m_y, GRAVEYARD_WIDTH, BOARD_HEIGHT, backgroundColor);
 
-    for (const auto &turtlePiece : m_slainTurtles)
+    for (auto &turtlePieceRender : m_turtlePieceRenders)
     {
-        turtlePiece->paint(painter);
+        turtlePieceRender->paint(painter);
     }
 }

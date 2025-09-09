@@ -1,5 +1,12 @@
 #include "player/TurtlePieceRender.hpp"
 
+#include <QWidget>
+#include <QPointF>
+#include <QImage>
+#include <QPainter>
+
+#include <iostream>
+
 #include "shared/Hasher.hpp"
 #include "player/ImageLibrary.hpp"
 
@@ -8,13 +15,14 @@ TurtlePieceRender::TurtlePieceRender(
     TurtlePieceColor color,
     const QPointF &centerPosition,
     int angleDegrees)
-    : TurtlePiece(name, color),
-      m_centerPosition(centerPosition),
+    : QWidget(nullptr),
+      TurtlePiece(name, color),
+      m_position(centerPosition),
       m_angleDegrees(angleDegrees)
 {
     updateImages();
-    m_centerPosition.rx() -= 0.5 * m_turtleRotatedImage.width();
-    m_centerPosition.ry() -= 0.5 * m_turtleRotatedImage.height();
+    m_position.rx() -= 0.5 * m_turtleRotatedImage.width();
+    m_position.ry() -= 0.5 * m_turtleRotatedImage.height();
 }
 
 void TurtlePieceRender::updateImages()
@@ -29,35 +37,48 @@ void TurtlePieceRender::updateImages()
     m_deadRotatedImage = ImageLibrary::getDeadImage(m_color).transformed(transform);
 }
 
+void TurtlePieceRender::resize(int width, int height)
+{
+    QTransform transform;
+    transform.scale(static_cast<float>(width) / m_turtleRotatedImage.width(),
+                    static_cast<float>(height) / m_turtleRotatedImage.height());
+    m_turtleRotatedImage = ImageLibrary::getTurtleImage(m_color).transformed(transform);
+    m_kingRotatedImage = ImageLibrary::getKingImage(m_color).transformed(transform);
+    m_movableRotatedImage = ImageLibrary::getMovableImage(m_color).transformed(transform);
+    m_highlightRotatedImage = ImageLibrary::getHighlightImage(m_color).transformed(transform);
+    m_selectRotatedImage = ImageLibrary::getSelectImage(m_color).transformed(transform);
+    m_deadRotatedImage = ImageLibrary::getDeadImage(m_color).transformed(transform);
+}
+
 void TurtlePieceRender::setCenterPosition(const QPointF &centerPosition)
 {
-    m_centerPosition = centerPosition;
-    m_centerPosition.rx() -= 0.5 * m_turtleRotatedImage.width();
-    m_centerPosition.ry() -= 0.5 * m_turtleRotatedImage.height();
+    m_position = centerPosition;
+    m_position.rx() -= 0.5 * m_turtleRotatedImage.width();
+    m_position.ry() -= 0.5 * m_turtleRotatedImage.height();
 }
 
 void TurtlePieceRender::paint(QPainter &painter)
 {
-    painter.drawImage(m_centerPosition, m_turtleRotatedImage);
+    painter.drawImage(m_position, m_turtleRotatedImage);
     if (m_isKinged)
     {
-        painter.drawImage(m_centerPosition, m_kingRotatedImage);
+        painter.drawImage(m_position, m_kingRotatedImage);
     }
     if (m_isMovable)
     {
-        painter.drawImage(m_centerPosition, m_movableRotatedImage);
+        painter.drawImage(m_position, m_movableRotatedImage);
     }
     if (m_isHighlighted)
     {
-        painter.drawImage(m_centerPosition, m_highlightRotatedImage);
+        painter.drawImage(m_position, m_highlightRotatedImage);
     }
     if (m_isSelected)
     {
-        painter.drawImage(m_centerPosition, m_selectRotatedImage);
+        painter.drawImage(m_position, m_selectRotatedImage);
     }
     if (m_isDead)
     {
-        painter.drawImage(m_centerPosition, m_deadRotatedImage);
+        painter.drawImage(m_position, m_deadRotatedImage);
     }
 }
 

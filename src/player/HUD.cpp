@@ -1,11 +1,11 @@
 #include "player/HUD.hpp"
 
-#include <QPainter>
-#include <QPen>
+#include <QWidget>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QSpacerItem>
 #include <QFont>
-#include <QImage>
-#include <QPointF>
-#include <QString>
 
 #include <memory>
 #include <iostream>
@@ -14,7 +14,8 @@
 #include "player/ImageLibrary.hpp"
 #include "player/StringLibrary.hpp"
 
-HUD::HUD()
+HUD::HUD(QWidget *parent)
+    : QWidget(parent)
 {
     m_playerColor = TurtlePieceColor::None;
     m_blackPiecesRemaining = 0u;
@@ -23,32 +24,62 @@ HUD::HUD()
     m_redTimeRemainingSec = 0u;
     m_gameState = GameState::Connecting;
     m_winner = Winner::None;
+    m_usingTimers = false;
 
-    m_turtleFont = QFont("Times", HUD_FONT_SIZE, QFont::Bold);
-    m_turtlePen = QPen(Qt::black);
+    setGeometry(0, 0, HUD_WIDTH, HUD_HEIGHT);
 
-    m_victoryFont = QFont("Times", VICTORY_TEXT_FONT_SIZE, QFont::Bold);
-    m_victoryPen = QPen(Qt::lightGray);
-    m_victoryTextCenteringRect = QRect(BOARD_LEFT, BOARD_CENTER_Y + VICTORY_TEXT_Y_OFFSET,
-                                       BOARD_WIDTH, VICTORY_TEXT_HEIGHT);
+    auto hudFont = QFont("Noto Sans JP", HUD_FONT_SIZE, QFont::Bold);
 
-    m_timerPen = QPen(Qt::black);
-    m_activeTimerPen = QPen(QColor("#00FFFF"));
+    auto hudLayout = new QHBoxLayout(this);
+    hudLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    m_blackRemainingTextRightingRect = QRect(HUD_BLACK_REMAINING_TEXT_X_OFFSET, HUD_REMAINING_TEXT_Y_OFFSET,
-                                             HUD_REMAINING_TEXT_WIDTH, HUD_HEIGHT);
-    m_redRemainingTextRightingRect = QRect(HUD_RED_REMAINING_TEXT_X_OFFSET, HUD_REMAINING_TEXT_Y_OFFSET,
-                                           HUD_REMAINING_TEXT_WIDTH, HUD_HEIGHT);
+    auto spacer1 = new QSpacerItem(HUD_WIDTH / 12, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    hudLayout->addItem(spacer1);
 
-    m_blackTurtleIcon = ImageLibrary::getTurtleImage(TurtlePieceColor::Black).scaled(HUD_TURTLE_ICON_HEIGHT_WIDTH, HUD_TURTLE_ICON_HEIGHT_WIDTH, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    m_blackTurtleIconPosition = QPointF(HUD_BLACK_TURTLE_ICON_X_OFFSET, HUD_TURTLE_ICON_Y_OFFSET);
-    m_redTurtleIcon = ImageLibrary::getTurtleImage(TurtlePieceColor::Red).scaled(HUD_TURTLE_ICON_HEIGHT_WIDTH, HUD_TURTLE_ICON_HEIGHT_WIDTH, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    m_redTurtleIconPosition = QPointF(HUD_RED_TURTLE_ICON_X_OFFSET, HUD_TURTLE_ICON_Y_OFFSET);
+    m_currentTurnLabel = new QLabel();
+    m_currentTurnLabel->setFont(hudFont);
+    hudLayout->addWidget(m_currentTurnLabel);
 
-    m_victoryImagePosition = QPointF(BOARD_CENTER_X, BOARD_CENTER_Y + VICTORY_IMAGE_Y_OFFSET);
-    // Winner and loser images should be same size
-    m_victoryImagePosition.rx() -= 0.5 * ImageLibrary::getWinnerImage().width();
-    m_victoryImagePosition.ry() -= 0.5 * ImageLibrary::getWinnerImage().height();
+    auto spacer2 = new QSpacerItem(HUD_WIDTH / 6, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    hudLayout->addItem(spacer2);
+
+    m_blackPiecesRemainingLabel = new QLabel();
+    m_blackPiecesRemainingLabel->setFont(hudFont);
+    hudLayout->addWidget(m_blackPiecesRemainingLabel);
+
+    auto blackTurtleIconLabel = new QLabel();
+    auto blackTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black));
+    auto scaledBlackTurtleIcon = blackTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                        Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
+    hudLayout->addWidget(blackTurtleIconLabel);
+
+    m_blackTimeRemainingLabel = new QLabel();
+    m_blackTimeRemainingLabel->setFont(hudFont);
+    hudLayout->addWidget(m_blackTimeRemainingLabel);
+
+    auto spacer3 = new QSpacerItem(HUD_WIDTH / 6, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    hudLayout->addItem(spacer3);
+
+    m_redPiecesRemainingLabel = new QLabel();
+    m_redPiecesRemainingLabel->setFont(hudFont);
+    hudLayout->addWidget(m_redPiecesRemainingLabel);
+
+    auto redTurtleIconLabel = new QLabel();
+    auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
+    auto scaledRedTurtleIcon = redTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
+                                                    Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
+    hudLayout->addWidget(redTurtleIconLabel);
+
+    m_redTimeRemainingLabel = new QLabel();
+    m_redTimeRemainingLabel->setFont(hudFont);
+    hudLayout->addWidget(m_redTimeRemainingLabel);
+}
+
+void HUD::reloadStrings()
+{
+    setGameState(m_gameState);
 }
 
 void HUD::setPlayerColor(TurtlePieceColor playerColor)
@@ -60,6 +91,8 @@ void HUD::setPiecesRemaining(size_t blackPiecesRemaining, size_t redPiecesRemain
 {
     m_blackPiecesRemaining = blackPiecesRemaining;
     m_redPiecesRemaining = redPiecesRemaining;
+    m_blackPiecesRemainingLabel->setText(QString::fromStdString(std::to_string(m_blackPiecesRemaining)));
+    m_redPiecesRemainingLabel->setText(QString::fromStdString(std::to_string(m_redPiecesRemaining)));
 }
 
 void HUD::enableTimers(bool usingTimers)
@@ -72,11 +105,124 @@ void HUD::setTimeRemaining(uint64_t blackTimeRemainingSec, uint64_t redTimeRemai
     m_lastTimestamp = std::chrono::system_clock::now();
     m_blackTimeRemainingSec = blackTimeRemainingSec;
     m_redTimeRemainingSec = redTimeRemainingSec;
+    if (m_usingTimers)
+    {
+        m_blackTimeRemainingLabel->setText(formatTimeRemaining(m_blackTimeRemainingSec));
+        m_redTimeRemainingLabel->setText(formatTimeRemaining(m_redTimeRemainingSec));
+    }
+    else
+    {
+        m_blackTimeRemainingLabel->clear();
+        m_redTimeRemainingLabel->clear();
+    }
+}
+
+void HUD::updateTimers()
+{
+    if (m_usingTimers)
+    {
+        auto timePassedSec = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
+                                                       std::chrono::system_clock::now() - m_lastTimestamp)
+                                                       .count());
+        if (m_gameState == GameState::BlackMove)
+        {
+            auto blackTimeRemainingSec = (m_blackTimeRemainingSec > timePassedSec) ? (m_blackTimeRemainingSec - timePassedSec) : 0u;
+            m_blackTimeRemainingLabel->setText(formatTimeRemaining(blackTimeRemainingSec));
+        }
+        else if (m_gameState == GameState::RedMove)
+        {
+            auto redTimeRemainingSec = (m_redTimeRemainingSec > timePassedSec) ? (m_redTimeRemainingSec - timePassedSec) : 0u;
+            m_redTimeRemainingLabel->setText(formatTimeRemaining(redTimeRemainingSec));
+        }
+    }
 }
 
 void HUD::setGameState(GameState gameState)
 {
     m_gameState = gameState;
+    switch (m_gameState)
+    {
+    case GameState::Connecting:
+    {
+        m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Connecting"));
+    }
+    break;
+    case GameState::Connected:
+    {
+        m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Waiting for opponent to connect"));
+    }
+    break;
+    case GameState::BlackMove:
+    {
+        if (m_playerColor == TurtlePieceColor::Black)
+        {
+            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Your move"));
+            m_currentTurnLabel->setStyleSheet("color: #00FFFF;");
+        }
+        else
+        {
+            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Opponent's move"));
+            m_currentTurnLabel->setStyleSheet("color: white;");
+        }
+
+        m_blackTimeRemainingLabel->setStyleSheet("color: #00FFFF;");
+        m_redTimeRemainingLabel->setStyleSheet("color: white;");
+    }
+    break;
+    case GameState::RedMove:
+    {
+        if (m_playerColor == TurtlePieceColor::Red)
+        {
+            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Your move"));
+            m_currentTurnLabel->setStyleSheet("color: #00FFFF;");
+        }
+        else
+        {
+            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Opponent's move"));
+            m_redTimeRemainingLabel->setStyleSheet("color: white;");
+        }
+
+        m_blackTimeRemainingLabel->setStyleSheet("color: white;");
+        m_redTimeRemainingLabel->setStyleSheet("color: #00FFFF;");
+    }
+    break;
+    case GameState::GameFinished:
+    {
+        if (m_winner == Winner::Draw)
+        {
+            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Draw!"));
+        }
+        else if (m_winner == Winner::Black)
+        {
+            if (m_playerColor == TurtlePieceColor::Black)
+            {
+                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You win!"));
+            }
+            else
+            {
+                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You lose!"));
+            }
+        }
+        else if (m_winner == Winner::Red)
+        {
+            if (m_playerColor == TurtlePieceColor::Red)
+            {
+                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You win!"));
+            }
+            else
+            {
+                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You lose!"));
+            }
+        }
+        else // if (m_winner == Winner::None)
+        {
+            // Do nothing, this shouldn't happen
+        }
+        m_blackTimeRemainingLabel->setStyleSheet("color: white;");
+        m_redTimeRemainingLabel->setStyleSheet("color: white;");
+    }
+    break;
+    }
 }
 
 void HUD::setWinner(Winner winner)
@@ -98,148 +244,4 @@ QString HUD::formatTimeRemaining(uint64_t timeRemaining)
     }
     std::string combined = minutes + ":" + seconds;
     return QString(combined.c_str());
-}
-
-void HUD::paint(QPainter &painter)
-{
-    auto timePassedSec = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
-                                                   std::chrono::system_clock::now() - m_lastTimestamp)
-                                                   .count());
-
-    // Fill the background
-    QRgb backgroundColor = qRgb(HUD_BG_RGB[0], HUD_BG_RGB[1], HUD_BG_RGB[2]);
-    painter.fillRect(0, 0, WINDOW_WIDTH, HUD_HEIGHT, backgroundColor);
-
-    painter.setFont(m_turtleFont);
-    painter.setPen(m_turtlePen);
-
-    painter.drawImage(m_blackTurtleIconPosition, m_blackTurtleIcon);
-    painter.drawImage(m_redTurtleIconPosition, m_redTurtleIcon);
-
-    painter.drawText(m_blackRemainingTextRightingRect, Qt::AlignRight, std::to_string(m_blackPiecesRemaining).c_str());
-    painter.drawText(m_redRemainingTextRightingRect, Qt::AlignRight, std::to_string(m_redPiecesRemaining).c_str());
-
-    switch (m_gameState)
-    {
-    case GameState::Connecting:
-    {
-        painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Connecting"));
-    }
-    break;
-    case GameState::Connected:
-    {
-        painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Waiting for opponent to connect"));
-    }
-    break;
-    case GameState::BlackMove:
-    {
-        if (m_playerColor == TurtlePieceColor::Black)
-        {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Your move"));
-        }
-        else
-        {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Opponent's move"));
-        }
-
-        if (m_usingTimers)
-        {
-            painter.setPen(m_activeTimerPen);
-            auto blackTimeRemainingSec = (m_blackTimeRemainingSec > timePassedSec) ? (m_blackTimeRemainingSec - timePassedSec) : 0u;
-            painter.drawText(HUD_BLACK_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(blackTimeRemainingSec));
-        }
-        else
-        {
-            painter.setPen(m_timerPen);
-            painter.drawText(HUD_BLACK_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(m_blackTimeRemainingSec));
-        }
-        painter.setPen(m_timerPen);
-        painter.drawText(HUD_RED_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(m_redTimeRemainingSec));
-    }
-    break;
-    case GameState::RedMove:
-    {
-        if (m_playerColor == TurtlePieceColor::Red)
-        {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Your move"));
-        }
-        else
-        {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Opponent's move"));
-        }
-
-        painter.setPen(m_timerPen);
-        painter.drawText(HUD_BLACK_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(m_blackTimeRemainingSec));
-        if (m_usingTimers)
-        {
-            painter.setPen(m_activeTimerPen);
-            auto redTimeRemainingSec = (m_redTimeRemainingSec > timePassedSec) ? (m_redTimeRemainingSec - timePassedSec) : 0u;
-            painter.drawText(HUD_RED_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(redTimeRemainingSec));
-        }
-        else
-        {
-            painter.setPen(m_timerPen);
-            painter.drawText(HUD_RED_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(m_redTimeRemainingSec));
-        }
-    }
-    break;
-    case GameState::GameFinished:
-    {
-        if (m_winner == Winner::Draw)
-        {
-            painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("Draw!"));
-            painter.setFont(m_victoryFont);
-            painter.setPen(m_victoryPen);
-            painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Draw!"));
-            painter.drawImage(m_victoryImagePosition, ImageLibrary::getDrawImage());
-        }
-        else if (m_winner == Winner::Black)
-        {
-            if (m_playerColor == TurtlePieceColor::Black)
-            {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You win!"));
-                painter.setFont(m_victoryFont);
-                painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Winner!"));
-                painter.drawImage(m_victoryImagePosition, ImageLibrary::getWinnerImage());
-            }
-            else
-            {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You lose!"));
-                painter.setFont(m_victoryFont);
-                painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Loser!"));
-                painter.drawImage(m_victoryImagePosition, ImageLibrary::getLoserImage());
-            }
-        }
-        else if (m_winner == Winner::Red)
-        {
-            if (m_playerColor == TurtlePieceColor::Red)
-            {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You win!"));
-                painter.setFont(m_victoryFont);
-                painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Winner!"));
-                painter.drawImage(m_victoryImagePosition, ImageLibrary::getWinnerImage());
-            }
-            else
-            {
-                painter.drawText(HUD_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, StringLibrary::getTranslatedString("You lose!"));
-                painter.setFont(m_victoryFont);
-                painter.setPen(m_victoryPen);
-                painter.drawText(m_victoryTextCenteringRect, Qt::AlignCenter, StringLibrary::getTranslatedString("Loser!"));
-                painter.drawImage(m_victoryImagePosition, ImageLibrary::getLoserImage());
-            }
-        }
-        else // if (m_winner == Winner::None)
-        {
-            // Do nothing, this shouldn't happen
-        }
-        painter.setFont(m_turtleFont);
-        painter.setPen(m_timerPen);
-        painter.drawText(HUD_BLACK_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(m_blackTimeRemainingSec));
-        painter.drawText(HUD_RED_TIMER_TEXT_X_OFFSET, HUD_HEIGHT - HUD_TEXT_Y_OFFSET, formatTimeRemaining(m_redTimeRemainingSec));
-    }
-    break;
-    }
 }

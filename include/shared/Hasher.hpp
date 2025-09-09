@@ -437,7 +437,7 @@ struct std::hash<turtle_checkers_interfaces::srv::ChangeAccountPassword::Respons
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<bool>{}(response->changed));
         hashCombine(combinedHash, std::hash<std::string>{}(response->player_name));
-        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->error_code));
         return combinedHash;
     }
 };
@@ -450,7 +450,7 @@ struct std::hash<turtle_checkers_interfaces::srv::CreateAccount::Response::Share
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<bool>{}(response->created));
         hashCombine(combinedHash, std::hash<std::string>{}(response->player_name));
-        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->error_code));
         return combinedHash;
     }
 };
@@ -481,7 +481,7 @@ struct std::hash<turtle_checkers_interfaces::srv::CreateLobby::Response::SharedP
         hashCombine(combinedHash, std::hash<std::string>{}(response->red_player_name));
         hashCombine(combinedHash, std::hash<bool>{}(response->black_player_ready));
         hashCombine(combinedHash, std::hash<bool>{}(response->red_player_ready));
-        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->error_code));
         return combinedHash;
     }
 };
@@ -527,7 +527,7 @@ struct std::hash<turtle_checkers_interfaces::srv::JoinLobby::Response::SharedPtr
         hashCombine(combinedHash, std::hash<bool>{}(response->black_player_ready));
         hashCombine(combinedHash, std::hash<bool>{}(response->red_player_ready));
         hashCombine(combinedHash, std::hash<uint64_t>{}(response->timer_seconds));
-        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->error_code));
         return combinedHash;
     }
 };
@@ -540,7 +540,7 @@ struct std::hash<turtle_checkers_interfaces::srv::LogInAccount::Response::Shared
         size_t combinedHash = 0u;
         hashCombine(combinedHash, std::hash<bool>{}(response->logged_in));
         hashCombine(combinedHash, std::hash<std::string>{}(response->player_name));
-        hashCombine(combinedHash, std::hash<std::string>{}(response->error_msg));
+        hashCombine(combinedHash, std::hash<uint64_t>{}(response->error_code));
         return combinedHash;
     }
 };

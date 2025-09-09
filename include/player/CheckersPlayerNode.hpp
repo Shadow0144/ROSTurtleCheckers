@@ -79,8 +79,7 @@ public:
     void joinLobby(const std::string &playerName,
                    const std::string &lobbyName,
                    const std::string &lobbyId,
-                   const std::string &lobbyPassword,
-                   TurtlePieceColor playerDesiredColor);
+                   const std::string &lobbyPassword);
     void getLobbyList();
     void leaveLobby();
     void kickPlayer(const std::string &playerName);

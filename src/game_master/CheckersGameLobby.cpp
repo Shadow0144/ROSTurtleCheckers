@@ -134,7 +134,7 @@ CheckersGameLobby::CheckersGameLobby(rclcpp::Node::SharedPtr &nodeHandle,
     m_timerChangedSubscription = m_nodeHandle->create_subscription<turtle_checkers_interfaces::msg::TimerChanged>(
         m_lobbyName + "/id" + m_lobbyId + "/TimerChanged", 10, std::bind(&CheckersGameLobby::timerChangedCallback, this, std::placeholders::_1));
 
-    RCLCPP_INFO(m_nodeHandle->get_logger(), "Creating checkers game lobby!");
+    RCLCPP_INFO(m_nodeHandle->get_logger(), "Creating checkers game lobby: " + m_lobbyName + "#" + m_lobbyId);
 }
 
 CheckersGameLobby::~CheckersGameLobby()

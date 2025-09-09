@@ -55,6 +55,7 @@ qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/player/CheckersPlayerNode.hpp)
 
 add_executable(checkers_player_node
+  src/shared/ErrorCode.cpp
   src/shared/RSAKeyGenerator.cpp
   src/player/ImageLibrary.cpp
   src/player/StringLibrary.cpp
@@ -69,6 +70,7 @@ add_executable(checkers_player_node
   src/player/TurtleGraveyard.cpp
   src/player/ChatBox.cpp
   src/player/HUD.cpp
+  src/player/GameWinnerOverlayWidget.cpp
   src/player/CheckersBoardRender.cpp
   src/player/TitleWidget.cpp
   src/player/DialogWidget.cpp
@@ -98,6 +100,7 @@ target_link_libraries(checkers_player_node
   Qt5::Widgets)
 
 add_executable(checkers_game_master_node
+  src/shared/ErrorCode.cpp
   src/shared/RSAKeyGenerator.cpp
   src/shared/Tile.cpp
   src/shared/TurtleLogger.cpp

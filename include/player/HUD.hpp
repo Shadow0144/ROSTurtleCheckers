@@ -1,32 +1,27 @@
 #pragma once
 
-#include <QPainter>
-#include <QPen>
-#include <QFont>
-#include <QImage>
-#include <QPointF>
-#include <QRect>
-#include <QString>
+#include <QWidget>
+#include <QLabel>
 
 #include <chrono>
-#include <memory>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/TurtlePiece.hpp"
 
-class HUD
+class HUD : public QWidget
 {
 public:
-    HUD();
+    HUD(QWidget *parent);
 
     void setPlayerColor(TurtlePieceColor playerColor);
     void setPiecesRemaining(size_t blackPiecesRemaining, size_t redPiecesRemaining);
     void enableTimers(bool usingTimers);
     void setTimeRemaining(uint64_t blackTimeRemainingSec, uint64_t redTimeRemainingSec);
+    void updateTimers();
     void setGameState(GameState gameState);
     void setWinner(Winner winner);
 
-    void paint(QPainter &painter);
+    void reloadStrings();
 
 private:
     QString formatTimeRemaining(uint64_t timeRemaining);
@@ -42,25 +37,11 @@ private:
     bool m_usingTimers;
     std::chrono::system_clock::time_point m_lastTimestamp;
 
-    QFont m_turtleFont;
-    QPen m_turtlePen;
-
-    QImage m_blackTurtleIcon;
-    QImage m_redTurtleIcon;
-
-    QFont m_victoryFont;
-    QPen m_victoryPen;
-    QRect m_victoryTextCenteringRect;
-    QPointF m_victoryImagePosition;
-
-    QRect m_blackRemainingTextRightingRect;
-    QRect m_redRemainingTextRightingRect;
-
-    QPen m_timerPen;
-    QPen m_activeTimerPen;
-
-    QPointF m_blackTurtleIconPosition;
-    QPointF m_redTurtleIconPosition;
+    QLabel *m_currentTurnLabel;
+    QLabel *m_blackPiecesRemainingLabel;
+    QLabel *m_blackTimeRemainingLabel;
+    QLabel *m_redPiecesRemainingLabel;
+    QLabel *m_redTimeRemainingLabel;
 };
 
 typedef std::shared_ptr<HUD> HUDPtr;

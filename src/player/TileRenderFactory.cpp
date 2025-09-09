@@ -17,11 +17,11 @@ std::vector<TileRenderPtr> TileRenderFactory::createTileRenders(
         {
             if (r % 2u == 0u)
             {
-                tileCenterX = ((1u + (2u * c)) * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+                tileCenterX = ((1u + (2u * c)) * TILE_WIDTH) + TILE_HALF_WIDTH + FULL_GRAVEYARD_WIDTH;
             }
             else
             {
-                tileCenterX = ((0u + (2u * c)) * TILE_WIDTH) + TILE_HALF_WIDTH + GRAVEYARD_WIDTH;
+                tileCenterX = ((0u + (2u * c)) * TILE_WIDTH) + TILE_HALF_WIDTH + FULL_GRAVEYARD_WIDTH;
             }
             if (playerColor == TurtlePieceColor::Black)
             {

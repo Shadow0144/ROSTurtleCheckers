@@ -31,6 +31,7 @@
 #include "player/TurtlePieceRender.hpp"
 #include "player/TurtleGraveyard.hpp"
 #include "player/HUD.hpp"
+#include "player/GameWinnerOverlayWidget.hpp"
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 #include "player/Parameters.hpp"
@@ -51,19 +52,22 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	m_showingDialog = false;
 
-	m_board = std::make_shared<CheckersBoardRender>();
-
 	m_languageSelector = new LanguageSelectorWidget(this);
 
-	m_hud = std::make_shared<HUD>();
-	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
-	m_hud->setGameState(GameState::Connecting);
+	m_hud = std::make_shared<HUD>(this);
 
-	m_chatBox = new ChatBox(this, CHAT_IN_GAME_WIDTH, CHAT_IN_GAME_HEIGHT, [this](const std::string &chatMessages)
-							{ this->reportPlayer(chatMessages); }, [this](const std::string &chatMessage)
-							{ this->sendChatMessage(chatMessage); });
+	m_board = std::make_shared<CheckersBoardRender>();
+
+	m_gameWinnerOverlayWidget = std::make_shared<GameWinnerOverlayWidget>(this);
+
+	m_chatBox = std::make_shared<ChatBox>(this, CHAT_BOX_IN_GAME_WIDTH, CHAT_BOX_IN_GAME_HEIGHT, [this](const std::string &chatMessages)
+										  { this->reportPlayer(chatMessages); }, [this](const std::string &chatMessage)
+										  { this->sendChatMessage(chatMessage); });
 	m_chatBox->setGeometry(CHAT_BOX_IN_GAME_X, CHAT_BOX_IN_GAME_Y,
 						   CHAT_BOX_IN_GAME_WIDTH, CHAT_BOX_IN_GAME_HEIGHT);
+
+	m_leftGraveyard = std::make_shared<TurtleGraveyard>(this, GRAVEYARD_OFFSET_X, true);
+	m_rightGraveyard = std::make_shared<TurtleGraveyard>(this, BOARD_WIDTH + FULL_GRAVEYARD_WIDTH, false);
 
 	auto buttonLayout = new QHBoxLayout(this);
 	buttonLayout->setAlignment(Qt::AlignCenter);
@@ -74,11 +78,13 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 
 	m_offerDrawButton = new QPushButton();
 	m_offerDrawButton->setText(StringLibrary::getTranslatedString("Offer Draw"));
+    m_offerDrawButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(m_offerDrawButton, &QPushButton::released, this, &GameFrame::handleOfferDrawButton);
 	buttonLayout->addWidget(m_offerDrawButton);
 
 	m_forfeitButton = new QPushButton();
 	m_forfeitButton->setText(StringLibrary::getTranslatedString("Forfeit"));
+    m_forfeitButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(m_forfeitButton, &QPushButton::released, this, &GameFrame::handleForfeitButton);
 	buttonLayout->addWidget(m_forfeitButton);
 
@@ -127,8 +133,8 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 														{ this->handleLeaveGameButton(); }},
 										 "", {[]() {}});
 
-    // Needs to be in front of everything
-    m_languageSelector->raise();
+	// Needs to be in front of everything
+	m_languageSelector->raise();
 }
 
 GameFrame::~GameFrame()
@@ -140,6 +146,8 @@ void GameFrame::showEvent(QShowEvent *event)
 	(void)event; // NO LINT
 
 	m_redrawTimer->start(1000);
+
+	m_gameWinnerOverlayWidget->hide();
 
 	m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
 	reloadStrings();
@@ -159,24 +167,25 @@ void GameFrame::connectedToGame()
 	{
 		m_gameState = GameState::Connected;
 	}
+	m_winner = Winner::None;
 
 	displayDialog(false);
 
 	auto playerColor = Parameters::getPlayerColor();
 
 	// Create the board with all the tiles and pieces
-	m_board = std::make_shared<CheckersBoardRender>();
-	m_board->createBoard(playerColor);
+	m_board->createBoard();
 
-	// Create the graveyards now that we know which side of the screen they are on
-	m_blackPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Black, playerColor);
-	m_redPlayerGraveyard = std::make_shared<TurtleGraveyard>(TurtlePieceColor::Red, playerColor);
+	m_leftGraveyard->clear();
+	m_rightGraveyard->clear();
 
-	m_winner = Winner::None;
-	m_hud = std::make_shared<HUD>();
 	m_hud->setPiecesRemaining(m_board->getBlackTurtlesRemaining(), m_board->getRedTurtlesRemaining());
 	m_hud->setPlayerColor(playerColor);
 	m_hud->setGameState(m_gameState);
+	m_hud->setWinner(m_winner);
+
+	m_gameWinnerOverlayWidget->setPlayerColor(playerColor);
+	m_gameWinnerOverlayWidget->setWinner(m_winner);
 }
 
 void GameFrame::requestedPieceMoveAccepted(bool moveAccepted)
@@ -223,10 +232,13 @@ void GameFrame::sendChatMessage(const std::string &chatMessage)
 void GameFrame::declaredWinner(Winner winner)
 {
 	m_winner = winner;
-	m_hud->setWinner(m_winner);
-
 	m_gameState = GameState::GameFinished;
+
+	m_hud->setWinner(m_winner);
 	m_hud->setGameState(m_gameState);
+
+	m_gameWinnerOverlayWidget->setWinner(m_winner);
+	m_gameWinnerOverlayWidget->show();
 
 	displayDialog(true, m_leaveGameDialog);
 
@@ -238,8 +250,8 @@ void GameFrame::gameStarted(GameState gameState, const std::vector<size_t> &mova
 {
 	m_gameState = gameState;
 	m_hud->setGameState(m_gameState);
-	m_hud->setTimeRemaining(blackTimeRemainSec, redTimeRemainSec);
 	m_hud->enableTimers(blackTimeRemainSec > 0u || redTimeRemainSec > 0u);
+	m_hud->setTimeRemaining(blackTimeRemainSec, redTimeRemainSec);
 
 	if (isOwnTurn())
 	{
@@ -266,7 +278,7 @@ void GameFrame::updatedBoard(size_t sourceTileIndex, size_t destinationTileIndex
 		m_board->slayTurtle(slainPieceTileIndex);
 		// if (m_gameState != nextGameState) // If the game state switches on this update, the last turn finished
 		{
-			m_board->moveTurtlePiecesToGraveyard(m_blackPlayerGraveyard, m_redPlayerGraveyard);
+			m_board->moveTurtlePiecesToGraveyard(m_leftGraveyard, m_rightGraveyard);
 		}
 	}
 
@@ -514,11 +526,6 @@ void GameFrame::handleLeaveGameButton()
 	m_playerWindow->moveToMainMenuFrame();
 }
 
-void GameFrame::handleOfferRematchButton()
-{
-	// TODO: Add button to end game dialog that creates a lobby and holds the position open for the other player
-}
-
 uint64_t GameFrame::getBoardHash() const
 {
 	return std::hash<CheckersBoardRenderPtr>{}(m_board);
@@ -543,8 +550,8 @@ void GameFrame::resyncBoard(uint64_t blackTimeRemainingSeconds,
 	m_board->resyncBoard(turtlePieceNamePerTile,
 						 turtlePieceColorPerTile,
 						 turtlePieceIsKingedPerTile,
-						 m_blackPlayerGraveyard,
-						 m_redPlayerGraveyard);
+						 m_leftGraveyard,
+						 m_rightGraveyard);
 }
 
 void GameFrame::displayDialog(bool dialogDisplayed, DialogWidget *dialog)
@@ -568,9 +575,10 @@ void GameFrame::displayDialog(bool dialogDisplayed, DialogWidget *dialog)
 
 void GameFrame::reloadStrings()
 {
-	// HUD reloads strings when it redraws itself every frame
-
+	m_hud->reloadStrings();
 	m_chatBox->reloadStrings();
+
+	m_gameWinnerOverlayWidget->reloadStrings();
 
 	m_offerDrawButton->setText(StringLibrary::getTranslatedString("Offer Draw"));
 	m_forfeitButton->setText(StringLibrary::getTranslatedString("Forfeit"));
@@ -599,10 +607,9 @@ void GameFrame::paintEvent(QPaintEvent *event)
 
 	m_board->paint(painter);
 
-	// Draw the graveyards and any turtles they contain
-	m_blackPlayerGraveyard->paint(painter);
-	m_redPlayerGraveyard->paint(painter);
+	m_leftGraveyard->paint(painter);
+	m_rightGraveyard->paint(painter);
 
-	// Draw the HUD
-	m_hud->paint(painter);
+	// Update the HUD timers
+	m_hud->updateTimers();
 }

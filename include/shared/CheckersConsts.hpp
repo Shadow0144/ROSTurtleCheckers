@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <algorithm>
 
 // Enums
 enum class GameState
@@ -52,12 +53,13 @@ enum class Language
 };
 
 // Constants
-constexpr size_t NUM_PIECES_PER_PLAYER = 1u;
+constexpr size_t NUM_PIECES_PER_PLAYER = 12u;
 constexpr size_t NUM_PIECES = 2u * NUM_PIECES_PER_PLAYER;
+constexpr size_t PIECE_SIZE = 50u;
 
 constexpr size_t NUM_PLAYABLE_ROWS = 8u;
 constexpr size_t NUM_PLAYABLE_COLS = 4u;
-constexpr static size_t NUM_PLAYABLE_TILES = NUM_PLAYABLE_ROWS * NUM_PLAYABLE_COLS;
+constexpr size_t NUM_PLAYABLE_TILES = NUM_PLAYABLE_ROWS * NUM_PLAYABLE_COLS;
 
 constexpr size_t BLACK_OFFSET = NUM_PLAYABLE_TILES - NUM_PIECES_PER_PLAYER;
 
@@ -80,7 +82,7 @@ constexpr int MENU_LINE_EDIT_WIDTH = 550;
 constexpr int MENU_BUTTON_WIDTH = 150;
 
 constexpr int LOBBY_LIST_SCROLL_W = 700;
-constexpr int LOBBY_LIST_SCROLL_H = 270;
+constexpr int LOBBY_LIST_SCROLL_H = 320;
 constexpr int LOBBY_LIST_LOBBY_NAME_WIDTH = 150;
 constexpr int LOBBY_LIST_PLAYER_NAME_WIDTH = 150;
 
@@ -91,7 +93,20 @@ constexpr int MATCH_LIST_PLAYER_NAME_WIDTH = 130;
 
 constexpr int IN_LOBBY_LAYOUT_MARGINS = 24;
 
-constexpr int HUD_HEIGHT = 20;
+constexpr int GRAVEYARD_OFFSET_X = 9;
+constexpr int GRAVEYARD_WIDTH = TILE_WIDTH;
+constexpr int FULL_GRAVEYARD_WIDTH = GRAVEYARD_OFFSET_X + GRAVEYARD_WIDTH;
+constexpr int GRAVEYARD_PADDING = 5;
+
+constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
+constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
+constexpr int BOARD_LEFT = GRAVEYARD_OFFSET_X + GRAVEYARD_WIDTH;
+constexpr int BOARD_TOP = 40;
+
+constexpr int BUTTON_DOCK_HEIGHT = 64;
+
+constexpr int HUD_HEIGHT = BOARD_TOP;
+constexpr int HUD_WIDTH = (2 * FULL_GRAVEYARD_WIDTH) + BOARD_WIDTH;
 constexpr int HUD_TEXT_X_OFFSET = 5;
 constexpr int HUD_TEXT_Y_OFFSET = 5;
 constexpr int HUD_FONT_SIZE = 10;
@@ -106,30 +121,20 @@ constexpr int HUD_TURTLE_ICON_HEIGHT_WIDTH = 18;
 constexpr int HUD_BLACK_TIMER_TEXT_X_OFFSET = 250;
 constexpr int HUD_RED_TIMER_TEXT_X_OFFSET = 450;
 
-constexpr int GRAVEYARD_WIDTH = 2u * TILE_WIDTH;
-
-constexpr int BOARD_LEFT = GRAVEYARD_WIDTH;
-constexpr int BOARD_TOP = HUD_HEIGHT;
-constexpr int BOARD_WIDTH = 8 * TILE_WIDTH;
-constexpr int BOARD_HEIGHT = 8 * TILE_HEIGHT;
-
-constexpr int BUTTON_DOCK_HEIGHT = 50;
-
 constexpr int CHAT_HEADER_FONT_SIZE = 10;
-constexpr int CHAT_BOX_IN_LOBBY_X = 0;
-constexpr int CHAT_BOX_IN_LOBBY_Y = 0;
-constexpr int CHAT_BOX_IN_LOBBY_WIDTH = 0;
-constexpr int CHAT_BOX_IN_LOBBY_HEIGHT = 0;
-constexpr int CHAT_BOX_IN_GAME_X = (2 * GRAVEYARD_WIDTH) + BOARD_WIDTH;
-constexpr int CHAT_BOX_IN_GAME_Y = 0;
-constexpr int CHAT_BOX_IN_GAME_WIDTH = 200;
-constexpr int CHAT_BOX_IN_GAME_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
-constexpr int CHAT_IN_LOBBY_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_IN_GAME_WIDTH - (2 * IN_LOBBY_LAYOUT_MARGINS) - 20;
-constexpr int CHAT_IN_LOBBY_HEIGHT = 50;
-constexpr int CHAT_IN_GAME_WIDTH = 180;
-constexpr int CHAT_IN_GAME_HEIGHT = 405;
+constexpr int CHAT_BOX_MARGIN_W = 20;
+constexpr int CHAT_BOX_MARGIN_H = 110;
+constexpr int REPORT_PLAYER_MARGINS = 5;
 
-constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + CHAT_BOX_IN_GAME_WIDTH;
+constexpr int CHAT_BOX_IN_LOBBY_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) - (2 * IN_LOBBY_LAYOUT_MARGINS) + 233;
+constexpr int CHAT_BOX_IN_LOBBY_HEIGHT = 170;
+
+constexpr int CHAT_BOX_IN_GAME_X = (2 * GRAVEYARD_WIDTH) + BOARD_WIDTH + GRAVEYARD_OFFSET_X;
+constexpr int CHAT_BOX_IN_GAME_Y = 0;
+constexpr int CHAT_BOX_IN_GAME_WIDTH = 240;
+constexpr int CHAT_BOX_IN_GAME_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
+
+constexpr int WINDOW_WIDTH = BOARD_WIDTH + (2 * GRAVEYARD_WIDTH) + GRAVEYARD_OFFSET_X + CHAT_BOX_IN_GAME_WIDTH;
 constexpr int WINDOW_HEIGHT = BOARD_HEIGHT + HUD_HEIGHT + BUTTON_DOCK_HEIGHT;
 
 constexpr int WINDOW_CENTER_X = WINDOW_WIDTH / 2;
@@ -138,11 +143,10 @@ constexpr int WINDOW_CENTER_Y = WINDOW_HEIGHT / 2;
 constexpr float BOARD_CENTER_X = BOARD_LEFT + (0.5f * BOARD_WIDTH);
 constexpr float BOARD_CENTER_Y = BOARD_TOP + (0.5f * BOARD_HEIGHT);
 
-constexpr int VICTORY_TEXT_Y_OFFSET = -85;
 constexpr int VICTORY_TEXT_HEIGHT = 24;
 constexpr int VICTORY_TEXT_FONT_SIZE = 24;
-constexpr int VICTORY_IMAGE_Y_OFFSET = 0;
-constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 80;
+constexpr int VICTORY_WIDGET_Y_OFFSET = -50;
+constexpr int VICTORY_BUTTONS_Y = BOARD_CENTER_Y + 100;
 
 constexpr float DEFAULT_BOARD_SCALE = 1.0f;
 
@@ -166,7 +170,7 @@ constexpr int LAST_MOVED_TO_SQUARES_BG_RGB[3] = {0u, 0u, 150u};
 constexpr int LAST_JUMPED_OVER_SQUARES_BG_RGB[3] = {50u, 50u, 100u};
 constexpr int BLACK_SQUARES_BG_RGB[3] = {0u, 0u, 0u};
 constexpr int HUD_BG_RGB[3] = {100u, 100u, 100u};
-constexpr int GRAVEYARD_BG_RGB[3] = {50u, 50u, 50u};
+constexpr int GRAVEYARD_BG_RGB[3] = {35u, 35u, 35u};
 
 constexpr int NUM_BITS_RSA = 16;
 constexpr int NUM_CHARS_SALT = 6;

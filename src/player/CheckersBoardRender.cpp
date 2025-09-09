@@ -14,6 +14,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
+#include "player/Parameters.hpp"
 #include "player/TileRenderFactory.hpp"
 #include "player/TurtlePieceRenderFactory.hpp"
 
@@ -25,10 +26,10 @@ CheckersBoardRender::CheckersBoardRender()
     m_moveSelected = false;
 }
 
-void CheckersBoardRender::createBoard(TurtlePieceColor playerColor)
+void CheckersBoardRender::createBoard()
 {
-    m_tileRenders = TileRenderFactory::createTileRenders(NUM_PLAYABLE_ROWS, NUM_PLAYABLE_COLS, playerColor);
-    m_turtlePieceRenders = TurtlePieceRenderFactory::createTurtlePieceRenders(NUM_PIECES_PER_PLAYER, m_tileRenders, playerColor);
+    m_tileRenders = TileRenderFactory::createTileRenders(NUM_PLAYABLE_ROWS, NUM_PLAYABLE_COLS, Parameters::getPlayerColor());
+    m_turtlePieceRenders = TurtlePieceRenderFactory::createTurtlePieceRenders(NUM_PIECES_PER_PLAYER, m_tileRenders, Parameters::getPlayerColor());
 
     m_blackTurtlesRemaining = NUM_PIECES_PER_PLAYER;
     m_redTurtlesRemaining = NUM_PIECES_PER_PLAYER;
@@ -117,29 +118,26 @@ void CheckersBoardRender::slayTurtle(size_t slainPieceTileIndex)
 }
 
 void CheckersBoardRender::moveTurtlePiecesToGraveyard(
-    TurtleGraveyardPtr &blackPlayerGraveyard, TurtleGraveyardPtr &redPlayerGraveyard)
+    TurtleGraveyardPtr &leftGraveyard, TurtleGraveyardPtr &rightGraveyard)
 {
     for (auto tileIndex : m_tileIndicesOfSlainTurtles)
     {
-        switch (m_tileRenders[tileIndex]->getTurtlePieceColor())
+        const auto turtleColor = m_tileRenders[tileIndex]->getTurtlePieceColor();
+        if (turtleColor == Parameters::getPlayerColor())
         {
-        case TurtlePieceColor::Black:
+            m_tileRenders[tileIndex]->moveTurtlePiece(leftGraveyard);
+        }
+        else
         {
-            m_tileRenders[tileIndex]->moveTurtlePiece(redPlayerGraveyard);
+            m_tileRenders[tileIndex]->moveTurtlePiece(rightGraveyard);
+        }
+        if (turtleColor == TurtlePieceColor::Black)
+        {
             m_blackTurtlesRemaining--;
         }
-        break;
-        case TurtlePieceColor::Red:
+        else if (turtleColor == TurtlePieceColor::Red)
         {
-            m_tileRenders[tileIndex]->moveTurtlePiece(blackPlayerGraveyard);
             m_redTurtlesRemaining--;
-        }
-        break;
-        case TurtlePieceColor::None:
-        {
-            // Do nothing
-        }
-        break;
         }
     }
     m_tileIndicesOfSlainTurtles.clear();

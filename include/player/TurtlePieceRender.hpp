@@ -1,32 +1,34 @@
 #pragma once
 
+#include <QWidget>
 #include <QPointF>
 #include <QImage>
 #include <QPainter>
-#include <QVector>
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/TurtlePiece.hpp"
 
-class TurtlePieceRender : public TurtlePiece
+class TurtlePieceRender : public QWidget, public TurtlePiece
 {
 public:
     TurtlePieceRender(
         const std::string &name,
         TurtlePieceColor color,
-        const QPointF &centerPosition, 
+        const QPointF &centerPosition,
         int angleDegrees);
 
     void updateImages(); // Call if the image index changes
 
+    void resize(int width, int height);
+
     void setCenterPosition(const QPointF &centerPosition);
-    
+
     void paint(QPainter &painter);
 
 private:
-    QPointF m_centerPosition;
+    QPointF m_position;
     int m_angleDegrees;
-    
+
     QImage m_turtleRotatedImage;
     QImage m_kingRotatedImage;
     QImage m_movableRotatedImage;

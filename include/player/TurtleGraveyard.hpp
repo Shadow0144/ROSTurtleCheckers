@@ -1,8 +1,6 @@
 #pragma once
 
-#include <QPainter>
-#include <QPen>
-#include <QPointF>
+#include <QWidget>
 
 #include <memory>
 #include <string>
@@ -11,25 +9,29 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/TurtlePieceRender.hpp"
 
-class TurtleGraveyard
+class TurtleGraveyard : public QWidget
 {
 public:
-    TurtleGraveyard(TurtlePieceColor owningPlayerColor, TurtlePieceColor viewingPlayerColor);
+    TurtleGraveyard(QWidget *parent, int x, bool left);
 
     void addTurtlePiece(TurtlePieceRenderPtr &turtlePieceRender);
     void clear();
 
-    void paint(QPainter &painter) const;
+    void paint(QPainter &painter);
 
 private:
-    std::vector<TurtlePieceRenderPtr> m_slainTurtles;
+    int m_x;
+    int m_y;
+    bool m_left;
 
-    float m_left;
-    QPointF m_nextPosition;
-    QPointF m_initialRowPosition;
-    QPointF m_positionRowIncrement;
-    QPointF m_positionColIncrement;
-    size_t m_turtlesInColumn;
+    int m_turtleCenterInitialY;
+    int m_turtleCenterX;
+    int m_turtleCenterY;
+    int m_turtleCenterYStep;
+
+    int m_turtlePieceSize;
+
+    std::vector<TurtlePieceRenderPtr> m_turtlePieceRenders;
 };
 
 typedef std::shared_ptr<TurtleGraveyard> TurtleGraveyardPtr;

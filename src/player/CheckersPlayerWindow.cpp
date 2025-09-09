@@ -100,7 +100,7 @@ CheckersPlayerWindow::CheckersPlayerWindow(const CheckersPlayerNodeWkPtr &player
 
     // Kicked dialog
     m_kickedDialog = new DialogWidget(this, WINDOW_CENTER_X, WINDOW_CENTER_Y,
-                                      "You have been kicked",
+                                      "You have been kicked from the lobby",
                                       "Return to lobby list", {[this]()
                                                                { this->handleReturnToLobbyList(); }},
                                       "", {[]() {}});

@@ -14,6 +14,8 @@
 
 TitleWidget::TitleWidget()
 {
+    setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
     auto titleLayout = new QHBoxLayout(this);
     titleLayout->setAlignment(Qt::AlignCenter);
 
