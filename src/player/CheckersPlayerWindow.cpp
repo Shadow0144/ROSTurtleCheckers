@@ -251,8 +251,7 @@ void CheckersPlayerWindow::joinLobby(const std::string &lobbyPassword)
         playerNode->joinLobby(Parameters::getPlayerName(),
                               Parameters::getLobbyName(),
                               Parameters::getLobbyId(),
-                              lobbyPassword,
-                              Parameters::getPlayerColor());
+                              lobbyPassword);
     }
 }
 

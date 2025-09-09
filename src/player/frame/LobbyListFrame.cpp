@@ -12,6 +12,7 @@
 #include <QPixmap>
 #include <QSpacerItem>
 #include <QSizePolicy>
+#include <QProgressBar>
 
 #include <cstdlib>
 #include <memory>
@@ -34,76 +35,40 @@ LobbyListFrame::LobbyListFrame(
     : QFrame(parentWindow, Qt::WindowFlags())
 {
     m_playerWindow = parentWindow;
-    m_playerDesiredColor = TurtlePieceColor::None;
 
-    auto mainLayout = new QVBoxLayout(this);
-    mainLayout->setAlignment(Qt::AlignCenter);
+    auto lobbyListLayout = new QVBoxLayout(this);
+    lobbyListLayout->setAlignment(Qt::AlignCenter);
 
     m_languageSelector = new LanguageSelectorWidget(this);
 
     m_titleWidget = new TitleWidget();
-    mainLayout->addWidget(m_titleWidget);
-
-    auto contentWidget = new QWidget();
-    auto contentLayout = new QVBoxLayout();
-    contentWidget->setLayout(contentLayout);
-    contentLayout->addStretch();
-    contentLayout->setAlignment(Qt::AlignHCenter);
+    lobbyListLayout->addWidget(m_titleWidget);
 
     m_lobbyListScrollArea = new QScrollArea();
     m_lobbyListScrollArea->setWidgetResizable(true);
     m_lobbyListScrollArea->setFixedSize(LOBBY_LIST_SCROLL_W, LOBBY_LIST_SCROLL_H);
     m_lobbyListScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
-    m_lobbyListLayoutWidget = nullptr;
-    buildLobbyList();
+    displayProgressBar();
 
-    contentLayout->addWidget(m_lobbyListScrollArea);
+    lobbyListLayout->addWidget(m_lobbyListScrollArea);
 
-    auto joinLobbyDesiredColorLayout = new QHBoxLayout();
-    joinLobbyDesiredColorLayout->setAlignment(Qt::AlignCenter);
+    auto lobbyListButtonLayout = new QHBoxLayout();
+    lobbyListButtonLayout->setAlignment(Qt::AlignCenter);
 
-    m_blackRadioButton = new QRadioButton();
-    m_randomRadioButton = new QRadioButton();
-    m_redRadioButton = new QRadioButton();
+    m_refreshButton = new QPushButton(StringLibrary::getTranslatedString("Refresh"));
+    m_refreshButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(m_refreshButton, &QPushButton::released, this,
+            &LobbyListFrame::handleRefreshButton);
+    lobbyListButtonLayout->addWidget(m_refreshButton);
 
-    m_blackRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black))));
-    m_randomRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::None))));
-    m_redRadioButton->setIcon(QIcon(QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red))));
+    m_cancelButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    connect(m_cancelButton, &QPushButton::released, this,
+            &LobbyListFrame::handleCancelButton);
+    lobbyListButtonLayout->addWidget(m_cancelButton);
 
-    m_randomRadioButton->setChecked(true);
-
-    connect(m_blackRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onBlackTurtleToggled);
-    connect(m_randomRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onRandomTurtleToggled);
-    connect(m_redRadioButton, &QRadioButton::toggled, this, &LobbyListFrame::onRedTurtleToggled);
-
-    joinLobbyDesiredColorLayout->addWidget(m_blackRadioButton);
-    joinLobbyDesiredColorLayout->addWidget(m_randomRadioButton);
-    joinLobbyDesiredColorLayout->addWidget(m_redRadioButton);
-
-    contentLayout->addLayout(joinLobbyDesiredColorLayout);
-
-    mainLayout->addWidget(contentWidget);
-
-    auto menuButtonWidget = new QWidget();
-    menuButtonWidget->setContentsMargins(0, 5, 0, 5);
-    auto menuButtonLayout = new QHBoxLayout();
-    menuButtonWidget->setLayout(menuButtonLayout);
-    menuButtonLayout->setAlignment(Qt::AlignCenter);
-
-    m_refreshJoinLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Refresh"));
-    m_refreshJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    connect(m_refreshJoinLobbyButton, &QPushButton::released, this,
-            &LobbyListFrame::handleRefreshJoinLobbyButton);
-    menuButtonLayout->addWidget(m_refreshJoinLobbyButton);
-
-    m_cancelJoinLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
-    m_cancelJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
-    connect(m_cancelJoinLobbyButton, &QPushButton::released, this,
-            &LobbyListFrame::handleCancelJoinLobbyButton);
-    menuButtonLayout->addWidget(m_cancelJoinLobbyButton);
-
-    mainLayout->addWidget(menuButtonWidget);
+    lobbyListLayout->addLayout(lobbyListButtonLayout);
 
     // Needs to be in front of the title widget
     m_languageSelector->raise();
@@ -117,17 +82,28 @@ void LobbyListFrame::showEvent(QShowEvent *event)
 {
     (void)event; // NO LINT
 
-    if (m_lobbyListLayoutWidget)
-    {
-        delete m_lobbyListLayoutWidget;
-        m_lobbyListLayoutWidget = nullptr;
-    }
-
+    displayProgressBar();
     m_playerWindow->getLobbyList();
-    m_randomRadioButton->setChecked(true);
 
     m_languageSelector->setCurrentIndex(static_cast<int>(Parameters::getLanguage()));
     reloadStrings();
+}
+
+void LobbyListFrame::displayProgressBar()
+{
+    auto lobbyListProgressBarWidget = new QWidget();
+    auto lobbyListProgressBarLayout = new QVBoxLayout();
+    lobbyListProgressBarWidget->setLayout(lobbyListProgressBarLayout);
+    lobbyListProgressBarWidget->setContentsMargins(50, 50, 50, 50);
+    lobbyListProgressBarLayout->setAlignment(Qt::AlignCenter);
+
+    auto lobbyListProgressBar = new QProgressBar();
+    lobbyListProgressBar->setRange(0, 0);
+    lobbyListProgressBarLayout->addWidget(lobbyListProgressBar);
+
+    // This will delete the previous widget, layout, and children of them
+    m_lobbyDetailsWidgets.clear(); // Clear these since they will all be deleted
+    m_lobbyListScrollArea->setWidget(lobbyListProgressBarWidget);
 }
 
 void LobbyListFrame::displayLobbyList(const std::vector<std::string> &lobbyNames,
@@ -139,74 +115,10 @@ void LobbyListFrame::displayLobbyList(const std::vector<std::string> &lobbyNames
     m_lobbyNames = lobbyNames;
     m_lobbyIds = lobbyIds;
     m_hasPasswords = hasPasswords;
-    m_blackPlayerNames = blackPlayerNames;
-    m_redPlayerNames = redPlayerNames;
 
-    buildLobbyList();
-}
-
-void LobbyListFrame::handleCommitJoinLobbyButton(size_t lobbyIndex)
-{
-    Parameters::setLobbyName(m_lobbyNames[lobbyIndex]);
-    Parameters::setLobbyId(m_lobbyIds[lobbyIndex]);
-    if (m_hasPasswords[lobbyIndex])
-    {
-        m_playerWindow->moveToLobbyPasswordFrame();
-    }
-    else
-    {
-        m_playerWindow->joinLobby("");
-    }
-}
-
-void LobbyListFrame::handleRefreshJoinLobbyButton()
-{
-    m_playerWindow->getLobbyList();
-}
-
-void LobbyListFrame::handleCancelJoinLobbyButton()
-{
-    m_playerWindow->moveToMainMenuFrame();
-}
-
-void LobbyListFrame::onBlackTurtleToggled(bool checked)
-{
-    if (checked)
-    {
-        m_playerDesiredColor = TurtlePieceColor::Black;
-        Parameters::setPlayerColor(m_playerDesiredColor);
-    }
-}
-
-void LobbyListFrame::onRandomTurtleToggled(bool checked)
-{
-    if (checked)
-    {
-        m_playerDesiredColor = TurtlePieceColor::None;
-        Parameters::setPlayerColor(m_playerDesiredColor);
-    }
-}
-
-void LobbyListFrame::onRedTurtleToggled(bool checked)
-{
-    if (checked)
-    {
-        m_playerDesiredColor = TurtlePieceColor::Red;
-        Parameters::setPlayerColor(m_playerDesiredColor);
-    }
-}
-
-void LobbyListFrame::buildLobbyList()
-{
-    if (m_lobbyListLayoutWidget)
-    {
-        delete m_lobbyListLayoutWidget;
-        m_lobbyListLayoutWidget = nullptr;
-    }
-
-    m_lobbyListLayoutWidget = new QWidget();
-    m_lobbyListLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    auto lobbyListLayout = new QVBoxLayout(m_lobbyListLayoutWidget);
+    auto lobbyListLayoutWidget = new QWidget();
+    lobbyListLayoutWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    auto lobbyListLayout = new QVBoxLayout(lobbyListLayoutWidget);
 
     const auto numLobbies = m_lobbyNames.size();
     if (m_lobbyIds.size() != numLobbies)
@@ -220,11 +132,11 @@ void LobbyListFrame::buildLobbyList()
         auto lobbyDetailsWidget = new LobbyDetailsWidget(this,
                                                          m_lobbyNames[i],
                                                          m_lobbyIds[i],
-                                                         m_blackPlayerNames[i],
-                                                         m_redPlayerNames[i],
+                                                         blackPlayerNames[i],
+                                                         redPlayerNames[i],
                                                          m_hasPasswords[i],
                                                          [i, this]()
-                                                         { this->handleCommitJoinLobbyButton(i); });
+                                                         { this->handleJoinLobbyButton(i); });
         m_lobbyDetailsWidgets.push_back(lobbyDetailsWidget);
         lobbyListLayout->addWidget(lobbyDetailsWidget);
     }
@@ -233,17 +145,42 @@ void LobbyListFrame::buildLobbyList()
     lobbyListLayout->addItem(spacer);
 
     // This will delete the previous widget, layout, and children of them
-    m_lobbyListScrollArea->setWidget(m_lobbyListLayoutWidget);
+    m_lobbyListScrollArea->setWidget(lobbyListLayoutWidget);
 
     update();
+}
+
+void LobbyListFrame::handleRefreshButton()
+{
+    displayProgressBar();
+    m_playerWindow->getLobbyList();
+}
+
+void LobbyListFrame::handleCancelButton()
+{
+    m_playerWindow->moveToMainMenuFrame();
+}
+
+void LobbyListFrame::handleJoinLobbyButton(size_t lobbyIndex)
+{
+    Parameters::setLobbyName(m_lobbyNames[lobbyIndex]);
+    Parameters::setLobbyId(m_lobbyIds[lobbyIndex]);
+    if (m_hasPasswords[lobbyIndex])
+    {
+        m_playerWindow->moveToLobbyPasswordFrame();
+    }
+    else
+    {
+        m_playerWindow->joinLobby("");
+    }
 }
 
 void LobbyListFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    m_refreshJoinLobbyButton->setText(StringLibrary::getTranslatedString("Refresh"));
-    m_cancelJoinLobbyButton->setText(StringLibrary::getTranslatedString("Cancel"));
+    m_refreshButton->setText(StringLibrary::getTranslatedString("Refresh"));
+    m_cancelButton->setText(StringLibrary::getTranslatedString("Cancel"));
 
     for (auto &lobbyDetailsWidget : m_lobbyDetailsWidgets)
     {

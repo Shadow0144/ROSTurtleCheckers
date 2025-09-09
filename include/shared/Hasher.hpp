@@ -509,7 +509,6 @@ struct std::hash<turtle_checkers_interfaces::srv::JoinLobby::Request::SharedPtr>
         hashCombine(combinedHash, std::hash<std::string>{}(request->player_name));
         hashCombine(combinedHash, std::hash<std::string>{}(request->lobby_name));
         hashCombine(combinedHash, std::hash<std::string>{}(request->lobby_id));
-        hashCombine(combinedHash, std::hash<uint64_t>{}(request->desired_player_color));
         return combinedHash;
     }
 };

@@ -55,7 +55,7 @@ public:
     bool containsPlayer(const std::string &playerName) const;
     TurtlePieceColor addPlayer(const std::string &playerName,
                                uint64_t playerPublicKey,
-                               TurtlePieceColor desiredColor);
+                               TurtlePieceColor desiredColor = TurtlePieceColor::None);
     void removePlayer(const std::string &playerName, bool kicked);
 
     void setLobbyOwner(const std::string &playerName);

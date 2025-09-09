@@ -377,8 +377,7 @@ void CheckersPlayerNode::joinLobby(
     const std::string &playerName,
     const std::string &lobbyName,
     const std::string &lobbyId,
-    const std::string &lobbyPassword,
-    TurtlePieceColor playerDesiredColor)
+    const std::string &lobbyPassword)
 {
     auto request = std::make_shared<turtle_checkers_interfaces::srv::JoinLobby::Request>();
     request->player_name = playerName;
@@ -394,7 +393,6 @@ void CheckersPlayerNode::joinLobby(
         uint64_t encryptedHashedLobbyPassword = RSAKeyGenerator::encrypt(hashedLobbyPassword, m_gameMasterPublicKey);
         request->encrypted_hashed_lobby_password = encryptedHashedLobbyPassword;
     }
-    request->desired_player_color = static_cast<size_t>(playerDesiredColor);
     request->checksum_sig = RSAKeyGenerator::createChecksumSignature(
         std::hash<turtle_checkers_interfaces::srv::JoinLobby::Request::SharedPtr>{}(request),
         m_publicKey, m_privateKey);
