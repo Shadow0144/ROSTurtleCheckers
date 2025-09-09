@@ -19,7 +19,7 @@ QPushButton:hover { color: cyan; border: 1px solid cyan; }
 QPushButton:focus { }
 QPushButton:disabled { color: dimGray; border: 1px solid dimGray; }
 
-QLineEdit { color: white; background-color: black; border: 1px solid gray; }
+QLineEdit { color: white; background-color: black; border: 1px solid white; }
 QLineEdit[valid="false"] { color: white; border: 1px solid red; }
 QLineEdit[valid="true"] { color: white; border: 1px solid aqua; }
 QLineEdit[in_use="false"] { color: white; border: 1px solid gray; }
