@@ -26,39 +26,46 @@ ChatBox::ChatBox(QWidget *parent,
                  int chatHeight,
                  const std::function<void(const std::string &)> &reportPlayerCallback,
                  const std::function<void(const std::string &)> &sendMessageCallback)
-    : QWidget(parent, Qt::WindowFlags())
+    : QWidget(parent)
 {
     m_reportPlayerCallback = reportPlayerCallback;
     m_sendMessageCallback = sendMessageCallback;
 
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    setFixedWidth(chatWidth);
+    setFixedHeight(chatHeight);
+
     auto chatBoxLayout = new QVBoxLayout(this);
-    chatBoxLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    chatBoxLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    chatBoxLayout->setContentsMargins(0, 0, 0, 0);
+    chatBoxLayout->setSpacing(0);
 
-    auto chatTitleWidget = new QWidget();
-    auto chatTitleLayout = new QHBoxLayout();
-    chatTitleLayout->setAlignment(Qt::AlignBottom);
-    chatTitleWidget->setLayout(chatTitleLayout);
-
-    m_chatLabel = new QLabel(StringLibrary::getTranslatedString("Chat"));
-    auto chatFont = m_chatLabel->font();
-    chatFont.setPointSize(CHAT_HEADER_FONT_SIZE);
-    m_chatLabel->setFont(chatFont);
-    chatTitleLayout->addWidget(m_chatLabel);
-
-    chatTitleLayout->addStretch(1);
+    auto reportPlayerWidget = new QWidget();
+    auto reportPlayerLayout = new QHBoxLayout();
+    reportPlayerLayout->setContentsMargins(9, 10, 0, 0);
+    reportPlayerLayout->setSpacing(0);
+    reportPlayerLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    reportPlayerWidget->setLayout(reportPlayerLayout);
 
     m_reportPlayerButton = new QPushButton(StringLibrary::getTranslatedString("Report Player"));
+    m_reportPlayerButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    m_reportPlayerButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     connect(m_reportPlayerButton, &QPushButton::released, this, &ChatBox::handleReportPlayerButton);
-    chatTitleLayout->addWidget(m_reportPlayerButton);
+    reportPlayerLayout->addWidget(m_reportPlayerButton);
 
-    chatBoxLayout->addWidget(chatTitleWidget);
+    chatBoxLayout->addWidget(reportPlayerWidget);
+
+    auto boxAndButtonWidget = new QWidget();
+    auto boxesAndButtonsLayout = new QVBoxLayout();
+    boxesAndButtonsLayout->setSpacing(0);
+    boxAndButtonWidget->setLayout(boxesAndButtonsLayout);
 
     m_chatScrollArea = new QScrollArea();
     m_chatScrollArea->setWidgetResizable(true);
-    m_chatScrollArea->setFixedSize(chatWidth, chatHeight);
+    m_chatScrollArea->setFixedSize(chatWidth - CHAT_BOX_MARGIN_W, chatHeight - CHAT_BOX_MARGIN_H);
     m_chatScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     m_chatScrollArea->setObjectName("ChatScrollArea");
-    chatBoxLayout->addWidget(m_chatScrollArea);
+    boxesAndButtonsLayout->addWidget(m_chatScrollArea);
 
     m_chatLayoutWidget = new QWidget();
     auto chatLayout = new QVBoxLayout(m_chatLayoutWidget);
@@ -73,7 +80,12 @@ ChatBox::ChatBox(QWidget *parent,
 
     m_chatScrollArea->setWidget(m_chatLayoutWidget);
 
+    auto chatEntryWidget = new QWidget();
     auto chatEntryLayout = new QHBoxLayout();
+    chatEntryWidget->setLayout(chatEntryLayout);
+    chatEntryWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    chatEntryLayout->setContentsMargins(0, 9, 0, 9);
+    chatEntryLayout->setSpacing(6);
 
     m_chatEntryLineEdit = new QLineEdit();
     m_chatEntryLineEdit->setMaxLength(MAX_CHARS_CHAT_BOX);
@@ -86,13 +98,17 @@ ChatBox::ChatBox(QWidget *parent,
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
     m_sendButton = new QPushButton(StringLibrary::getTranslatedString("Send"));
+    m_sendButton->setFixedWidth(MENU_BUTTON_WIDTH);
+    m_sendButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
     connect(m_sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
     connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, m_sendButton, &QPushButton::click);
     m_sendButton->setDefault(true);
     m_sendButton->setEnabled(false);
     chatEntryLayout->addWidget(m_sendButton);
 
-    chatBoxLayout->addLayout(chatEntryLayout);
+    boxesAndButtonsLayout->addWidget(chatEntryWidget);
+
+    chatBoxLayout->addWidget(boxAndButtonWidget);
 }
 
 void ChatBox::validateChatEntryText(const QString &chatEntry)
@@ -137,7 +153,7 @@ void ChatBox::addMessage(const std::string &playerName,
     }
     messageStringStream << "<span style='color:" << colorString << "'>"
                         << playerName
-                        << " (" << std::put_time(&tm_now, "%H:%M:%S") << "):</span> "
+                        << " (" << std::put_time(&tm_now, "%H:%M:%S") << "):</span><br>&nbsp;"
                         << chatMessage;
     m_chatContentLabel->setText(m_chatContentLabel->text() +
                                 QString::fromStdString(messageStringStream.str()));
@@ -157,7 +173,6 @@ void ChatBox::setReportPlayerButtonEnabled(bool isEnabled)
 
 void ChatBox::reloadStrings()
 {
-    m_chatLabel->setText(StringLibrary::getTranslatedString("Chat"));
     m_reportPlayerButton->setText(StringLibrary::getTranslatedString("Report Player"));
     m_sendButton->setText(StringLibrary::getTranslatedString("Send"));
 }

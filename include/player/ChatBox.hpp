@@ -48,8 +48,8 @@ private:
     QLabel *m_chatContentLabel;
     QLineEdit *m_chatEntryLineEdit;
 
-    QLabel *m_chatLabel;
-
     QPushButton *m_reportPlayerButton;
     QPushButton *m_sendButton;
 };
+
+typedef std::shared_ptr<ChatBox> ChatBoxPtr;
