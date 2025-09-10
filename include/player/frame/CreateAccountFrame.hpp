@@ -15,6 +15,8 @@
 
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/TitleWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -48,18 +50,18 @@ private:
 	QLineEdit *m_playerNameLineEdit;
 	QLineEdit *m_passwordLineEdit;
 
-	QLabel *m_playerNameLabel;
-	QLabel *m_playerPasswordLabel;
-	QLabel *m_passwordWarningLabel1;
-	QLabel *m_passwordWarningLabel2;
-	QLabel *m_passwordWarningLabel3;
-	QLabel *m_passwordWarningLabel4;
+	TranslatedQLabel *m_playerNameLabel;
+	TranslatedQLabel *m_playerPasswordLabel;
+	TranslatedQLabel *m_passwordWarningLabel1;
+	TranslatedQLabel *m_passwordWarningLabel2;
+	TranslatedQLabel *m_passwordWarningLabel3;
+	TranslatedQLabel *m_passwordWarningLabel4;
 	QLabel *m_passwordWarningLabel5;
-	QLabel *m_passwordWarningLabel6;
-	QLabel *m_errorMessageLabel;
+	TranslatedQLabel *m_passwordWarningLabel6;
+	TranslatedQLabel *m_errorMessageLabel;
 
-	QPushButton *m_createAccountButton;
-	QPushButton *m_cancelButton;
+	TranslatedQPushButton *m_createAccountButton;
+	TranslatedQPushButton *m_cancelButton;
 
 	bool m_playerNameValid;
 	bool m_playerPasswordValid;

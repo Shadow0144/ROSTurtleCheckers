@@ -15,6 +15,8 @@
 
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -45,15 +47,15 @@ private:
 
 	LanguageSelectorWidget *m_languageSelector;
 
-	QLabel *m_playerNameLabel;
-	QLabel *m_playerPasswordLabel;
-	QLabel *m_errorMessageLabel;
+	TranslatedQLabel *m_playerNameLabel;
+	TranslatedQLabel *m_playerPasswordLabel;
+	TranslatedQLabel *m_errorMessageLabel;
 
 	QLineEdit *m_playerNameLineEdit;
 	QLineEdit *m_passwordLineEdit;
 
-	QPushButton *m_logInAccountButton;
-	QPushButton *m_cancelButton;
+	TranslatedQPushButton *m_logInAccountButton;
+	TranslatedQPushButton *m_cancelButton;
 
 	bool m_playerNameValid;
 	bool m_playerPasswordValid;

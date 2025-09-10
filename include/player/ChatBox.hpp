@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class ChatBox : public QWidget
 {
@@ -48,8 +49,8 @@ private:
     QLabel *m_chatContentLabel;
     QLineEdit *m_chatEntryLineEdit;
 
-    QPushButton *m_reportPlayerButton;
-    QPushButton *m_sendButton;
+    TranslatedQPushButton *m_reportPlayerButton;
+    TranslatedQPushButton *m_sendButton;
 };
 
 typedef std::shared_ptr<ChatBox> ChatBoxPtr;

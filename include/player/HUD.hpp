@@ -7,6 +7,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/TurtlePiece.hpp"
+#include "player/TranslatedQLabel.hpp"
 
 class HUD : public QWidget
 {
@@ -37,7 +38,7 @@ private:
     bool m_usingTimers;
     std::chrono::system_clock::time_point m_lastTimestamp;
 
-    QLabel *m_currentTurnLabel;
+    TranslatedQLabel *m_currentTurnLabel;
     QLabel *m_blackPiecesRemainingLabel;
     QLabel *m_blackTimeRemainingLabel;
     QLabel *m_redPiecesRemainingLabel;

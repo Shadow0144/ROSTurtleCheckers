@@ -20,7 +20,7 @@
 #include <string>
 
 #include "shared/CheckersConsts.hpp"
-#include "player/StringLibrary.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 ChatBox::ChatBox(QWidget *parent,
                  int chatWidth,
@@ -48,7 +48,7 @@ ChatBox::ChatBox(QWidget *parent,
     reportPlayerLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     reportPlayerWidget->setLayout(reportPlayerLayout);
 
-    m_reportPlayerButton = new QPushButton(StringLibrary::getTranslatedString("Report Player"));
+    m_reportPlayerButton = new TranslatedQPushButton("Report Player");
     m_reportPlayerButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_reportPlayerButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     connect(m_reportPlayerButton, &QPushButton::released, this, &ChatBox::handleReportPlayerButton);
@@ -98,7 +98,9 @@ ChatBox::ChatBox(QWidget *parent,
 
     chatEntryLayout->addWidget(m_chatEntryLineEdit);
 
-    m_sendButton = new QPushButton(StringLibrary::getTranslatedString(">"));
+    // Currently using the '>' symbol for saving horizontal space,
+    // but in case we go back to using "Send", we will keep this a translated button
+    m_sendButton = new TranslatedQPushButton(">");
     connect(m_sendButton, &QPushButton::released, this, &ChatBox::handleSendMessageButton);
     connect(m_chatEntryLineEdit, &QLineEdit::returnPressed, m_sendButton, &QPushButton::click);
     m_sendButton->setDefault(true);
@@ -172,6 +174,6 @@ void ChatBox::setReportPlayerButtonEnabled(bool isEnabled)
 
 void ChatBox::reloadStrings()
 {
-    m_reportPlayerButton->setText(StringLibrary::getTranslatedString("Report Player"));
-    m_sendButton->setText(StringLibrary::getTranslatedString(">"));
+    m_reportPlayerButton->reloadStrings();
+    m_sendButton->reloadStrings();
 }

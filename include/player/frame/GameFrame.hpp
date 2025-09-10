@@ -30,6 +30,7 @@
 #include "player/GameWinnerOverlayWidget.hpp"
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -114,8 +115,8 @@ private:
 
 	QWidget *m_gameWidget;
 
-	QPushButton *m_offerDrawButton;
-	QPushButton *m_forfeitButton;
+	TranslatedQPushButton *m_offerDrawButton;
+	TranslatedQPushButton *m_forfeitButton;
 
 	bool m_showingDialog;
 	DialogWidget *m_offerDrawConfirmDialog;

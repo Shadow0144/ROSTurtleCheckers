@@ -9,6 +9,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "shared/TurtlePiece.hpp"
+#include "player/TranslatedQLabel.hpp"
 
 class GameWinnerOverlayWidget : public QWidget
 {
@@ -23,7 +24,7 @@ public:
 private:
     QVBoxLayout *m_victoryLayout;
 
-    QLabel *m_winnerLabel;
+    TranslatedQLabel *m_winnerLabel;
 
     QLabel *m_winnerImageLabel;
     QLabel *m_loserImageLabel;

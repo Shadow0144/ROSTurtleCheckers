@@ -11,7 +11,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
-#include "player/StringLibrary.hpp"
+#include "player/TranslatedQLabel.hpp"
 
 GameWinnerOverlayWidget::GameWinnerOverlayWidget(QWidget *parent)
     : QWidget(parent)
@@ -52,7 +52,7 @@ GameWinnerOverlayWidget::GameWinnerOverlayWidget(QWidget *parent)
     m_drawImageLabel->hide();
     m_victoryLayout->addWidget(m_drawImageLabel);
 
-    m_winnerLabel = new QLabel();
+    m_winnerLabel = new TranslatedQLabel();
     m_winnerLabel->setAlignment(Qt::AlignCenter);
     m_winnerLabel->setFont(QFont("Noto Sans JP", VICTORY_TEXT_FONT_SIZE, QFont::Bold));
     m_winnerLabel->setStyleSheet("color: lightGray;");
@@ -63,7 +63,7 @@ GameWinnerOverlayWidget::GameWinnerOverlayWidget(QWidget *parent)
 
 void GameWinnerOverlayWidget::reloadStrings()
 {
-    setWinner(m_winner);
+    m_winnerLabel->reloadStrings();
 }
 
 void GameWinnerOverlayWidget::setPlayerColor(TurtlePieceColor playerColor)
@@ -82,19 +82,19 @@ void GameWinnerOverlayWidget::setWinner(Winner winner)
 
     if (m_winner == Winner::Draw)
     {
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("Draw!"));
+        m_winnerLabel->setText("Draw!");
         m_drawImageLabel->show();
     }
     else if (m_winner == Winner::Black)
     {
         if (m_playerColor == TurtlePieceColor::Black)
         {
-            m_winnerLabel->setText(StringLibrary::getTranslatedString("Winner!"));
+            m_winnerLabel->setText("Winner!");
             m_winnerImageLabel->show();
         }
         else
         {
-            m_winnerLabel->setText(StringLibrary::getTranslatedString("Loser!"));
+            m_winnerLabel->setText("Loser!");
             m_loserImageLabel->show();
         }
     }
@@ -102,12 +102,12 @@ void GameWinnerOverlayWidget::setWinner(Winner winner)
     {
         if (m_playerColor == TurtlePieceColor::Red)
         {
-            m_winnerLabel->setText(StringLibrary::getTranslatedString("Winner!"));
+            m_winnerLabel->setText("Winner!");
             m_winnerImageLabel->show();
         }
         else
         {
-            m_winnerLabel->setText(StringLibrary::getTranslatedString("Loser!"));
+            m_winnerLabel->setText("Loser!");
             m_loserImageLabel->show();
         }
     }

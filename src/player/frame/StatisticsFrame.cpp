@@ -28,10 +28,11 @@
 #include "shared/TurtleLogger.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
-#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/MatchDetailsWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 StatisticsFrame::StatisticsFrame(
     CheckersPlayerWindow *parentWindow)
@@ -54,14 +55,14 @@ StatisticsFrame::StatisticsFrame(
     m_titleWidget = new TitleWidget();
     statisticsContentLayout->addWidget(m_titleWidget, 1, 0, 1, 4);
 
-    m_playerNameLabel = new QLabel(StringLibrary::getTranslatedString("Player: "));
+    m_playerNameLabel = new TranslatedQLabel("Player: ");
     m_playerNameLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_playerNameLabel, 2, 0);
     m_playerNameLineEdit = new QLineEdit("");
     m_playerNameLineEdit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_playerNameLineEdit, 2, 1, 1, 2);
 
-    m_searchPlayerButton = new QPushButton(StringLibrary::getTranslatedString("Search"));
+    m_searchPlayerButton = new TranslatedQPushButton("Search");
     m_searchPlayerButton->setFixedWidth(MENU_BUTTON_WIDTH);
     std::string playerNameRegex = "^[a-zA-Z][a-zA-Z0-9_]{0," + std::to_string(MAX_CHARS_PLAYER_NAME) + "}$";
     auto playerNameValidator = new QRegularExpressionValidator(QRegularExpression(playerNameRegex.c_str()));
@@ -69,28 +70,28 @@ StatisticsFrame::StatisticsFrame(
     connect(m_searchPlayerButton, &QPushButton::released, this, &StatisticsFrame::handleSearchPlayerButton);
     statisticsContentLayout->addWidget(m_searchPlayerButton, 2, 3);
 
-    m_matchesPlayedLabel = new QLabel(StringLibrary::getTranslatedString("Matches played: "));
+    m_matchesPlayedLabel = new TranslatedQLabel("Matches played: ");
     m_matchesPlayedLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_matchesPlayedLabel, 3, 0);
     m_matchesPlayedNumberLabel = new QLabel("0");
     m_matchesPlayedNumberLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_matchesPlayedNumberLabel, 3, 1);
 
-    m_matchesWonLabel = new QLabel(StringLibrary::getTranslatedString("Matches won: "));
+    m_matchesWonLabel = new TranslatedQLabel("Matches won: ");
     m_matchesWonLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_matchesWonLabel, 3, 2);
     m_matchesWonNumberLabel = new QLabel("0");
     m_matchesWonNumberLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_matchesWonNumberLabel, 3, 3);
 
-    m_matchesLostLabel = new QLabel(StringLibrary::getTranslatedString("Matches lost: "));
+    m_matchesLostLabel = new TranslatedQLabel("Matches lost: ");
     m_matchesLostLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_matchesLostLabel, 4, 0);
     m_matchesLostNumberLabel = new QLabel("0");
     m_matchesLostNumberLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_matchesLostNumberLabel, 4, 1);
 
-    m_matchesDrawnLabel = new QLabel(StringLibrary::getTranslatedString("Matches drawn: "));
+    m_matchesDrawnLabel = new TranslatedQLabel("Matches drawn: ");
     m_matchesDrawnLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     statisticsContentLayout->addWidget(m_matchesDrawnLabel, 4, 2);
     m_matchesDrawnNumberLabel = new QLabel("0");
@@ -109,7 +110,7 @@ StatisticsFrame::StatisticsFrame(
     statisticsButtonWidget->setLayout(statisticsButtonLayout);
     statisticsButtonWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
-    m_backButton = new QPushButton(StringLibrary::getTranslatedString("Back"));
+    m_backButton = new TranslatedQPushButton("Back");
     m_backButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_backButton, &QPushButton::released, this,
             &StatisticsFrame::handleBackButton);
@@ -241,14 +242,14 @@ void StatisticsFrame::reloadStrings()
         matchDetailsWidget->reloadStrings();
     }
 
-    m_playerNameLabel->setText(StringLibrary::getTranslatedString("Player: "));
+    m_playerNameLabel->reloadStrings();
 
-    m_searchPlayerButton->setText(StringLibrary::getTranslatedString("Search"));
+    m_searchPlayerButton->reloadStrings();
 
-    m_matchesPlayedLabel->setText(StringLibrary::getTranslatedString("Matches played: "));
-    m_matchesWonLabel->setText(StringLibrary::getTranslatedString("Matches won: "));
-    m_matchesLostLabel->setText(StringLibrary::getTranslatedString("Matches lost: "));
-    m_matchesDrawnLabel->setText(StringLibrary::getTranslatedString("Matches drawn: "));
+    m_matchesPlayedLabel->reloadStrings();
+    m_matchesWonLabel->reloadStrings();
+    m_matchesLostLabel->reloadStrings();
+    m_matchesDrawnLabel->reloadStrings();
 
-    m_backButton->setText(StringLibrary::getTranslatedString("Back"));
+    m_backButton->reloadStrings();
 }

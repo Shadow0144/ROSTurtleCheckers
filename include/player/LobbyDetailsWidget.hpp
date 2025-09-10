@@ -8,6 +8,9 @@
 #include <vector>
 #include <functional>
 
+#include "player/PlayerIconNameWidget.hpp"
+#include "player/TranslatedQPushButton.hpp"
+
 class LobbyDetailsWidget : public QWidget
 {
 public:
@@ -25,8 +28,8 @@ private:
     std::string m_blackPlayerName;
     std::string m_redPlayerName;
 
-    QLabel *m_blackPlayerNameLabel;
-    QLabel *m_redPlayerNameLabel;
+    PlayerIconNameWidget *m_blackPlayerIconNameWidget;
+    PlayerIconNameWidget *m_redPlayerIconNameWidget;
 
-    QPushButton *m_joinLobbyButton;
+    TranslatedQPushButton *m_joinLobbyButton;
 };

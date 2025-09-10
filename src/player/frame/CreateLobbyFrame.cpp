@@ -20,7 +20,6 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/ImageLibrary.hpp"
-#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 
@@ -40,7 +39,7 @@ CreateLobbyFrame::CreateLobbyFrame(
     m_titleWidget = new TitleWidget();
     createLobbyLayout->addWidget(m_titleWidget);
 
-    m_lobbyNameLabel = new QLabel(StringLibrary::getTranslatedString("Lobby name"));
+    m_lobbyNameLabel = new TranslatedQLabel("Lobby name");
     createLobbyLayout->addWidget(m_lobbyNameLabel);
 
     m_lobbyNameLineEdit = new QLineEdit();
@@ -52,7 +51,7 @@ CreateLobbyFrame::CreateLobbyFrame(
     connect(m_lobbyNameLineEdit, &QLineEdit::textChanged, this, &CreateLobbyFrame::validateLobbyNameText);
     createLobbyLayout->addWidget(m_lobbyNameLineEdit);
 
-    m_lobbyPasswordLabel = new QLabel(StringLibrary::getTranslatedString("Lobby password"));
+    m_lobbyPasswordLabel = new TranslatedQLabel("Lobby password");
     createLobbyLayout->addWidget(m_lobbyPasswordLabel);
 
     m_lobbyPasswordLineEdit = new QLineEdit();
@@ -91,7 +90,7 @@ CreateLobbyFrame::CreateLobbyFrame(
     auto createLobbyButtonLayout = new QHBoxLayout();
     createLobbyButtonLayout->setAlignment(Qt::AlignCenter);
 
-    m_createLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Create Lobby"));
+    m_createLobbyButton = new TranslatedQPushButton("Create Lobby");
     m_createLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_createLobbyButton->setEnabled(false);
     connect(m_createLobbyButton, &QPushButton::released, this,
@@ -101,7 +100,7 @@ CreateLobbyFrame::CreateLobbyFrame(
     connect(m_lobbyPasswordLineEdit, &QLineEdit::returnPressed, m_createLobbyButton, &QPushButton::click);
     createLobbyButtonLayout->addWidget(m_createLobbyButton);
 
-    m_cancelCreateLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelCreateLobbyButton = new TranslatedQPushButton("Cancel");
     m_cancelCreateLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_cancelCreateLobbyButton, &QPushButton::released, this,
             &CreateLobbyFrame::handleCancelButton);
@@ -215,9 +214,9 @@ void CreateLobbyFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    m_lobbyNameLabel->setText(StringLibrary::getTranslatedString("Lobby name"));
-    m_lobbyPasswordLabel->setText(StringLibrary::getTranslatedString("Lobby password"));
+    m_lobbyNameLabel->reloadStrings();
+    m_lobbyPasswordLabel->reloadStrings();
 
-    m_createLobbyButton->setText(StringLibrary::getTranslatedString("Create Lobby"));
-    m_cancelCreateLobbyButton->setText(StringLibrary::getTranslatedString("Cancel"));
+    m_createLobbyButton->reloadStrings();
+    m_cancelCreateLobbyButton->reloadStrings();
 }

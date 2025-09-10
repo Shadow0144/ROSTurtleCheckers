@@ -8,6 +8,7 @@
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QPushButton>
+#include <QSpacerItem>
 
 #include <cstdlib>
 #include <memory>
@@ -16,9 +17,10 @@
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
-#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 ChangeAccountPasswordFrame::ChangeAccountPasswordFrame(
     CheckersPlayerWindow *parentWindow)
@@ -44,7 +46,7 @@ ChangeAccountPasswordFrame::ChangeAccountPasswordFrame(
     m_playerNameLabel->setFont(playerNameFont);
     changeAccountPasswordLayout->addWidget(m_playerNameLabel);
 
-    m_currentPlayerPasswordLabel = new QLabel(StringLibrary::getTranslatedString("Current password"));
+    m_currentPlayerPasswordLabel = new TranslatedQLabel("Current password");
     changeAccountPasswordLayout->addWidget(m_currentPlayerPasswordLabel);
 
     std::string playerPasswordRegex = "^[a-zA-Z0-9a-zA-Z0-9\\`\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\[\\]\\{\\}\\|\\;\\:\\,\\.\\<\\>\\?]{0," + std::to_string(MAX_CHARS_PLAYER_PASS) + "}$";
@@ -58,7 +60,7 @@ ChangeAccountPasswordFrame::ChangeAccountPasswordFrame(
     connect(m_previousPasswordLineEdit, &QLineEdit::textChanged, this, &ChangeAccountPasswordFrame::validatePreviousPasswordText);
     changeAccountPasswordLayout->addWidget(m_previousPasswordLineEdit);
 
-    m_newPlayerPasswordLabel = new QLabel(StringLibrary::getTranslatedString("New password"));
+    m_newPlayerPasswordLabel = new TranslatedQLabel("New password");
     changeAccountPasswordLayout->addWidget(m_newPlayerPasswordLabel);
 
     m_newPasswordLineEdit = new QLineEdit();
@@ -69,12 +71,12 @@ ChangeAccountPasswordFrame::ChangeAccountPasswordFrame(
     connect(m_newPasswordLineEdit, &QLineEdit::textChanged, this, &ChangeAccountPasswordFrame::validateNewPasswordText);
     changeAccountPasswordLayout->addWidget(m_newPasswordLineEdit);
 
-    m_passwordWarningLabel1 = new QLabel(StringLibrary::getTranslatedString("This application is a learning project for me, thus passwords are NOT robustly secured."));
-    m_passwordWarningLabel2 = new QLabel(StringLibrary::getTranslatedString("Do NOT use passwords you use elsewhere."));
-    m_passwordWarningLabel3 = new QLabel(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
-    m_passwordWarningLabel4 = new QLabel(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
+    m_passwordWarningLabel1 = new TranslatedQLabel("This application is a learning project for me, thus passwords are NOT robustly secured.");
+    m_passwordWarningLabel2 = new TranslatedQLabel("Do NOT use passwords you use elsewhere.");
+    m_passwordWarningLabel3 = new TranslatedQLabel("To prevent password reuse, passwords can be a maximum of 3 characters in length.");
+    m_passwordWarningLabel4 = new TranslatedQLabel("You may use alphanumeric characters and/or the following symbols:");
     m_passwordWarningLabel5 = new QLabel("\t` ~ ! @ # $ % ^ & * ( ) - _ = + [ ] { } | ; : , . < > ?");
-    m_passwordWarningLabel6 = new QLabel(StringLibrary::getTranslatedString("Warning: Lost passwords cannot be recovered or changed!"));
+    m_passwordWarningLabel6 = new TranslatedQLabel("Warning: Lost passwords cannot be recovered or changed!");
     m_passwordWarningLabel6->setWordWrap(true);
     changeAccountPasswordLayout->addWidget(m_passwordWarningLabel1);
     changeAccountPasswordLayout->addWidget(m_passwordWarningLabel2);
@@ -84,9 +86,10 @@ ChangeAccountPasswordFrame::ChangeAccountPasswordFrame(
     changeAccountPasswordLayout->addWidget(m_passwordWarningLabel6);
 
     // Add a spacer
-    changeAccountPasswordLayout->addWidget(new QLabel(""));
+    auto spacer = new QSpacerItem(0, 10, QSizePolicy::Preferred, QSizePolicy::Minimum);
+    changeAccountPasswordLayout->addItem(spacer);
 
-    m_messageLabel = new QLabel("");
+    m_messageLabel = new TranslatedQLabel();
     m_messageLabel->setProperty("succeeded", false);
     m_messageLabel->setProperty("error", false);
     auto errorMessageLabelSizePolicy = m_messageLabel->sizePolicy();
@@ -96,12 +99,13 @@ ChangeAccountPasswordFrame::ChangeAccountPasswordFrame(
     changeAccountPasswordLayout->addWidget(m_messageLabel);
 
     // Add a spacer
-    changeAccountPasswordLayout->addWidget(new QLabel(""));
+    spacer = new QSpacerItem(0, 10, QSizePolicy::Preferred, QSizePolicy::Minimum);
+    changeAccountPasswordLayout->addItem(spacer);
 
     auto createAccountButtonLayout = new QHBoxLayout();
     createAccountButtonLayout->setAlignment(Qt::AlignCenter);
 
-    m_changeAccountPasswordButton = new QPushButton(StringLibrary::getTranslatedString("Change Password"));
+    m_changeAccountPasswordButton = new TranslatedQPushButton("Change Password");
     m_changeAccountPasswordButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_changeAccountPasswordButton->setEnabled(false);
     connect(m_changeAccountPasswordButton, &QPushButton::released, this,
@@ -111,7 +115,7 @@ ChangeAccountPasswordFrame::ChangeAccountPasswordFrame(
     connect(m_newPasswordLineEdit, &QLineEdit::returnPressed, m_changeAccountPasswordButton, &QPushButton::click);
     createAccountButtonLayout->addWidget(m_changeAccountPasswordButton);
 
-    m_cancelButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelButton = new TranslatedQPushButton("Cancel");
     m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_cancelButton, &QPushButton::released, this,
             &ChangeAccountPasswordFrame::handleCancelButton);
@@ -145,7 +149,7 @@ void ChangeAccountPasswordFrame::showEvent(QShowEvent *event)
     m_newPasswordLineEdit->update();
 
     m_changingPassword = false;
-    m_changeAccountPasswordButton->setText(StringLibrary::getTranslatedString("Change Password"));
+    m_changeAccountPasswordButton->setText("Change Password");
     m_previousPasswordLineEdit->setEnabled(true);
     m_newPasswordLineEdit->setEnabled(true);
 
@@ -162,10 +166,10 @@ void ChangeAccountPasswordFrame::succeededChange()
 {
     m_resultMessage = "Password changed successfully";
     m_changingPassword = false;
-    m_changeAccountPasswordButton->setText(StringLibrary::getTranslatedString("Change Password"));
+    m_changeAccountPasswordButton->setText("Change Password");
     m_previousPasswordLineEdit->setEnabled(true);
     m_newPasswordLineEdit->setEnabled(true);
-    m_messageLabel->setText(StringLibrary::getTranslatedString(m_resultMessage));
+    m_messageLabel->setText(m_resultMessage);
     m_messageLabel->setProperty("succeeded", true);
     m_messageLabel->setProperty("error", false);
     m_messageLabel->style()->unpolish(m_messageLabel);
@@ -178,10 +182,10 @@ void ChangeAccountPasswordFrame::failedChange(const std::string &errorMessage)
 {
     m_resultMessage = errorMessage;
     m_changingPassword = false;
-    m_changeAccountPasswordButton->setText(StringLibrary::getTranslatedString("Change Password"));
+    m_changeAccountPasswordButton->setText("Change Password");
     m_previousPasswordLineEdit->setEnabled(true);
     m_newPasswordLineEdit->setEnabled(true);
-    m_messageLabel->setText(errorMessage.c_str());
+    m_messageLabel->setText(errorMessage);
     m_messageLabel->setProperty("succeeded", false);
     m_messageLabel->setProperty("error", true);
     m_messageLabel->style()->unpolish(m_messageLabel);
@@ -247,7 +251,7 @@ void ChangeAccountPasswordFrame::validateNewPasswordText(const QString &newPlaye
 void ChangeAccountPasswordFrame::handleChangeAccountPasswordButton()
 {
     m_changingPassword = true;
-    m_changeAccountPasswordButton->setText(StringLibrary::getTranslatedString("Changing..."));
+    m_changeAccountPasswordButton->setText("Changing...");
     m_changeAccountPasswordButton->setEnabled(false);
     m_previousPasswordLineEdit->setEnabled(false);
     m_newPasswordLineEdit->setEnabled(false);
@@ -266,18 +270,18 @@ void ChangeAccountPasswordFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    m_currentPlayerPasswordLabel->setText(StringLibrary::getTranslatedString("Current password"));
-    m_newPlayerPasswordLabel->setText(StringLibrary::getTranslatedString("New password"));
+    m_currentPlayerPasswordLabel->reloadStrings();
+    m_newPlayerPasswordLabel->reloadStrings();
 
-    m_passwordWarningLabel1->setText(StringLibrary::getTranslatedString("This application is a learning project for me, thus passwords are NOT robustly secured."));
-    m_passwordWarningLabel2->setText(StringLibrary::getTranslatedString("Do NOT use passwords you use elsewhere."));
-    m_passwordWarningLabel3->setText(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
-    m_passwordWarningLabel4->setText(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
+    m_passwordWarningLabel1->reloadStrings();
+    m_passwordWarningLabel2->reloadStrings();
+    m_passwordWarningLabel3->reloadStrings();
+    m_passwordWarningLabel4->reloadStrings();
     // m_passwordWarningLabel5 does not need translating
-    m_passwordWarningLabel6->setText(StringLibrary::getTranslatedString("Warning: Lost passwords cannot be recovered or changed!"));
+    m_passwordWarningLabel6->reloadStrings();
 
-    m_messageLabel->setText(StringLibrary::getTranslatedString(m_resultMessage));
+    m_messageLabel->reloadStrings();
 
-    m_changeAccountPasswordButton->setText((m_changingPassword) ? StringLibrary::getTranslatedString("Changing...") : StringLibrary::getTranslatedString("Change Password"));
-    m_cancelButton->setText(StringLibrary::getTranslatedString("Cancel"));
+    m_changeAccountPasswordButton->reloadStrings();
+    m_cancelButton->reloadStrings();
 }

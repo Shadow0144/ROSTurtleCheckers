@@ -13,7 +13,8 @@
 #include <functional>
 
 #include "shared/CheckersConsts.hpp"
-#include "player/StringLibrary.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 DialogWidget::DialogWidget(QWidget *parent,
                            int centerX,
@@ -25,10 +26,6 @@ DialogWidget::DialogWidget(QWidget *parent,
                            const std::function<void()> &onCancelFunction)
     : QWidget(parent)
 {
-    m_headerText = headerText;
-    m_confirmText = confirmText;
-    m_cancelText = cancelText;
-
     m_headerLabel = nullptr;
     m_confirmButton = nullptr;
     m_cancelButton = nullptr;
@@ -39,7 +36,7 @@ DialogWidget::DialogWidget(QWidget *parent,
 
     if (!headerText.empty())
     {
-        m_headerLabel = new QLabel(StringLibrary::getTranslatedString(m_headerText));
+        m_headerLabel = new TranslatedQLabel(headerText);
         m_headerLabel->setAlignment(Qt::AlignCenter);
         m_headerLabel->setContentsMargins(0, 5, 0, 5);
         dialogLayout->addWidget(m_headerLabel);
@@ -49,25 +46,23 @@ DialogWidget::DialogWidget(QWidget *parent,
         m_headerLabel = nullptr;
     }
 
-    if (!m_confirmText.empty() || !m_cancelText.empty())
+    if (!confirmText.empty() || !cancelText.empty())
     {
         auto buttonsLayoutWidget = new QWidget();
         auto buttonsLayout = new QHBoxLayout();
         buttonsLayoutWidget->setLayout(buttonsLayout);
 
-        if (!m_confirmText.empty())
+        if (!confirmText.empty())
         {
-            m_confirmButton = new QPushButton();
-            m_confirmButton->setText(StringLibrary::getTranslatedString(m_confirmText));
+            m_confirmButton = new TranslatedQPushButton(confirmText);
             m_confirmButton->setFixedWidth(MENU_BUTTON_WIDTH);
             connect(m_confirmButton, &QPushButton::released, this, onConfirmFunction);
             buttonsLayout->addWidget(m_confirmButton);
         }
 
-        if (!m_cancelText.empty())
+        if (!cancelText.empty())
         {
-            m_cancelButton = new QPushButton();
-            m_cancelButton->setText(StringLibrary::getTranslatedString(m_cancelText));
+            m_cancelButton = new TranslatedQPushButton(cancelText);
             m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
             connect(m_cancelButton, &QPushButton::released, this, onCancelFunction);
             buttonsLayout->addWidget(m_cancelButton);
@@ -87,16 +82,16 @@ void DialogWidget::reloadStrings()
 {
     if (m_headerLabel)
     {
-        m_headerLabel->setText(StringLibrary::getTranslatedString(m_headerText));
+        m_headerLabel->reloadStrings();
     }
 
     if (m_confirmButton)
     {
-        m_confirmButton->setText(StringLibrary::getTranslatedString(m_confirmText));
+        m_confirmButton->reloadStrings();
     }
 
     if (m_cancelButton)
     {
-        m_cancelButton->setText(StringLibrary::getTranslatedString(m_cancelText));
+        m_cancelButton->reloadStrings();
     }
 }

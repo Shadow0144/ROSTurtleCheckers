@@ -19,12 +19,16 @@
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
-#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
 #include "player/ImageLibrary.hpp"
+#include "player/PlayerIconNameWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQCheckBox.hpp"
+#include "player/TranslatedQComboBox.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 InLobbyFrame::InLobbyFrame(
     CheckersPlayerWindow *parentWindow)
@@ -79,10 +83,9 @@ InLobbyFrame::InLobbyFrame(
     spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
     lobbyNameLayout->addItem(spacer);
 
-    m_gameStartTimerLabel = new QLabel();
+    m_gameStartTimerLabel = new TranslatedQLabel("The match will start when both players are ready!");
     m_gameStartTimerLabel->setProperty("highlight", true);
     m_gameStartTimerLabel->setMargin(10);
-    m_gameStartTimerLabel->setText(StringLibrary::getTranslatedString("The match will start when both players are ready!"));
     lobbyNameLayout->addWidget(m_gameStartTimerLabel);
 
     inLobbyLayout->addLayout(lobbyNameLayout);
@@ -111,23 +114,14 @@ InLobbyFrame::InLobbyFrame(
     m_blackPlayerLobbyOwnerLabel->setVisible(false);
     blackPlayerLayout->addWidget(m_blackPlayerLobbyOwnerLabel);
 
-    m_blackReadyInLobbyCheckBox = new QCheckBox(StringLibrary::getTranslatedString("Ready"));
+    m_blackReadyInLobbyCheckBox = new TranslatedQCheckBox("Ready");
     m_blackReadyInLobbyCheckBox->setEnabled(false);
     connect(m_blackReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
             &InLobbyFrame::handleBlackReadyButtonToggled);
     blackPlayerLayout->addWidget(m_blackReadyInLobbyCheckBox);
 
-    auto blackTurtleIconLabel = new QLabel();
-    auto blackTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black));
-    auto scaledBlackTurtleIcon = blackTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
-                                                        Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
-    blackPlayerLayout->addWidget(blackTurtleIconLabel);
-
-    m_blackPlayerNameLabel = new QLabel(StringLibrary::getTranslatedString("Open"));
-    m_blackPlayerNameLabel->setEnabled(false);
-    m_blackPlayerNameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    blackPlayerLayout->addWidget(m_blackPlayerNameLabel);
+    m_blackPlayerIconNameWidget = new PlayerIconNameWidget(TurtlePieceColor::Black);
+    blackPlayerLayout->addWidget(m_blackPlayerIconNameWidget);
 
     m_blackPlayerKickButton = new QPushButton();
     auto blackPlayerKickIcon = QPixmap::fromImage(ImageLibrary::getKickImage());
@@ -164,23 +158,14 @@ InLobbyFrame::InLobbyFrame(
     m_redPlayerLobbyOwnerLabel->setVisible(false);
     redPlayerLayout->addWidget(m_redPlayerLobbyOwnerLabel);
 
-    m_redReadyInLobbyCheckBox = new QCheckBox(StringLibrary::getTranslatedString("Ready"));
+    m_redReadyInLobbyCheckBox = new TranslatedQCheckBox("Ready");
     m_redReadyInLobbyCheckBox->setEnabled(false);
     connect(m_redReadyInLobbyCheckBox, &QCheckBox::stateChanged, this,
             &InLobbyFrame::handleRedReadyButtonToggled);
     redPlayerLayout->addWidget(m_redReadyInLobbyCheckBox);
 
-    auto redTurtleIconLabel = new QLabel();
-    auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
-    auto scaledRedTurtleIcon = redTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
-                                                    Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
-    redPlayerLayout->addWidget(redTurtleIconLabel);
-
-    m_redPlayerNameLabel = new QLabel(StringLibrary::getTranslatedString("Open"));
-    m_redPlayerNameLabel->setEnabled(false);
-    m_redPlayerNameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    redPlayerLayout->addWidget(m_redPlayerNameLabel);
+    m_redPlayerIconNameWidget = new PlayerIconNameWidget(TurtlePieceColor::Red);
+    redPlayerLayout->addWidget(m_redPlayerIconNameWidget);
 
     m_redPlayerKickButton = new QPushButton();
     auto redPlayerKickIcon = QPixmap::fromImage(ImageLibrary::getKickImage());
@@ -204,13 +189,13 @@ InLobbyFrame::InLobbyFrame(
     auto timerLayout = new QHBoxLayout();
     timerWidget->setLayout(timerLayout);
 
-    m_timerLabel = new QLabel(StringLibrary::getTranslatedString("Match timer:"));
+    m_timerLabel = new TranslatedQLabel("Match timer:");
     timerLayout->addWidget(m_timerLabel);
 
-    m_timerComboBox = new QComboBox();
-    m_timerComboBox->addItem(StringLibrary::getTranslatedString("No timer"));
-    m_timerComboBox->addItem(StringLibrary::getTranslatedString("5 minutes"));
-    m_timerComboBox->addItem(StringLibrary::getTranslatedString("10 minutes"));
+    m_timerComboBox = new TranslatedQComboBox();
+    m_timerComboBox->addItem("No timer");
+    m_timerComboBox->addItem("5 minutes");
+    m_timerComboBox->addItem("10 minutes");
     m_timerComboBox->setEnabled(false);
     m_timerComboBox->setCurrentIndex(0);
     connect(m_timerComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
@@ -228,7 +213,7 @@ InLobbyFrame::InLobbyFrame(
     auto inLobbyButtonLayout = new QHBoxLayout();
     inLobbyButtonWidget->setLayout(inLobbyButtonLayout);
 
-    m_leaveLobbyInLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Leave Lobby"));
+    m_leaveLobbyInLobbyButton = new TranslatedQPushButton("Leave Lobby");
     m_leaveLobbyInLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_leaveLobbyInLobbyButton, &QPushButton::released, this,
             &InLobbyFrame::handleLeaveLobbyButton);
@@ -284,9 +269,8 @@ void InLobbyFrame::updateGameStartTimer()
         {
             m_secondsBeforeStart = std::chrono::seconds(0u);
         }
-        m_gameStartTimerLabel->setText(
-            StringLibrary::getTranslatedString("The match will start in... %s...",
-                                               {std::to_string(m_secondsBeforeStart.count())}));
+        m_gameStartTimerLabel->setText("The match will start in... %s...",
+                                       {std::to_string(m_secondsBeforeStart.count())});
     }
 }
 
@@ -324,21 +308,18 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
         Parameters::setOpponentColor(TurtlePieceColor::None);
     }
 
-    std::string openString = "Open";
     bool blackPlayerJoined = !m_blackPlayerName.empty();
     bool redPlayerJoined = !m_redPlayerName.empty();
 
     m_chatBox->setReportPlayerButtonEnabled(blackPlayerJoined && redPlayerJoined);
 
-    m_blackPlayerNameLabel->setText(blackPlayerJoined ? m_blackPlayerName.c_str() : openString.c_str());
-    m_blackPlayerNameLabel->setEnabled(blackPlayerJoined);
-    m_redPlayerNameLabel->setText(redPlayerJoined ? m_redPlayerName.c_str() : openString.c_str());
-    m_redPlayerNameLabel->setEnabled(redPlayerJoined);
+    m_blackPlayerIconNameWidget->setPlayerName(m_blackPlayerName);
+    m_redPlayerIconNameWidget->setPlayerName(m_redPlayerName);
 
     auto playerColor = Parameters::getPlayerColor();
     if (playerColor == TurtlePieceColor::Black)
     {
-        m_blackReadyInLobbyCheckBox->setEnabled(true);
+        m_blackReadyInLobbyCheckBox->setEnabled(redPlayerJoined);
         if (m_blackPlayerReady)
         {
             m_blackReadyInLobbyCheckBox->setCheckState(Qt::Checked);
@@ -365,7 +346,7 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
 
     if (playerColor == TurtlePieceColor::Red)
     {
-        m_redReadyInLobbyCheckBox->setEnabled(true);
+        m_redReadyInLobbyCheckBox->setEnabled(blackPlayerJoined);
         if (m_redPlayerReady)
         {
             m_redReadyInLobbyCheckBox->setCheckState(Qt::Checked);
@@ -394,27 +375,29 @@ void InLobbyFrame::setLobbyInfo(const std::string &blackPlayerName,
     setTimer(timerSeconds);
 }
 
-void InLobbyFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)
+void InLobbyFrame::playerJoinedLobby(const std::string &joiningPlayerName, TurtlePieceColor joiningPlayerColor)
 {
-    if (playerName == Parameters::getPlayerName())
+    if (joiningPlayerName == Parameters::getPlayerName())
     {
         // Do nothing
+        return;
     }
 
-    switch (playerColor)
+    Parameters::setOpponentName(joiningPlayerName);
+    Parameters::setOpponentColor(joiningPlayerColor);
+
+    switch (joiningPlayerColor)
     {
     case TurtlePieceColor::Black:
     {
-        m_blackPlayerName = playerName;
-        m_blackPlayerNameLabel->setText(m_blackPlayerName.c_str());
-        m_blackPlayerNameLabel->setEnabled(true);
+        m_blackPlayerName = joiningPlayerName;
+        m_blackPlayerIconNameWidget->setPlayerName(m_blackPlayerName);
     }
     break;
     case TurtlePieceColor::Red:
     {
-        m_redPlayerName = playerName;
-        m_redPlayerNameLabel->setText(m_redPlayerName.c_str());
-        m_redPlayerNameLabel->setEnabled(true);
+        m_redPlayerName = joiningPlayerName;
+        m_redPlayerIconNameWidget->setPlayerName(m_redPlayerName);
     }
     break;
     case TurtlePieceColor::None:
@@ -425,40 +408,44 @@ void InLobbyFrame::playerJoinedLobby(const std::string &playerName, TurtlePieceC
     }
     setLobbyOwnerColor(m_lobbyOwnerColor); // (Re)enable the kick button
 
-    Parameters::setOpponentName(playerName);
-    Parameters::setOpponentColor(playerColor);
+    m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+    m_blackReadyInLobbyCheckBox->setEnabled(Parameters::getPlayerColor() == TurtlePieceColor::Black);
+    m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+    m_redReadyInLobbyCheckBox->setEnabled(Parameters::getPlayerColor() == TurtlePieceColor::Red);
 
     bool blackPlayerJoined = !m_blackPlayerName.empty();
     bool redPlayerJoined = !m_redPlayerName.empty();
     m_chatBox->setReportPlayerButtonEnabled(blackPlayerJoined && redPlayerJoined);
 }
 
-void InLobbyFrame::playerLeftLobby(const std::string &playerName)
+void InLobbyFrame::playerLeftLobby(const std::string &leavingPlayerName)
 {
-    if (playerName == Parameters::getPlayerName())
+    Parameters::setOpponentName("");
+    Parameters::setOpponentColor(TurtlePieceColor::None);
+
+    if (leavingPlayerName == Parameters::getPlayerName())
     {
         // We've been kicked
         m_playerWindow->leaveLobby();
         m_playerWindow->moveToMainMenuFrame();
+        return;
     }
 
-    if (playerName == m_blackPlayerName)
+    if (leavingPlayerName == m_blackPlayerName)
     {
-        m_blackPlayerNameLabel->setText(StringLibrary::getTranslatedString("Open"));
-        m_blackPlayerNameLabel->setEnabled(false);
-        m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+        m_blackPlayerIconNameWidget->clearPlayerName();
         m_blackPlayerName.clear();
     }
-    else if (playerName == m_redPlayerName)
+    else if (leavingPlayerName == m_redPlayerName)
     {
-        m_redPlayerNameLabel->setText(StringLibrary::getTranslatedString("Open"));
-        m_redPlayerNameLabel->setEnabled(false);
-        m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+        m_redPlayerIconNameWidget->clearPlayerName();
         m_redPlayerName.clear();
     }
 
-    Parameters::setOpponentName("");
-    Parameters::setOpponentColor(TurtlePieceColor::None);
+    m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+    m_blackReadyInLobbyCheckBox->setEnabled(false);
+    m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+    m_redReadyInLobbyCheckBox->setEnabled(false);
 
     bool blackPlayerJoined = !m_blackPlayerName.empty();
     bool redPlayerJoined = !m_redPlayerName.empty();
@@ -545,19 +532,19 @@ void InLobbyFrame::setLobbyOwnerColor(TurtlePieceColor lobbyOwnerColor)
     }
 }
 
-void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
+void InLobbyFrame::setPlayerReady(const std::string &readyingPlayerName, bool ready)
 {
-    if (playerName == Parameters::getPlayerName())
+    if (readyingPlayerName == Parameters::getPlayerName())
     {
         // Do nothing
     }
     else
     {
-        if (playerName == m_blackPlayerName)
+        if (readyingPlayerName == m_blackPlayerName)
         {
             m_blackReadyInLobbyCheckBox->setCheckState(ready ? Qt::Checked : Qt::Unchecked);
         }
-        else if (playerName == m_redPlayerName)
+        else if (readyingPlayerName == m_redPlayerName)
         {
             m_redReadyInLobbyCheckBox->setCheckState(ready ? Qt::Checked : Qt::Unchecked);
         }
@@ -571,9 +558,8 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
         m_blackPlayerKickButton->setEnabled(false);
         m_redPlayerKickButton->setEnabled(false);
         m_secondsBeforeStart = MAX_SECONDS_BEFORE_START;
-        m_gameStartTimerLabel->setText(
-            StringLibrary::getTranslatedString("The match will start in... %s...",
-                                               {std::to_string(m_secondsBeforeStart.count())}));
+        m_gameStartTimerLabel->setText("The match will start in... %s...",
+                                       {std::to_string(m_secondsBeforeStart.count())});
         m_gameStartTimer->start();
     }
     else
@@ -586,7 +572,7 @@ void InLobbyFrame::setPlayerReady(const std::string &playerName, bool ready)
             m_blackPlayerKickButton->setEnabled(m_lobbyOwnerColor == TurtlePieceColor::Red);
             m_redPlayerKickButton->setEnabled(m_lobbyOwnerColor == TurtlePieceColor::Black);
         }
-        m_gameStartTimerLabel->setText(StringLibrary::getTranslatedString("The match will start when both players are ready!"));
+        m_gameStartTimerLabel->setText("The match will start when both players are ready!");
         m_gameStartTimer->stop();
     }
 }
@@ -727,38 +713,30 @@ void InLobbyFrame::handleTimerIndexChanged(int index)
             m_playerWindow->setTimer(m_timer.count());
         }
     }
+
+    m_blackReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
+    m_redReadyInLobbyCheckBox->setCheckState(Qt::Unchecked);
 }
 
 void InLobbyFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    if (m_blackPlayerReady && m_redPlayerReady)
-    {
-        m_gameStartTimerLabel->setText(
-            StringLibrary::getTranslatedString("The match will start in... %s...",
-                                               {std::to_string(m_secondsBeforeStart.count())}));
-    }
-    else
-    {
-        m_gameStartTimerLabel->setText(StringLibrary::getTranslatedString("The match will start when both players are ready!"));
-    }
+    m_gameStartTimerLabel->reloadStrings();
 
-    m_blackPlayerNameLabel->setText(m_blackPlayerName.empty() ? StringLibrary::getTranslatedString("Open") : m_blackPlayerName.c_str());
-    m_redPlayerNameLabel->setText(m_redPlayerName.empty() ? StringLibrary::getTranslatedString("Open") : m_redPlayerName.c_str());
+    m_blackPlayerIconNameWidget->reloadStrings();
+    m_redPlayerIconNameWidget->reloadStrings();
 
-    m_blackReadyInLobbyCheckBox->setText(StringLibrary::getTranslatedString("Ready"));
-    m_redReadyInLobbyCheckBox->setText(StringLibrary::getTranslatedString("Ready"));
+    m_blackReadyInLobbyCheckBox->reloadStrings();
+    m_redReadyInLobbyCheckBox->reloadStrings();
 
-    m_timerLabel->setText(StringLibrary::getTranslatedString("Match timer:"));
+    m_timerLabel->reloadStrings();
 
-    m_timerComboBox->setItemText(0, StringLibrary::getTranslatedString("No timer"));
-    m_timerComboBox->setItemText(1, StringLibrary::getTranslatedString("5 minutes"));
-    m_timerComboBox->setItemText(2, StringLibrary::getTranslatedString("10 minutes"));
+    m_timerComboBox->reloadStrings();
 
     m_chatBox->reloadStrings();
 
-    m_leaveLobbyInLobbyButton->setText(StringLibrary::getTranslatedString("Leave Lobby"));
+    m_leaveLobbyInLobbyButton->reloadStrings();
 
     m_reportPlayerConfirmDialog->reloadStrings();
 }

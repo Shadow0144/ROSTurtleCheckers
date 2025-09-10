@@ -244,6 +244,9 @@ TurtlePieceColor CheckersGameLobby::addPlayer(const std::string &playerName, uin
     break;
     }
 
+    m_blackPlayerReady = false;
+    m_redPlayerReady = false;
+
     auto message = turtle_checkers_interfaces::msg::PlayerJoinedLobby();
     message.lobby_name = m_lobbyName;
     message.lobby_id = m_lobbyId;
@@ -263,15 +266,16 @@ void CheckersGameLobby::removePlayer(const std::string &playerName, bool kick)
     if (playerName == m_blackPlayerName)
     {
         m_blackPlayerName.clear();
-        m_blackPlayerReady = false;
         m_lobbyOwnerPlayerName = m_redPlayerName;
     }
     else if (playerName == m_redPlayerName)
     {
         m_redPlayerName.clear();
-        m_redPlayerReady = false;
         m_lobbyOwnerPlayerName = m_blackPlayerName;
     }
+
+    m_blackPlayerReady = false;
+    m_redPlayerReady = false;
 
     if (kick)
     {

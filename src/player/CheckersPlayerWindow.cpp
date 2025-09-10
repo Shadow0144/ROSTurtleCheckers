@@ -290,16 +290,16 @@ void CheckersPlayerWindow::leaveLobby()
     Parameters::setLobbyId("");   // Clear out the lobby ID
 }
 
-void CheckersPlayerWindow::updateLobbyOwner(const std::string &playerName)
+void CheckersPlayerWindow::updateLobbyOwner(const std::string &owningPlayerName)
 {
-    m_inLobbyFrame->updateLobbyOwner(playerName);
+    m_inLobbyFrame->updateLobbyOwner(owningPlayerName);
 }
 
-void CheckersPlayerWindow::kickPlayer(const std::string &playerName)
+void CheckersPlayerWindow::kickPlayer(const std::string &kickedPlayerName)
 {
     if (auto playerNode = m_playerNode.lock())
     {
-        playerNode->kickPlayer(playerName);
+        playerNode->kickPlayer(kickedPlayerName);
     }
 }
 
@@ -382,19 +382,19 @@ void CheckersPlayerWindow::connectedToLobby(const std::string &lobbyName,
     moveToInLobbyFrame();
 }
 
-void CheckersPlayerWindow::playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor)
+void CheckersPlayerWindow::playerJoinedLobby(const std::string &joiningPlayerName, TurtlePieceColor joiningPlayerColor)
 {
-    m_inLobbyFrame->playerJoinedLobby(playerName, playerColor);
+    m_inLobbyFrame->playerJoinedLobby(joiningPlayerName, joiningPlayerColor);
 }
 
-void CheckersPlayerWindow::playerLeftLobby(const std::string &playerName)
+void CheckersPlayerWindow::playerLeftLobby(const std::string &leavingPlayerName)
 {
-    m_inLobbyFrame->playerLeftLobby(playerName);
+    m_inLobbyFrame->playerLeftLobby(leavingPlayerName);
 }
 
-void CheckersPlayerWindow::setPlayerReady(const std::string &playerName, bool ready)
+void CheckersPlayerWindow::setPlayerReady(const std::string &readyingPlayerName, bool ready)
 {
-    m_inLobbyFrame->setPlayerReady(playerName, ready);
+    m_inLobbyFrame->setPlayerReady(readyingPlayerName, ready);
 }
 
 void CheckersPlayerWindow::updateTimer(uint64_t timerSeconds)

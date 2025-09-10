@@ -17,9 +17,10 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/ImageLibrary.hpp"
-#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 LobbyPasswordFrame::LobbyPasswordFrame(
     CheckersPlayerWindow *parentWindow)
@@ -45,7 +46,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
 
     enterLobbyPasswordLayout->addLayout(lobbyNameLayout);
 
-    m_lobbyPasswordLabel = new QLabel(StringLibrary::getTranslatedString("Lobby password"));
+    m_lobbyPasswordLabel = new TranslatedQLabel("Lobby password");
     enterLobbyPasswordLayout->addWidget(m_lobbyPasswordLabel);
 
     m_lobbyPasswordLineEdit = new QLineEdit();
@@ -58,7 +59,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     connect(m_lobbyPasswordLineEdit, &QLineEdit::textChanged, this, &LobbyPasswordFrame::validatePasswordText);
     enterLobbyPasswordLayout->addWidget(m_lobbyPasswordLineEdit);
 
-    m_passwordIncorrectLabel = new QLabel(StringLibrary::getTranslatedString("Incorrect password"));
+    m_passwordIncorrectLabel = new TranslatedQLabel("Incorrect password");
     m_passwordIncorrectLabel->setProperty("error", true);
     auto passwordIncorrectLabelSizePolicy = m_passwordIncorrectLabel->sizePolicy();
     passwordIncorrectLabelSizePolicy.setRetainSizeWhenHidden(true);
@@ -69,7 +70,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     auto enterLobbyPasswordButtonLayout = new QHBoxLayout();
     enterLobbyPasswordButtonLayout->setAlignment(Qt::AlignCenter);
 
-    m_confirmPasswordButton = new QPushButton(StringLibrary::getTranslatedString("Join Lobby"));
+    m_confirmPasswordButton = new TranslatedQPushButton("Join Lobby");
     m_confirmPasswordButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_confirmPasswordButton->setEnabled(false);
     connect(m_confirmPasswordButton, &QPushButton::released, this,
@@ -78,7 +79,7 @@ LobbyPasswordFrame::LobbyPasswordFrame(
     m_confirmPasswordButton->setDefault(true);
     enterLobbyPasswordButtonLayout->addWidget(m_confirmPasswordButton);
 
-    m_cancelJoinLobbyButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelJoinLobbyButton = new TranslatedQPushButton("Cancel");
     m_cancelJoinLobbyButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_cancelJoinLobbyButton, &QPushButton::released, this,
             &LobbyPasswordFrame::handleCancelButton);
@@ -141,9 +142,9 @@ void LobbyPasswordFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    m_lobbyPasswordLabel->setText(StringLibrary::getTranslatedString("Lobby password"));
-    m_passwordIncorrectLabel->setText(StringLibrary::getTranslatedString("Incorrect password"));
+    m_lobbyPasswordLabel->reloadStrings();
+    m_passwordIncorrectLabel->reloadStrings();
 
-    m_confirmPasswordButton->setText(StringLibrary::getTranslatedString("Join Lobby"));
-    m_cancelJoinLobbyButton->setText(StringLibrary::getTranslatedString("Cancel"));
+    m_confirmPasswordButton->reloadStrings();
+    m_cancelJoinLobbyButton->reloadStrings();
 }

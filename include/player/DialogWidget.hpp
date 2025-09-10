@@ -8,6 +8,9 @@
 #include <vector>
 #include <functional>
 
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
+
 class DialogWidget : public QWidget
 {
 public:
@@ -23,12 +26,8 @@ public:
     void reloadStrings();
 
 private:
-    QLabel *m_headerLabel;
+    TranslatedQLabel *m_headerLabel;
 
-    QPushButton *m_confirmButton;
-    QPushButton *m_cancelButton;
-
-    std::string m_headerText;
-    std::string m_confirmText;
-    std::string m_cancelText;
+    TranslatedQPushButton *m_confirmButton;
+    TranslatedQPushButton *m_cancelButton;
 };

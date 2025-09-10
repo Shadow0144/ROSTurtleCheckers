@@ -95,11 +95,11 @@ public:
                           bool redPlayerReady,
                           uint64_t timerSeconds);
 
-    void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
-    void playerLeftLobby(const std::string &playerName);
-    void updateLobbyOwner(const std::string &playerName);
-    void kickPlayer(const std::string &playerName);
-    void setPlayerReady(const std::string &playerName, bool ready);
+    void playerJoinedLobby(const std::string &joiningPlayerName, TurtlePieceColor joiningPlayerColor);
+    void playerLeftLobby(const std::string &leavingPlayerName);
+    void updateLobbyOwner(const std::string &owningPlayerName);
+    void kickPlayer(const std::string &kickedPlayerName);
+    void setPlayerReady(const std::string &readyingPlayerName, bool ready);
     void updateTimer(uint64_t timerSeconds);
 
     void reportPlayer(const std::string &chatMessages);

@@ -21,6 +21,8 @@
 #include "player/ImageLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 LogInAccountFrame::LogInAccountFrame(
     CheckersPlayerWindow *parentWindow)
@@ -40,7 +42,7 @@ LogInAccountFrame::LogInAccountFrame(
     m_titleWidget = new TitleWidget();
     logInAccountLayout->addWidget(m_titleWidget);
 
-    m_playerNameLabel = new QLabel(StringLibrary::getTranslatedString("Player name"));
+    m_playerNameLabel = new TranslatedQLabel("Player name");
     logInAccountLayout->addWidget(m_playerNameLabel);
 
     m_playerNameLineEdit = new QLineEdit();
@@ -52,7 +54,7 @@ LogInAccountFrame::LogInAccountFrame(
     connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &LogInAccountFrame::validatePlayerNameText);
     logInAccountLayout->addWidget(m_playerNameLineEdit);
 
-    m_playerPasswordLabel = new QLabel(StringLibrary::getTranslatedString("Player password"));
+    m_playerPasswordLabel = new TranslatedQLabel("Player password");
     logInAccountLayout->addWidget(m_playerPasswordLabel);
 
     m_passwordLineEdit = new QLineEdit();
@@ -65,7 +67,7 @@ LogInAccountFrame::LogInAccountFrame(
     connect(m_passwordLineEdit, &QLineEdit::textChanged, this, &LogInAccountFrame::validatePasswordText);
     logInAccountLayout->addWidget(m_passwordLineEdit);
 
-    m_errorMessageLabel = new QLabel("");
+    m_errorMessageLabel = new TranslatedQLabel("");
     m_errorMessageLabel->setProperty("error", true);
     auto errorMessageLabelSizePolicy = m_errorMessageLabel->sizePolicy();
     errorMessageLabelSizePolicy.setRetainSizeWhenHidden(true);
@@ -76,7 +78,7 @@ LogInAccountFrame::LogInAccountFrame(
     auto logInAccountButtonLayout = new QHBoxLayout();
     logInAccountButtonLayout->setAlignment(Qt::AlignCenter);
 
-    m_logInAccountButton = new QPushButton(StringLibrary::getTranslatedString("Log In"));
+    m_logInAccountButton = new TranslatedQPushButton("Log In");
     m_logInAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_logInAccountButton->setEnabled(false);
     connect(m_logInAccountButton, &QPushButton::released, this,
@@ -86,7 +88,7 @@ LogInAccountFrame::LogInAccountFrame(
     connect(m_passwordLineEdit, &QLineEdit::returnPressed, m_logInAccountButton, &QPushButton::click);
     logInAccountButtonLayout->addWidget(m_logInAccountButton);
 
-    m_cancelButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelButton = new TranslatedQPushButton("Cancel");
     m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_cancelButton, &QPushButton::released, this,
             &LogInAccountFrame::handleCancelButton);
@@ -131,8 +133,8 @@ void LogInAccountFrame::failedLogIn(const std::string &errorMessage)
 {
     m_loggingInAccount = false;
     m_errorMessage = errorMessage;
-    m_logInAccountButton->setText(StringLibrary::getTranslatedString("Log In"));
-    m_errorMessageLabel->setText(StringLibrary::getTranslatedString(m_errorMessage));
+    m_logInAccountButton->setText("Log In");
+    m_errorMessageLabel->setText(m_errorMessage);
     m_errorMessageLabel->setVisible(true);
     m_playerNameLineEdit->setEnabled(true);
     m_passwordLineEdit->setEnabled(true);
@@ -195,7 +197,7 @@ void LogInAccountFrame::validatePasswordText(const QString &playerPassword)
 void LogInAccountFrame::handleLogInAccountButton()
 {
     m_loggingInAccount = true;
-    m_logInAccountButton->setText(StringLibrary::getTranslatedString("Logging In..."));
+    m_logInAccountButton->setText("Logging In...");
     m_logInAccountButton->setEnabled(false);
     m_playerNameLineEdit->setEnabled(false);
     m_passwordLineEdit->setEnabled(false);
@@ -214,10 +216,10 @@ void LogInAccountFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    m_playerNameLabel->setText(StringLibrary::getTranslatedString("Player name"));
-    m_playerPasswordLabel->setText(StringLibrary::getTranslatedString("Player password"));
-    m_errorMessageLabel->setText(StringLibrary::getTranslatedString(m_errorMessage));
+    m_playerNameLabel->reloadStrings();
+    m_playerPasswordLabel->reloadStrings();
+    m_errorMessageLabel->reloadStrings();
 
-    m_logInAccountButton->setText((m_loggingInAccount) ? StringLibrary::getTranslatedString("Logging In...") : StringLibrary::getTranslatedString("Log In"));
-    m_cancelButton->setText(StringLibrary::getTranslatedString("Cancel"));
+    m_logInAccountButton->reloadStrings();
+    m_cancelButton->reloadStrings();
 }

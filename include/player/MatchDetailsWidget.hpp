@@ -8,6 +8,7 @@
 #include <functional>
 
 #include "shared/CheckersConsts.hpp"
+#include "player/TranslatedQLabel.hpp"
 
 class MatchDetailsWidget : public QWidget
 {
@@ -26,5 +27,5 @@ private:
 
     std::string m_winningPlayerName;
 
-    QLabel *m_winnerLabel;
+    TranslatedQLabel *m_winnerLabel;
 };

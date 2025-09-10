@@ -12,6 +12,7 @@
 
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -42,12 +43,12 @@ private:
 
 	QLabel *m_playerNameLabel;
 
-	QPushButton *m_createLobbyButton;
-	QPushButton *m_joinLobbyButton;
-	QPushButton *m_statisticsButton;
-	QPushButton *m_changeAccountPasswordAccountButton;
-	QPushButton *m_logOutAccountButton;
-	QPushButton *m_quitButton;
+	TranslatedQPushButton *m_createLobbyButton;
+	TranslatedQPushButton *m_joinLobbyButton;
+	TranslatedQPushButton *m_statisticsButton;
+	TranslatedQPushButton *m_changeAccountPasswordAccountButton;
+	TranslatedQPushButton *m_logOutAccountButton;
+	TranslatedQPushButton *m_quitButton;
 };
 
 typedef std::unique_ptr<MainMenuFrame> MainMenuFrameUniPtr;

@@ -13,7 +13,8 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
-#include "player/StringLibrary.hpp"
+#include "player/PlayerIconNameWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
 
 MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
                                        const std::string &playerName,
@@ -55,7 +56,7 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
 
     auto winnerLayout = new QHBoxLayout();
     auto winnerIconLabel = new QLabel();
-    m_winnerLabel = new QLabel();
+    m_winnerLabel = new TranslatedQLabel();
     m_winnerLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     m_winnerLabel->setFixedWidth(MATCH_LIST_PLAYER_NAME_WIDTH);
 
@@ -64,13 +65,13 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     case Winner::None:
     {
         m_winningPlayerName = "";
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
+        m_winnerLabel->setText("No winner");
     }
     break;
     case Winner::Black:
     {
         m_winningPlayerName = blackPlayerName;
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
+        m_winnerLabel->setText("%s won", {m_winningPlayerName});
         if (playerName == blackPlayerName)
         {
             winnerIconLabel->setPixmap(scaledWinIcon);
@@ -84,7 +85,7 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     case Winner::Red:
     {
         m_winningPlayerName = redPlayerName;
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
+        m_winnerLabel->setText("%s won", {m_winningPlayerName});
         if (playerName == blackPlayerName)
         {
             winnerIconLabel->setPixmap(scaledLoseIcon);
@@ -98,7 +99,7 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     case Winner::Draw:
     {
         m_winningPlayerName = "";
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("Draw"));
+        m_winnerLabel->setText("Draw");
         if (playerName == blackPlayerName)
         {
             winnerIconLabel->setPixmap(scaledDrawIcon);
@@ -112,7 +113,7 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     default:
     {
         m_winningPlayerName = "";
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
+        m_winnerLabel->setText("No winner");
     }
     break;
     }
@@ -121,67 +122,14 @@ MatchDetailsWidget::MatchDetailsWidget(QWidget *parent,
     winnerLayout->addWidget(m_winnerLabel);
     matchLayout->addLayout(winnerLayout);
 
-    auto blackPlayerLayout = new QHBoxLayout();
+    auto blackPlayerIconNameWidget = new PlayerIconNameWidget(TurtlePieceColor::Black, blackPlayerName);
+    matchLayout->addWidget(blackPlayerIconNameWidget);
 
-    auto blackTurtleIconLabel = new QLabel();
-    auto blackTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Black));
-    auto scaledBlackTurtleIcon = blackTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
-                                                        Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    blackTurtleIconLabel->setPixmap(scaledBlackTurtleIcon);
-    blackPlayerLayout->addWidget(blackTurtleIconLabel);
-
-    auto blackPlayerNameLabel = new QLabel(blackPlayerName.c_str());
-    blackPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    blackPlayerNameLabel->setFixedWidth(MATCH_LIST_PLAYER_NAME_WIDTH);
-    blackPlayerLayout->addWidget(blackPlayerNameLabel);
-
-    matchLayout->addLayout(blackPlayerLayout);
-
-    auto redPlayerLayout = new QHBoxLayout();
-
-    auto redTurtleIconLabel = new QLabel();
-    auto redTurtleIcon = QPixmap::fromImage(ImageLibrary::getTurtleImage(TurtlePieceColor::Red));
-    auto scaledRedTurtleIcon = redTurtleIcon.scaled(ICON_HEIGHT_WIDTH, ICON_HEIGHT_WIDTH,
-                                                    Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    redTurtleIconLabel->setPixmap(scaledRedTurtleIcon);
-    redPlayerLayout->addWidget(redTurtleIconLabel);
-
-    auto redPlayerNameLabel = new QLabel(redPlayerName.c_str());
-    redPlayerNameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    redPlayerNameLabel->setFixedWidth(MATCH_LIST_PLAYER_NAME_WIDTH);
-    redPlayerLayout->addWidget(redPlayerNameLabel);
-
-    matchLayout->addLayout(redPlayerLayout);
+    auto redPlayerIconNameWidget = new PlayerIconNameWidget(TurtlePieceColor::Red, redPlayerName);
+    matchLayout->addWidget(redPlayerIconNameWidget);
 }
 
 void MatchDetailsWidget::reloadStrings()
 {
-    switch (m_winner)
-    {
-    case Winner::None:
-    {
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
-    }
-    break;
-    case Winner::Black:
-    {
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
-    }
-    break;
-    case Winner::Red:
-    {
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("%s won", {m_winningPlayerName}));
-    }
-    break;
-    case Winner::Draw:
-    {
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("Draw"));
-    }
-    break;
-    default:
-    {
-        m_winnerLabel->setText(StringLibrary::getTranslatedString("No winner"));
-    }
-    break;
-    }
+    m_winnerLabel->reloadStrings();
 }

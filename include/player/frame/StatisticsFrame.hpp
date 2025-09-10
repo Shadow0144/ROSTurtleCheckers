@@ -17,6 +17,8 @@
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/MatchDetailsWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -56,23 +58,22 @@ private:
 
     QLineEdit *m_playerNameLineEdit;
 
-    QPushButton *m_searchPlayerButton;
-
-    QLabel *m_playerNameLabel;
-    QLabel *m_matchesPlayedLabel;
+    TranslatedQLabel *m_playerNameLabel;
+    TranslatedQLabel *m_matchesPlayedLabel;
     QLabel *m_matchesPlayedNumberLabel;
-    QLabel *m_matchesWonLabel;
+    TranslatedQLabel *m_matchesWonLabel;
     QLabel *m_matchesWonNumberLabel;
-    QLabel *m_matchesLostLabel;
+    TranslatedQLabel *m_matchesLostLabel;
     QLabel *m_matchesLostNumberLabel;
-    QLabel *m_matchesDrawnLabel;
+    TranslatedQLabel *m_matchesDrawnLabel;
     QLabel *m_matchesDrawnNumberLabel;
 
     QScrollArea *m_matchListScrollArea;
 
     std::vector<MatchDetailsWidget *> m_matchDetailsWidgets;
 
-    QPushButton *m_backButton;
+    TranslatedQPushButton *m_searchPlayerButton;
+    TranslatedQPushButton *m_backButton;
 
     std::vector<std::string> m_lobbyNameIds;
     std::vector<std::string> m_blackPlayerNames;

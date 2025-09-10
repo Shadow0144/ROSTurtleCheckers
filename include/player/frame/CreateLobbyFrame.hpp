@@ -16,6 +16,8 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/TitleWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -48,14 +50,14 @@ private:
 
 	TitleWidget *m_titleWidget;
 
-	QLabel *m_lobbyNameLabel;
-	QLabel *m_lobbyPasswordLabel;
+	TranslatedQLabel *m_lobbyNameLabel;
+	TranslatedQLabel *m_lobbyPasswordLabel;
 
 	QLineEdit *m_lobbyNameLineEdit;
 	QLineEdit *m_lobbyPasswordLineEdit;
 
-	QPushButton *m_createLobbyButton;
-	QPushButton *m_cancelCreateLobbyButton;
+	TranslatedQPushButton *m_createLobbyButton;
+	TranslatedQPushButton *m_cancelCreateLobbyButton;
 
 	QRadioButton *m_blackRadioButton;
 	QRadioButton *m_randomRadioButton;

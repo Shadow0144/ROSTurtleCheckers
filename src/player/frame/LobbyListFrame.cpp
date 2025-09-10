@@ -24,11 +24,11 @@
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
 #include "player/ImageLibrary.hpp"
-#include "player/StringLibrary.hpp"
 #include "shared/TurtleLogger.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/LobbyDetailsWidget.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 LobbyListFrame::LobbyListFrame(
     CheckersPlayerWindow *parentWindow)
@@ -62,13 +62,13 @@ LobbyListFrame::LobbyListFrame(
     lobbyListButtonWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     lobbyListButtonLayout->setAlignment(Qt::AlignCenter);
 
-    m_refreshButton = new QPushButton(StringLibrary::getTranslatedString("Refresh"));
+    m_refreshButton = new TranslatedQPushButton("Refresh");
     m_refreshButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_refreshButton, &QPushButton::released, this,
             &LobbyListFrame::handleRefreshButton);
     lobbyListButtonLayout->addWidget(m_refreshButton);
 
-    m_cancelButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelButton = new TranslatedQPushButton("Cancel");
     m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_cancelButton, &QPushButton::released, this,
             &LobbyListFrame::handleCancelButton);
@@ -188,8 +188,8 @@ void LobbyListFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    m_refreshButton->setText(StringLibrary::getTranslatedString("Refresh"));
-    m_cancelButton->setText(StringLibrary::getTranslatedString("Cancel"));
+    m_refreshButton->reloadStrings();
+    m_cancelButton->reloadStrings();
 
     for (auto &lobbyDetailsWidget : m_lobbyDetailsWidgets)
     {

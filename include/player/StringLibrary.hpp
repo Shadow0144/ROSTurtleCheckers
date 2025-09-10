@@ -11,7 +11,7 @@
 class StringLibrary
 {
 public:
-    static QString getTranslatedString(const std::string &stringTag,
+    static QString getTranslatedString(const std::string &keyString,
                                        const std::vector<std::string> &parameters = {});
 
 private:

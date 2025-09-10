@@ -17,6 +17,7 @@
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LobbyDetailsWidget.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -56,8 +57,8 @@ private:
 
 	QScrollArea *m_lobbyListScrollArea;
 
-	QPushButton *m_refreshButton;
-	QPushButton *m_cancelButton;
+	TranslatedQPushButton *m_refreshButton;
+	TranslatedQPushButton *m_cancelButton;
 
 	std::vector<std::string> m_lobbyNames;
 	std::vector<std::string> m_lobbyIds;

@@ -37,6 +37,11 @@ qt5_wrap_cpp(CheckersGameWindow_MOCS
   include/player/LanguageSelectorWidget.hpp
   include/player/LobbyDetailsWidget.hpp
   include/player/MatchDetailsWidget.hpp
+  include/player/PlayerIconNameWidget.hpp
+  include/player/TranslatedQLabel.hpp
+  include/player/TranslatedQPushButton.hpp
+  include/player/TranslatedQCheckBox.hpp
+  include/player/TranslatedQComboBox.hpp
   include/player/TileRender.hpp
   include/player/TurtlePieceRender.hpp
   include/player/CheckersBoardRender.hpp
@@ -77,6 +82,11 @@ add_executable(checkers_player_node
   src/player/LanguageSelectorWidget.cpp
   src/player/LobbyDetailsWidget.cpp
   src/player/MatchDetailsWidget.cpp
+  src/player/PlayerIconNameWidget.cpp
+  src/player/TranslatedQLabel.cpp
+  src/player/TranslatedQPushButton.cpp
+  src/player/TranslatedQCheckBox.cpp
+  src/player/TranslatedQComboBox.cpp
   src/player/frame/ChangeAccountPasswordFrame.cpp
   src/player/frame/CreateAccountFrame.cpp
   src/player/frame/CreateLobbyFrame.cpp

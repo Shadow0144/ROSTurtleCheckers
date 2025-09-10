@@ -14,6 +14,8 @@
 
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/TitleWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -45,13 +47,13 @@ private:
 
 	QLabel *m_lobbyNameLabel;
 	QLabel *m_lobbyIdLabel;
-	QLabel *m_lobbyPasswordLabel;
-	QLabel *m_passwordIncorrectLabel;
+	TranslatedQLabel *m_lobbyPasswordLabel;
+	TranslatedQLabel *m_passwordIncorrectLabel;
 
 	QLineEdit *m_lobbyPasswordLineEdit;
 
-	QPushButton *m_confirmPasswordButton;
-	QPushButton *m_cancelJoinLobbyButton;
+	TranslatedQPushButton *m_confirmPasswordButton;
+	TranslatedQPushButton *m_cancelJoinLobbyButton;
 };
 
 typedef std::unique_ptr<LobbyPasswordFrame> LobbyPasswordFrameUniPtr;

@@ -8,6 +8,7 @@
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QPushButton>
+#include <QSpacerItem>
 
 #include <cstdlib>
 #include <memory>
@@ -16,7 +17,6 @@
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "player/Parameters.hpp"
-#include "player/StringLibrary.hpp"
 #include "player/TitleWidget.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 
@@ -38,7 +38,7 @@ CreateAccountFrame::CreateAccountFrame(
     m_titleWidget = new TitleWidget();
     createAccountLayout->addWidget(m_titleWidget);
 
-    m_playerNameLabel = new QLabel(StringLibrary::getTranslatedString("Player name"));
+    m_playerNameLabel = new TranslatedQLabel("Player name");
     createAccountLayout->addWidget(m_playerNameLabel);
 
     m_playerNameLineEdit = new QLineEdit();
@@ -50,7 +50,7 @@ CreateAccountFrame::CreateAccountFrame(
     connect(m_playerNameLineEdit, &QLineEdit::textChanged, this, &CreateAccountFrame::validatePlayerNameText);
     createAccountLayout->addWidget(m_playerNameLineEdit);
 
-    m_playerPasswordLabel = new QLabel(StringLibrary::getTranslatedString("Player password"));
+    m_playerPasswordLabel = new TranslatedQLabel("Player password");
     createAccountLayout->addWidget(m_playerPasswordLabel);
 
     m_passwordLineEdit = new QLineEdit();
@@ -63,12 +63,12 @@ CreateAccountFrame::CreateAccountFrame(
     connect(m_passwordLineEdit, &QLineEdit::textChanged, this, &CreateAccountFrame::validatePasswordText);
     createAccountLayout->addWidget(m_passwordLineEdit);
 
-    m_passwordWarningLabel1 = new QLabel(StringLibrary::getTranslatedString("This application is a learning project for me, thus passwords are NOT robustly secured."));
-    m_passwordWarningLabel2 = new QLabel(StringLibrary::getTranslatedString("Do NOT use passwords you use elsewhere."));
-    m_passwordWarningLabel3 = new QLabel(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
-    m_passwordWarningLabel4 = new QLabel(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
+    m_passwordWarningLabel1 = new TranslatedQLabel("This application is a learning project for me, thus passwords are NOT robustly secured.");
+    m_passwordWarningLabel2 = new TranslatedQLabel("Do NOT use passwords you use elsewhere.");
+    m_passwordWarningLabel3 = new TranslatedQLabel("To prevent password reuse, passwords can be a maximum of 3 characters in length.");
+    m_passwordWarningLabel4 = new TranslatedQLabel("You may use alphanumeric characters and/or the following symbols:");
     m_passwordWarningLabel5 = new QLabel("\t` ~ ! @ # $ % ^ & * ( ) - _ = + [ ] { } | ; : , . < > ?");
-    m_passwordWarningLabel6 = new QLabel(StringLibrary::getTranslatedString("Warning: Lost passwords cannot be recovered or changed!"));
+    m_passwordWarningLabel6 = new TranslatedQLabel("Warning: Lost passwords cannot be recovered or changed!");
     createAccountLayout->addWidget(m_passwordWarningLabel1);
     createAccountLayout->addWidget(m_passwordWarningLabel2);
     createAccountLayout->addWidget(m_passwordWarningLabel3);
@@ -77,9 +77,10 @@ CreateAccountFrame::CreateAccountFrame(
     createAccountLayout->addWidget(m_passwordWarningLabel6);
 
     // Add a spacer
-    createAccountLayout->addWidget(new QLabel(""));
+    auto spacer = new QSpacerItem(0, 10, QSizePolicy::Preferred, QSizePolicy::Minimum);
+    createAccountLayout->addItem(spacer);
 
-    m_errorMessageLabel = new QLabel("");
+    m_errorMessageLabel = new TranslatedQLabel("");
     m_errorMessageLabel->setProperty("error", true);
     auto errorMessageLabelSizePolicy = m_errorMessageLabel->sizePolicy();
     errorMessageLabelSizePolicy.setRetainSizeWhenHidden(true);
@@ -88,12 +89,13 @@ CreateAccountFrame::CreateAccountFrame(
     createAccountLayout->addWidget(m_errorMessageLabel);
 
     // Add a spacer
-    createAccountLayout->addWidget(new QLabel(""));
+    spacer = new QSpacerItem(0, 10, QSizePolicy::Preferred, QSizePolicy::Minimum);
+    createAccountLayout->addItem(spacer);
 
     auto createAccountButtonLayout = new QHBoxLayout();
     createAccountButtonLayout->setAlignment(Qt::AlignCenter);
 
-    m_createAccountButton = new QPushButton(StringLibrary::getTranslatedString("Create Account"));
+    m_createAccountButton = new TranslatedQPushButton("Create Account");
     m_createAccountButton->setFixedWidth(MENU_BUTTON_WIDTH);
     m_createAccountButton->setEnabled(false);
     connect(m_createAccountButton, &QPushButton::released, this,
@@ -103,7 +105,7 @@ CreateAccountFrame::CreateAccountFrame(
     connect(m_passwordLineEdit, &QLineEdit::returnPressed, m_createAccountButton, &QPushButton::click);
     createAccountButtonLayout->addWidget(m_createAccountButton);
 
-    m_cancelButton = new QPushButton(StringLibrary::getTranslatedString("Cancel"));
+    m_cancelButton = new TranslatedQPushButton("Cancel");
     m_cancelButton->setFixedWidth(MENU_BUTTON_WIDTH);
     connect(m_cancelButton, &QPushButton::released, this,
             &CreateAccountFrame::handleCancelButton);
@@ -147,8 +149,8 @@ void CreateAccountFrame::showEvent(QShowEvent *event)
 void CreateAccountFrame::failedCreate(const std::string &errorMessage)
 {
     m_errorMessage = errorMessage;
-    m_createAccountButton->setText(StringLibrary::getTranslatedString("Create Account"));
-    m_errorMessageLabel->setText(StringLibrary::getTranslatedString(m_errorMessage));
+    m_createAccountButton->setText("Create Account");
+    m_errorMessageLabel->setText(m_errorMessage);
     m_errorMessageLabel->setVisible(true);
     m_playerNameLineEdit->setEnabled(true);
     m_passwordLineEdit->setEnabled(true);
@@ -212,7 +214,7 @@ void CreateAccountFrame::validatePasswordText(const QString &playerPassword)
 void CreateAccountFrame::handleCreateAccountButton()
 {
     m_creatingAccount = true;
-    m_createAccountButton->setText(StringLibrary::getTranslatedString("Creating..."));
+    m_createAccountButton->setText("Creating...");
     m_createAccountButton->setEnabled(false);
     m_playerNameLineEdit->setEnabled(false);
     m_passwordLineEdit->setEnabled(false);
@@ -231,18 +233,18 @@ void CreateAccountFrame::reloadStrings()
 {
     m_titleWidget->reloadStrings();
 
-    m_playerNameLabel->setText(StringLibrary::getTranslatedString("Player name"));
-    m_playerPasswordLabel->setText(StringLibrary::getTranslatedString("Player password"));
+    m_playerNameLabel->reloadStrings();
+    m_playerPasswordLabel->reloadStrings();
 
-    m_passwordWarningLabel1->setText(StringLibrary::getTranslatedString("This application is a learning project for me, thus passwords are NOT robustly secured."));
-    m_passwordWarningLabel2->setText(StringLibrary::getTranslatedString("Do NOT use passwords you use elsewhere."));
-    m_passwordWarningLabel3->setText(StringLibrary::getTranslatedString("To prevent password reuse, passwords can be a maximum of 3 characters in length."));
-    m_passwordWarningLabel4->setText(StringLibrary::getTranslatedString("You may use alphanumeric characters and/or the following symbols:"));
+    m_passwordWarningLabel1->reloadStrings();
+    m_passwordWarningLabel2->reloadStrings();
+    m_passwordWarningLabel3->reloadStrings();
+    m_passwordWarningLabel4->reloadStrings();
     // m_passwordWarningLabel5 does not need translating
-    m_passwordWarningLabel6->setText(StringLibrary::getTranslatedString("Warning: Lost passwords cannot be recovered or changed!"));
+    m_passwordWarningLabel6->reloadStrings();
 
-    m_errorMessageLabel->setText(StringLibrary::getTranslatedString(m_errorMessage));
+    m_errorMessageLabel->reloadStrings();
 
-    m_createAccountButton->setText((m_creatingAccount) ? StringLibrary::getTranslatedString("Creating...") : StringLibrary::getTranslatedString("Create Account"));
-    m_cancelButton->setText(StringLibrary::getTranslatedString("Cancel"));
+    m_createAccountButton->reloadStrings();
+    m_cancelButton->reloadStrings();
 }

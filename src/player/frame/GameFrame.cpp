@@ -23,7 +23,6 @@
 #include "player/CheckersPlayerWindow.hpp"
 #include "shared/CheckersConsts.hpp"
 #include "shared/Hasher.hpp"
-#include "player/StringLibrary.hpp"
 #include "player/LanguageSelectorWidget.hpp"
 #include "player/CheckersBoardRender.hpp"
 #include "player/TileRender.hpp"
@@ -76,14 +75,14 @@ GameFrame::GameFrame(CheckersPlayerWindow *parentWindow)
 									 GRAVEYARD_WIDTH + CHAT_BOX_IN_GAME_WIDTH,
 									 0);
 
-	m_offerDrawButton = new QPushButton();
-	m_offerDrawButton->setText(StringLibrary::getTranslatedString("Offer Draw"));
+	m_offerDrawButton = new TranslatedQPushButton();
+	m_offerDrawButton->setText("Offer Draw");
     m_offerDrawButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(m_offerDrawButton, &QPushButton::released, this, &GameFrame::handleOfferDrawButton);
 	buttonLayout->addWidget(m_offerDrawButton);
 
-	m_forfeitButton = new QPushButton();
-	m_forfeitButton->setText(StringLibrary::getTranslatedString("Forfeit"));
+	m_forfeitButton = new TranslatedQPushButton();
+	m_forfeitButton->setText("Forfeit");
     m_forfeitButton->setFixedWidth(MENU_BUTTON_WIDTH);
 	connect(m_forfeitButton, &QPushButton::released, this, &GameFrame::handleForfeitButton);
 	buttonLayout->addWidget(m_forfeitButton);
@@ -580,8 +579,8 @@ void GameFrame::reloadStrings()
 
 	m_gameWinnerOverlayWidget->reloadStrings();
 
-	m_offerDrawButton->setText(StringLibrary::getTranslatedString("Offer Draw"));
-	m_forfeitButton->setText(StringLibrary::getTranslatedString("Forfeit"));
+	m_offerDrawButton->reloadStrings();
+	m_forfeitButton->reloadStrings();
 
 	m_offerDrawConfirmDialog->reloadStrings();
 	m_offeringDrawDialog->reloadStrings();

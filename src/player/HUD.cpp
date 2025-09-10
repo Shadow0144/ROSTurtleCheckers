@@ -11,7 +11,7 @@
 
 #include "shared/CheckersConsts.hpp"
 #include "player/ImageLibrary.hpp"
-#include "player/StringLibrary.hpp"
+#include "player/TranslatedQLabel.hpp"
 
 HUD::HUD(QWidget *parent)
     : QWidget(parent)
@@ -35,7 +35,7 @@ HUD::HUD(QWidget *parent)
     auto spacer1 = new QSpacerItem(HUD_WIDTH / 12, 0, QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     hudLayout->addItem(spacer1);
 
-    m_currentTurnLabel = new QLabel();
+    m_currentTurnLabel = new TranslatedQLabel();
     m_currentTurnLabel->setFont(hudFont);
     hudLayout->addWidget(m_currentTurnLabel);
 
@@ -78,7 +78,7 @@ HUD::HUD(QWidget *parent)
 
 void HUD::reloadStrings()
 {
-    setGameState(m_gameState);
+    m_currentTurnLabel->reloadStrings();
 }
 
 void HUD::setPlayerColor(TurtlePieceColor playerColor)
@@ -143,24 +143,24 @@ void HUD::setGameState(GameState gameState)
     {
     case GameState::Connecting:
     {
-        m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Connecting"));
+        m_currentTurnLabel->setText("Connecting");
     }
     break;
     case GameState::Connected:
     {
-        m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Waiting for opponent to connect"));
+        m_currentTurnLabel->setText("Waiting for opponent to connect");
     }
     break;
     case GameState::BlackMove:
     {
         if (m_playerColor == TurtlePieceColor::Black)
         {
-            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Your move"));
+            m_currentTurnLabel->setText("Your move");
             m_currentTurnLabel->setStyleSheet("color: #00FFFF;");
         }
         else
         {
-            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Opponent's move"));
+            m_currentTurnLabel->setText("Opponent's move");
             m_currentTurnLabel->setStyleSheet("color: white;");
         }
 
@@ -172,12 +172,12 @@ void HUD::setGameState(GameState gameState)
     {
         if (m_playerColor == TurtlePieceColor::Red)
         {
-            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Your move"));
+            m_currentTurnLabel->setText("Your move");
             m_currentTurnLabel->setStyleSheet("color: #00FFFF;");
         }
         else
         {
-            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Opponent's move"));
+            m_currentTurnLabel->setText("Opponent's move");
             m_redTimeRemainingLabel->setStyleSheet("color: white;");
         }
 
@@ -189,28 +189,28 @@ void HUD::setGameState(GameState gameState)
     {
         if (m_winner == Winner::Draw)
         {
-            m_currentTurnLabel->setText(StringLibrary::getTranslatedString("Draw!"));
+            m_currentTurnLabel->setText("Draw!");
         }
         else if (m_winner == Winner::Black)
         {
             if (m_playerColor == TurtlePieceColor::Black)
             {
-                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You win!"));
+                m_currentTurnLabel->setText("You win!");
             }
             else
             {
-                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You lose!"));
+                m_currentTurnLabel->setText("You lose!");
             }
         }
         else if (m_winner == Winner::Red)
         {
             if (m_playerColor == TurtlePieceColor::Red)
             {
-                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You win!"));
+                m_currentTurnLabel->setText("You win!");
             }
             else
             {
-                m_currentTurnLabel->setText(StringLibrary::getTranslatedString("You lose!"));
+                m_currentTurnLabel->setText("You lose!");
             }
         }
         else // if (m_winner == Winner::None)

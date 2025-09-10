@@ -88,8 +88,8 @@ constexpr int LOBBY_LIST_SCROLL_H = 340;
 constexpr int LOBBY_LIST_LOBBY_NAME_WIDTH = 150;
 constexpr int LOBBY_LIST_PLAYER_NAME_WIDTH = 150;
 
-constexpr int STATISTICS_SCROLL_W = 740;
-constexpr int STATISTICS_SCROLL_H = 200;
+constexpr int STATISTICS_SCROLL_W = 750;
+constexpr int STATISTICS_SCROLL_H = 250;
 constexpr int MATCH_LIST_LOBBY_NAME_WIDTH = 130;
 constexpr int MATCH_LIST_PLAYER_NAME_WIDTH = 130;
 

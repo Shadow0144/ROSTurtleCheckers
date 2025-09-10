@@ -21,6 +21,11 @@
 #include "player/TitleWidget.hpp"
 #include "player/DialogWidget.hpp"
 #include "player/ChatBox.hpp"
+#include "player/PlayerIconNameWidget.hpp"
+#include "player/TranslatedQLabel.hpp"
+#include "player/TranslatedQCheckBox.hpp"
+#include "player/TranslatedQComboBox.hpp"
+#include "player/TranslatedQPushButton.hpp"
 
 class CheckersPlayerWindow;
 
@@ -40,11 +45,11 @@ public:
                       bool blackPlayerReady,
                       bool redPlayerReady,
                       uint64_t timerSeconds);
-    void playerJoinedLobby(const std::string &playerName, TurtlePieceColor playerColor);
-    void playerLeftLobby(const std::string &playerName);
+    void playerJoinedLobby(const std::string &joiningPlayerName, TurtlePieceColor joiningPlayerColor);
+    void playerLeftLobby(const std::string &leavingPlayerName);
     void updateLobbyOwner(const std::string &lobbyOwnerPlayerName);
     void setLobbyOwnerColor(TurtlePieceColor lobbyOwnerColor);
-    void setPlayerReady(const std::string &playerName, bool ready);
+    void setPlayerReady(const std::string &readyingPlayerName, bool ready);
     void setTimer(uint64_t timerSeconds);
 
     void clearChat();
@@ -85,17 +90,18 @@ private:
 
     QWidget *m_inLobbyWidget;
 
-    QCheckBox *m_blackReadyInLobbyCheckBox;
-    QCheckBox *m_redReadyInLobbyCheckBox;
+    TranslatedQCheckBox *m_blackReadyInLobbyCheckBox;
+    TranslatedQCheckBox *m_redReadyInLobbyCheckBox;
 
+    TranslatedQLabel *m_gameStartTimerLabel;
     QLabel *m_lobbyNameLabel;
     QLabel *m_lobbyIdLabel;
     QLabel *m_blackPlayerLobbyOwnerLabel;
     QLabel *m_redPlayerLobbyOwnerLabel;
-    QLabel *m_blackPlayerNameLabel;
-    QLabel *m_redPlayerNameLabel;
-    QLabel *m_gameStartTimerLabel;
-    QLabel *m_timerLabel;
+    TranslatedQLabel *m_timerLabel;
+
+    PlayerIconNameWidget *m_blackPlayerIconNameWidget;
+    PlayerIconNameWidget *m_redPlayerIconNameWidget;
 
     std::chrono::seconds m_secondsBeforeStart;
     const std::chrono::seconds MAX_SECONDS_BEFORE_START{3u};
@@ -103,9 +109,9 @@ private:
 
     QPushButton *m_blackPlayerKickButton;
     QPushButton *m_redPlayerKickButton;
-    QPushButton *m_leaveLobbyInLobbyButton;
+    TranslatedQPushButton *m_leaveLobbyInLobbyButton;
 
-    QComboBox *m_timerComboBox;
+    TranslatedQComboBox *m_timerComboBox;
 
     ChatBox *m_chatBox;
 
